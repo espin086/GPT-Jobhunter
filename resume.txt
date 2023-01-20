@@ -1,0 +1,139 @@
+JJ Espinoza (jj.espinoza.la@gmail.com)
+Read My Research
+Join my 16K Linkedin Followers
+Test My AI Software
+
+
+Technical Skills
+3x AWS ML Certified
+2x Google Cloud ML Certified
+Published AI/ML Research
+
+
+Leadership Expertise
+2x Director in M&E Industry
+Stanford/Harvard Exec Ed
+2x Tech Lead in FAANG
+
+
+
+
+Experience
+
+Sr. Artificial Intelligence & Machine Learning Cloud Architect
+Amazon Web Services (AWS)                                                                                                                                   [2020 - Present]
+Strategic guidance for AI/ML/Data Analytics team of 5+ architects to drive overall consulting efforts
+POCs/MVPs in AI/ML for pre-sales engagements leading to $5 million in paid engagements
+Lead team of 100+ leads in meeting 115% of publication goals helping to reduce knowledge silos and duplicate effort
+Science Lead
+Facebook                                                                                                                                                                          [2019 -2020]
+Developed a custom analysis using SQL/Python and it reduced Toyota's marketing costs per sale by 66%
+Improved clients use of FB’s Advanced Analytics by 26% product by leading data scientists through NLP analysis
+Responsible for scaling work to 34 customers by creating training videos, hosting office hours, and maintaining wikis 
+Advanced Solutions Lab Scientist (Intern)
+Google Cloud                                                                                                                                                                            [ 2019]
+Use AI to analyze videos to identify patterns and recommend items to users based on their preferences
+Developed a cloud architecture that can support computer vision models at scale
+Learned how to build Artificial Intelligence Systems from the brightest minds at Google
+Director, Machine Learning
+20th Century Studios                                                                                                                                                      [2017 - 2019]
+Developed a new AI system and saw an increase in studio revenues by 8%
+Configured a secure and efficient cloud system making it 3x for data scientist to get their work done
+Became an M & E thought leader by appearing on podcasts & drafting articles in industry publications
+Director, Data Science
+NBCUniversal                                                                                                                                                [Jan. 2016 – Oct. 2017]
+Found the best way to distribute movies internationally resulting in 18% increase in digital sales
+Quantified the impact of anti-piracy efforts is five times the return on investment using Econometrics
+Coached my team to improve their skills resulting in multiple promotions
+The Walt Disney Company 
+Manager, Management Science                                                                                                                                  [2012 - 2015]
+ABC Television's Marketing ROI increased by 21% after maintaining and improving their in-house Marketing Mix Model
+Lead the development of a new marketing model to better understand how audiences interact with ads online (13% gain)
+Presented at UCLA and at industry conferences to help with recruitment of new data scientists
+Sr. Data Analyst                                                                                                                                                                       
+Developed a Regression Model which made it easier for decision-makers to understand the impact of their decisions 
+Use Econometrics to measure the effect store layout, shelf placement, and signage on sales (13% revenue increase)
+Econ One Research                                                                                                                                                         [2011-2012]
+Data Engineer
+Created Econometric analysis that found that the Google was responsible for $400 million in punitive damages
+SAS programmer working with large datasets in collaboration with economists to produce evidence in legal cases
+Armstrong World Industries                                                                                                                                            [2003-2007]
+Distribution Technician
+Used regression analysis and microeconomics to make the Distribution Center 14% more efficient
+Created an algorithm that examined all of the possible ways to schedule the trucks and figure out the optimum schedule
+
+
+
+
+
+Education
+Harvard Business School
+CSUF
+UCLA
+UCLA
+Stanford Graduate School of Business
+Competing in AI
+MS Econometrics
+BS Mathematics 
+BA Economics
+Exec Edu - LEAD Program
+
+
+Certifications & Trainings (see Linkedin)
+
+
+
+
+3x AWS Certified
+Cloud Practitioner, Solutions Architect, Machine Learning 
+Google Certified in Machine Learning
+Advanced Solutions Lab
+Data Science on AWS
+ML Pipelines with NLP Models 
+Data Science Specialist
+Johns Hopkins University
+
+
+Publications, Public Speaking, and Patent
+
+
+AI Podcast Guest 
+This Week in Machine Learning (link)
+5+ Artificial Intelligence eBooks
+(link)
+Patent for Computer Vision Real Estate Investing System
+Provisional Patent #62/774,446
+University Lecturer & Guest Speaker
+USC, UCLA, Harvard, Stanford
+
+
+
+
+Extracurricular Passion Projects
+Econometrics Blog
+Started in grad school has 440K visitors (link)
+AI/ML Real Estate Investing Software
+Created and use software to buy investment properties 
+JohHunter
+Developed tool for efficient Job searching (link)
+Building AI/ML APIS for Developers
+I build AI/ML APIs (link)
+
+
+
+
+What my peers, direct, reports, and leaders say about me
+
+“As a direct result of his contribution we were able to reprioritize goals based on optimal revenue increase. I highly recommend JJ to drive any machine learning related initiative to success.” - Marketing Science Partner @ Facebook
+
+
+“JJ is an amazing technical leader in Machine Learning and it’s application to marketing strategy” - Cloud Consultant @20th Century Studios
+
+
+“Few people have the opportunity to work with someone who is not only a leader, but also someone who is more than willing to be hands-on and execute.” - Lead Manager, Marketing Technology @AT&T
+
+
+“JJ has in-depth knowledge of statistical modeling and other analytical tools and he genuinely enjoys applying these to solve business problems. JJ is a great team member, collaborator, and a positive presence” - Consulting Director of Data Science, @Disney
+
+
+“JJ drove several technically rigorous projects to completion that affected business change based on thoughtful messaging strategy” - Director of Analytics @NBCUniversal
