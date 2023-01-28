@@ -20,6 +20,7 @@ The main function of this module, jobs_analysis, takes a search term and a locat
 
 To use this module, you will need to have a resume text file named 'resume.txt' in the same directory as the module. The function get_text_resume reads this file and returns the content as a single string.
 
+Using inside of Python code
 
 ```from job_analysis import jobs_analysis```
 
@@ -27,6 +28,9 @@ To use this module, you will need to have a resume text file named 'resume.txt' 
 ```pprint.pprint(jobs)```
 
 or 
+
+Calling the command line application
+
 
 ```python job_analysis.py search location```
 
