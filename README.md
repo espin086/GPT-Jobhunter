@@ -21,12 +21,12 @@ The main function of this module, jobs_analysis, takes a search term and a locat
 To use this module, you will need to have a resume text file named 'resume.txt' in the same directory as the module. The function get_text_resume reads this file and returns the content as a single string.
 
 
-```from job_analysis import jobs_analysis
+```from job_analysis import jobs_analysis```
 
-jobs = jobs_analysis(search_term='software engineer', location='San Francisco, CA')
-pprint.pprint(jobs)
+```jobs = jobs_analysis(search_term='software engineer', location='San Francisco, CA')```
+```pprint.pprint(jobs)```
 
 or 
 
-python job_analysis.py search location```
+```python job_analysis.py search location```
 
