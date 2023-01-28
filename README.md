@@ -6,11 +6,17 @@ This module allows you to perform a job analysis on LinkedIn by searching for jo
 To use this module, you will need to have the following dependencies installed:
 
 `search_jobs`: a module for searching for jobs on LinkedIn
+
 `extract_text_from_site`: a module for extracting text from a website
+
 `text_similarity`: a module for calculating the similarity between two pieces of text
+
 `time`: a module for adding delay between requests
+
 `logging`: a module for generating log messages
+
 `argparse`: a module for parsing command line arguments
+
 `pprint`: a module for pretty-printing data structures
 
 You will also need to subscribe to two RapidAPI APIs to use with the code and save your RapidAPI key as an environemnt variable called `API_KEY_RAPIDAPI`
