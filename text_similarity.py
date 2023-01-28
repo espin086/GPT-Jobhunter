@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 
 
 def text_similarity(text1, text2):
@@ -8,7 +9,7 @@ def text_similarity(text1, text2):
     payload = "text1={0}&text2={1}".format(text1,text2)
     headers = {
     	"content-type": "application/x-www-form-urlencoded",
-    	"X-RapidAPI-Key": "6f6bd1d225msh190d9617fc8a770p12307cjsn64b205138508",
+    	"X-RapidAPI-Key": os.environ.get('API_KEY_RAPIDAPI'),
     	"X-RapidAPI-Host": "twinword-text-similarity-v1.p.rapidapi.com"
     }
     
