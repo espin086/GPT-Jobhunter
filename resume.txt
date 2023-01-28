@@ -4,65 +4,71 @@ Join my 16K Linkedin Followers
 Test My AI Software
 
 
-Technical Skills
-3x AWS ML Certified
-2x Google Cloud ML Certified
-Published AI/ML Research
+Summary
 
-
-Leadership Expertise
-2x Director in M&E Industry
-Stanford/Harvard Exec Ed
-2x Tech Lead in FAANG
-
-
+Experienced AI leader with a track record of delivering successful projects and increasing client satisfaction. Expertise in AI/ML, data science, and advanced analytics. Led teams in meeting goals, improving collaboration and reducing knowledge silos. Strong background in various industries. Goal is to advance to a Principal Data Scientist/Machine Learning Engineer or Director of Machine Learning role.
 
 
 Experience
 
-Sr. Artificial Intelligence & Machine Learning Cloud Architect
-Amazon Web Services (AWS)                                                                                                                                   [2020 - Present]
-Strategic guidance for AI/ML/Data Analytics team of 5+ architects to drive overall consulting efforts
-POCs/MVPs in AI/ML for pre-sales engagements leading to $5 million in paid engagements
-Lead team of 100+ leads in meeting 115% of publication goals helping to reduce knowledge silos and duplicate effort
-Science Lead
-Facebook                                                                                                                                                                          [2019 -2020]
-Developed a custom analysis using SQL/Python and it reduced Toyota's marketing costs per sale by 66%
-Improved clients use of FB’s Advanced Analytics by 26% product by leading data scientists through NLP analysis
-Responsible for scaling work to 34 customers by creating training videos, hosting office hours, and maintaining wikis 
-Advanced Solutions Lab Scientist (Intern)
-Google Cloud                                                                                                                                                                            [ 2019]
-Use AI to analyze videos to identify patterns and recommend items to users based on their preferences
-Developed a cloud architecture that can support computer vision models at scale
-Learned how to build Artificial Intelligence Systems from the brightest minds at Google
-Director, Machine Learning
-20th Century Studios                                                                                                                                                      [2017 - 2019]
-Developed a new AI system and saw an increase in studio revenues by 8%
-Configured a secure and efficient cloud system making it 3x for data scientist to get their work done
-Became an M & E thought leader by appearing on podcasts & drafting articles in industry publications
-Director, Data Science
-NBCUniversal                                                                                                                                                [Jan. 2016 – Oct. 2017]
-Found the best way to distribute movies internationally resulting in 18% increase in digital sales
-Quantified the impact of anti-piracy efforts is five times the return on investment using Econometrics
-Coached my team to improve their skills resulting in multiple promotions
+
+Sr AI Leader/Architect 
+Amazon Web Services (AWS)
+2020 - Present
+
+
+Provided strategic guidance and direction to a team of 5+ architects to drive overall consulting efforts, resulting in successful delivery of projects and increased client satisfaction
+Developed and executed POCs/MVPs in AI/ML for pre-sales engagements, contributing to $5 million in paid engagements and expansion of the company's client base
+Led a team of 10+ leads in meeting and exceeding 115% of publication goals, improving team collaboration and reducing knowledge silos and duplicate effort through effective team management and communication
+
+Technical Lead, Marketing Science 
+Facebook
+2019 - 2020
+
+
+Developed a custom data analysis solution utilizing SQL and Python, resulting in a 66% reduction in Toyota's marketing costs per sale through the optimization of marketing campaigns and targeting.
+Improved clients' use of Facebook's Advanced Analytics by 26% through expertly leading a team of data scientists in NLP analysis and providing actionable insights for optimization.
+Successfully scaled work to 34 customers by creating comprehensive training videos, hosting regular office hours, and maintaining detailed wikis, resulting in increased customer satisfaction and retention.
+
+
+Director, Machine Learning 
+20th Century Fox
+2017 - 2019
+
+
+Led the development of a new AI system, resulting in a 8% increase in studio revenues through improved automation, scalability and efficiency of studio operations.
+Implemented and configured a secure and efficient cloud system, resulting in a 3x increase in productivity for data scientists by providing a seamless and fast access to data and tools, and enabling faster data processing and analysis.
+Established oneself as a thought leader in the Media and Entertainment Industry by appearing on well-known podcasts, drafting articles in industry publications, and providing expert insights and guidance on the latest trends and technologies in the field.
+
+
+Director, Data Science 
+NBCUniversal
+2016 - 2017
+
+
+Developed and executed a strategy for international movie distribution, resulting in a 18% increase in digital sales through the optimization of distribution channels and the implementation of targeted marketing campaigns.
+Utilized Econometrics to quantify the impact of anti-piracy efforts and demonstrated a five times return on investment, by providing actionable insights and recommendations to stakeholders on the most effective ways to combat piracy.
+Provided coaching and mentorship to team members, resulting in multiple promotions and skill development, through regular performance evaluations, one-on-one meetings, and providing opportunities for professional growth and development.
+
+
+Director, Data Science 
+Disney
+2012 - 2015
+
+
+
 The Walt Disney Company 
-Manager, Management Science                                                                                                                                  [2012 - 2015]
-ABC Television's Marketing ROI increased by 21% after maintaining and improving their in-house Marketing Mix Model
-Lead the development of a new marketing model to better understand how audiences interact with ads online (13% gain)
-Presented at UCLA and at industry conferences to help with recruitment of new data scientists
-Sr. Data Analyst                                                                                                                                                                       
-Developed a Regression Model which made it easier for decision-makers to understand the impact of their decisions 
-Use Econometrics to measure the effect store layout, shelf placement, and signage on sales (13% revenue increase)
+Led the maintenance and improvement of the in-house Marketing Mix Model for ABC Television, resulting in a 21% increase in Marketing ROI by optimizing marketing strategies, and providing actionable insights to stakeholders.
+Developed and implemented a new marketing model to better understand how audiences interact with ads online, resulting in a 13% gain in ad performance by leveraging advanced analytics techniques and providing actionable insights on audience behavior.
+Established oneself as a thought leader in the field by presenting at UCLA and industry conferences, contributing to the recruitment of new data scientists by providing expert insights and guidance on the latest trends and technologies in the field.
+Data Engineer / Statistical Programmer
 Econ One Research                                                                                                                                                         [2011-2012]
-Data Engineer
-Created Econometric analysis that found that the Google was responsible for $400 million in punitive damages
-SAS programmer working with large datasets in collaboration with economists to produce evidence in legal cases
-Armstrong World Industries                                                                                                                                            [2003-2007]
-Distribution Technician
-Used regression analysis and microeconomics to make the Distribution Center 14% more efficient
-Created an algorithm that examined all of the possible ways to schedule the trucks and figure out the optimum schedule
-
-
+Developed and executed an econometric analysis, resulting in the identification of Google's liability for $400 million in punitive damages through the application of advanced statistical techniques and the analysis of large datasets.
+Demonstrated expertise as a SAS programmer working with large datasets, in collaboration with economists, to produce evidence in legal cases by leveraging technical skills and knowledge to provide actionable insights and support legal strategies
+Data Analyst
+Verifi Inc.                                                                                                                                                                          [2009-2011]
+Utilized advanced statistical techniques, such as Bayesian networks, Random Forest, and Machine Learning, to improve the accuracy of credit card fraud detection by up to 90%.
+Developed and implemented real-time anomaly detection system for credit card processing data, resulting in a 50% reduction in false positives and a 25% increase in the speed of fraud detection.
 
 
 
@@ -124,10 +130,8 @@ I build AI/ML APIs (link)
 
 What my peers, direct, reports, and leaders say about me
 
+
 “As a direct result of his contribution we were able to reprioritize goals based on optimal revenue increase. I highly recommend JJ to drive any machine learning related initiative to success.” - Marketing Science Partner @ Facebook
-
-
-“JJ is an amazing technical leader in Machine Learning and it’s application to marketing strategy” - Cloud Consultant @20th Century Studios
 
 
 “Few people have the opportunity to work with someone who is not only a leader, but also someone who is more than willing to be hands-on and execute.” - Lead Manager, Marketing Technology @AT&T
@@ -137,3 +141,6 @@ What my peers, direct, reports, and leaders say about me
 
 
 “JJ drove several technically rigorous projects to completion that affected business change based on thoughtful messaging strategy” - Director of Analytics @NBCUniversal
+
+More Recommendation on Linkedin
+
