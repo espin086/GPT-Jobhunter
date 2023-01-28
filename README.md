@@ -1,6 +1,8 @@
+# LinkedinBot
+
 This module allows you to perform a job analysis on LinkedIn by searching for jobs using a given search term and location, extracting job descriptions from job URLs, and calculating the similarity between a given resume text and a job description.
 
-Installation
+## Installation
 To use this module, you will need to have the following dependencies installed:
 
 `search_jobs`: a module for searching for jobs on LinkedIn
@@ -13,7 +15,7 @@ To use this module, you will need to have the following dependencies installed:
 
 You will also need to subscribe to two RapidAPI APIs to use with the code and save your RapidAPI key as an environemnt variable called `API_KEY_RAPIDAPI`
 
-Usage
+## Usage
 The main function of this module, jobs_analysis, takes a search term and a location as inputs and returns a list of dictionaries, each containing a job's title, url, description, and resume similarity score. The module also includes a main function that allows the user to input a search term and location through command line arguments.
 
 To use this module, you will need to have a resume text file named 'resume.txt' in the same directory as the module. The function get_text_resume reads this file and returns the content as a single string.
