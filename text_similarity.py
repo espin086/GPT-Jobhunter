@@ -35,8 +35,6 @@ def text_similarity(text1, text2):
     Raises:
     Exception: If an exception is encountered during the API request, it is logged as an error.
     """
-    logging.info(f"First text: {text1}")
-    logging.info(f"Second text: {text2}")
     try:
         url = "https://twinword-text-similarity-v1.p.rapidapi.com/similarity/"
         
@@ -53,6 +51,7 @@ def text_similarity(text1, text2):
         similarity={}
         
         similarity['similarity'] = json_object['similarity']
+        logging.info("Text similarity calculated")
         
         return similarity
     except Exception as e:
