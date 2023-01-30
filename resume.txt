@@ -1,146 +1,113 @@
-JJ Espinoza (jj.espinoza.la@gmail.com)
-Read My Research
-Join my 16K Linkedin Followers
-Test My AI Software
+JJ Espinoza
+Interview
+Website
+Linkedin
 
 
-Summary
 
-Experienced AI leader with a track record of delivering successful projects and increasing client satisfaction. Expertise in AI/ML, data science, and advanced analytics. Led teams in meeting goals, improving collaboration and reducing knowledge silos. Strong background in various industries. Goal is to advance to a Principal Data Scientist/Machine Learning Engineer or Director of Machine Learning role.
-
-
-Experience
-
-
-Sr AI Leader/Architect 
+AI/ML Lead Architect
 Amazon Web Services (AWS)
 2020 - Present
 
-
-Provided strategic guidance and direction to a team of 5+ architects to drive overall consulting efforts, resulting in successful delivery of projects and increased client satisfaction
-Developed and executed POCs/MVPs in AI/ML for pre-sales engagements, contributing to $5 million in paid engagements and expansion of the company's client base
-Led a team of 10+ leads in meeting and exceeding 115% of publication goals, improving team collaboration and reducing knowledge silos and duplicate effort through effective team management and communication
-
+Major achievement: Developed AI/ML-powered script analysis tool for major Hollywood studios, resulting in $2 million annual cost savings on diversity initiatives.
+Created proposals for $5+ million in AI projects using chatGPT and AWS AI services for cloud consulting.
+Skills: ML Solutions Architect, cloud infrastructure, technical proposal writing, cloud-based model training
 Technical Lead, Marketing Science 
 Facebook
 2019 - 2020
 
-
-Developed a custom data analysis solution utilizing SQL and Python, resulting in a 66% reduction in Toyota's marketing costs per sale through the optimization of marketing campaigns and targeting.
-Improved clients' use of Facebook's Advanced Analytics by 26% through expertly leading a team of data scientists in NLP analysis and providing actionable insights for optimization.
-Successfully scaled work to 34 customers by creating comprehensive training videos, hosting regular office hours, and maintaining detailed wikis, resulting in increased customer satisfaction and retention.
-
-
+Major achievement: Developed custom analysis tools for Toyota resulting in 1.5x increase in marketing effectiveness, resulting in millions of dollars in profit for Toyota and revenue for Facebook using Python and SQL.
+Developed custom marketing analysis for Toyota using Python and SQL, scaled to the automotive industry though custom tools.
+Skills: ROI optimization, custom analysis tool development, SQL, effective communication and presentation
 Director, Machine Learning 
 20th Century Fox
 2017 - 2019
 
-
-Led the development of a new AI system, resulting in a 8% increase in studio revenues through improved automation, scalability and efficiency of studio operations.
-Implemented and configured a secure and efficient cloud system, resulting in a 3x increase in productivity for data scientists by providing a seamless and fast access to data and tools, and enabling faster data processing and analysis.
-Established oneself as a thought leader in the Media and Entertainment Industry by appearing on well-known podcasts, drafting articles in industry publications, and providing expert insights and guidance on the latest trends and technologies in the field.
-
-
-Director, Data Science 
+Major achievement: Published four papers on computer vision for movie analysis, featured in podcasts and blog posts on industry-leading platforms, showcasing expertise in innovative research and data analysis.
+Developed machine learning pipeline using Google Cloud, CV and NLP for movie attendance analysis.
+Skills:  thought leader, Airflow, Linux, keynote speaker, Google Cloud, NLP, Computer Vision, AWS Cloud, SQL
+Director, Business Analtytics 
 NBCUniversal
 2016 - 2017
 
-
-Developed and executed a strategy for international movie distribution, resulting in a 18% increase in digital sales through the optimization of distribution channels and the implementation of targeted marketing campaigns.
-Utilized Econometrics to quantify the impact of anti-piracy efforts and demonstrated a five times return on investment, by providing actionable insights and recommendations to stakeholders on the most effective ways to combat piracy.
-Provided coaching and mentorship to team members, resulting in multiple promotions and skill development, through regular performance evaluations, one-on-one meetings, and providing opportunities for professional growth and development.
-
-
-Director, Data Science 
+Major achievement: Led department migration to cloud resulting in 35% cost savings and 4x ROI over 1 year for NBCUniversal.
+Led team, managed budget, used R & Python for advanced analysis and modeling, delivered insights to execs for business growth.
+Skills: Mentorship, machine learning model deployment, staff development, cloud infrastructure (AWS, GCP)
+Manager, Management Science 
 Disney
 2012 - 2015
 
+Major achievement: Led econometric digital attribution model resulting in 21% profit increase during TV show launches.
+Led marketing modeling, mentored staff and collaborated with data engineering teams to advise executives at Disney.
+Skills: SAS statistical analysis, econometric modeling, executive level communication, project management methodologies
+Data Engineer/Statistical Programmer 
+EconOne Research
+2011 - 2012
 
-
-The Walt Disney Company 
-Led the maintenance and improvement of the in-house Marketing Mix Model for ABC Television, resulting in a 21% increase in Marketing ROI by optimizing marketing strategies, and providing actionable insights to stakeholders.
-Developed and implemented a new marketing model to better understand how audiences interact with ads online, resulting in a 13% gain in ad performance by leveraging advanced analytics techniques and providing actionable insights on audience behavior.
-Established oneself as a thought leader in the field by presenting at UCLA and industry conferences, contributing to the recruitment of new data scientists by providing expert insights and guidance on the latest trends and technologies in the field.
-Data Engineer / Statistical Programmer
-Econ One Research                                                                                                                                                         [2011-2012]
-Developed and executed an econometric analysis, resulting in the identification of Google's liability for $400 million in punitive damages through the application of advanced statistical techniques and the analysis of large datasets.
-Demonstrated expertise as a SAS programmer working with large datasets, in collaboration with economists, to produce evidence in legal cases by leveraging technical skills and knowledge to provide actionable insights and support legal strategies
-Data Analyst
-Verifi Inc.                                                                                                                                                                          [2009-2011]
-Utilized advanced statistical techniques, such as Bayesian networks, Random Forest, and Machine Learning, to improve the accuracy of credit card fraud detection by up to 90%.
-Developed and implemented real-time anomaly detection system for credit card processing data, resulting in a 50% reduction in false positives and a 25% increase in the speed of fraud detection.
+Major achievement: Wrote high-quality, efficient code for large-scale anti-trust lawsuits resulting in a $400 million settlement.
+Led data cleaning and preparation for anti-trust litigation, ensured data quality through code reviews and documentation.
+Skills: data wrangling, data transformation, data quality control, data exploration, data visualization for communication
 
 
 
-Education
+Executive Education, L.E.A.D.
+Executive Education, AI Strategy
+
+M.S. Econometrics
+B.S. Mathematics
+B.A. Economics
+
+Certificate, Solutions Architect
+Certificate, Machine Learning 
+Certificate, Cloud Practitioner
+Certificate, Machine Learning
+Certificate, Data Science on AWS
+Certificate, Streaming Systems
+Certificate, Data Engineering and ML
+Certificate, Serverless Analytics
+Certificate, Serverless ML
+Certificate, Python Programming
+Certificate, Data Science 
+Certificate, Executive Data Science
+
+
+Stanford Business School
 Harvard Business School
+
 CSUF
 UCLA
 UCLA
-Stanford Graduate School of Business
-Competing in AI
-MS Econometrics
-BS Mathematics 
-BA Economics
-Exec Edu - LEAD Program
 
+AWS
+AWS
+AWS
+Google Cloud
+Coursera
+Google Cloud
+Google Cloud
+Google Cloud
+Google Cloud
+Udemy
+Johns Hopkins
+Johns Hopkins
+2022
+2021
 
-Certifications & Trainings (see Linkedin)
+2011
+2009
+2009
 
+2022
+2022
+2021
+2020
+2019
+2018
+2017
+2017
+2016
+2016
+2015
+2015
 
-
-
-3x AWS Certified
-Cloud Practitioner, Solutions Architect, Machine Learning 
-Google Certified in Machine Learning
-Advanced Solutions Lab
-Data Science on AWS
-ML Pipelines with NLP Models 
-Data Science Specialist
-Johns Hopkins University
-
-
-Publications, Public Speaking, and Patent
-
-
-AI Podcast Guest 
-This Week in Machine Learning (link)
-5+ Artificial Intelligence eBooks
-(link)
-Patent for Computer Vision Real Estate Investing System
-Provisional Patent #62/774,446
-University Lecturer & Guest Speaker
-USC, UCLA, Harvard, Stanford
-
-
-
-
-Extracurricular Passion Projects
-Econometrics Blog
-Started in grad school has 440K visitors (link)
-AI/ML Real Estate Investing Software
-Created and use software to buy investment properties 
-JohHunter
-Developed tool for efficient Job searching (link)
-Building AI/ML APIS for Developers
-I build AI/ML APIs (link)
-
-
-
-
-What my peers, direct, reports, and leaders say about me
-
-
-“As a direct result of his contribution we were able to reprioritize goals based on optimal revenue increase. I highly recommend JJ to drive any machine learning related initiative to success.” - Marketing Science Partner @ Facebook
-
-
-“Few people have the opportunity to work with someone who is not only a leader, but also someone who is more than willing to be hands-on and execute.” - Lead Manager, Marketing Technology @AT&T
-
-
-“JJ has in-depth knowledge of statistical modeling and other analytical tools and he genuinely enjoys applying these to solve business problems. JJ is a great team member, collaborator, and a positive presence” - Consulting Director of Data Science, @Disney
-
-
-“JJ drove several technically rigorous projects to completion that affected business change based on thoughtful messaging strategy” - Director of Analytics @NBCUniversal
-
-More Recommendation on Linkedin
 
