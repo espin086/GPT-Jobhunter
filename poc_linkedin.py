@@ -67,7 +67,7 @@ def get_text_resume(file):
     resume = " ".join(resume) #to join list of strings into a single string
     return resume
 
-def jobs_analysis(search_term, location, min_salary):
+def jobs_analysis(search_term, location, min_salary, minsim):
     """
     This function performs a job analysis by searching for jobs on LinkedIn using a given search term and location. It uses the search_linkedin_jobs function to retrieve a list of jobs, and then for each job, it uses the get_text_in_url function to extract the job description from the job's webpage. The function then uses the text_similarity function to calculate the similarity between the job description and a given resume text. The function then adds this similarity score to the job dictionary and appends it to a list of job analysis, which is returned at the end of the function.
    
@@ -104,7 +104,7 @@ def jobs_analysis(search_term, location, min_salary):
             
             logging.info(f'resume similarity: {resume_similarity}') 
             
-            if resume_similarity > .15:
+            if resume_similarity > minsim:
                 logging.info('high job similarity, analyzing job')
                 
 
@@ -153,9 +153,10 @@ if __name__ == "__main__":
     parser.add_argument('search', metavar='search', type=str, help='the term to search for, like job title')
     parser.add_argument('location', metavar='location', type=str, help='the location of the job')
     parser.add_argument('minsal', metavar='minsal', type=str, help='the minimum salary to consider')
+    parser.add_argument('minsim', metavar='minsim', type=float, choices=[Range(0.0, 1.0)], help='the minimum similarity score from resume to job description')
    
 
     args = parser.parse_args()
 
-    jobs = jobs_analysis(search_term=args.search, location=args.location, min_salary=args.minsal)
+    jobs = jobs_analysis(search_term=args.search, location=args.location, min_salary=args.minsal, minsim=args.minsim)
     print(jobs)
