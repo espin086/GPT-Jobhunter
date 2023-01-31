@@ -115,6 +115,7 @@ def jobs_analysis(search_term, location, min_salary):
             else:
                 logging.info('analyzing salary')
                 if max(job['salary']) > int(min_salary):
+                    jobs_analysis.append(job)
                     logging.info('keeping job with high salary')
                     pp.pprint(job)
                 else:
