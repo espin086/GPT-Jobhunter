@@ -104,7 +104,7 @@ def jobs_analysis(search_term, location, min_salary):
             
             logging.info(f'resume similarity: {resume_similarity}') 
             
-            if job['resume_similarity'] > .15:
+            if resume_similarity > .15:
                 logging.info('high job similarity, analyzing job')
                 
 
