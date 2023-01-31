@@ -28,7 +28,7 @@ def save_to_s3(data, bucket_name):
     import boto3
     s3 = boto3.resource('s3')
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    file_name = f"{timestamp}.json"
+    file_name = f"output/{timestamp}.json"
     s3.Object(bucket_name, file_name).put(Body=json.dumps(data))
     logging.info("Saved data to %s/%s", bucket_name, file_name)
     return None
@@ -78,7 +78,7 @@ def jobs_analysis(search_term, location, min_salary):
    
     pagination = 1
    
-    while pagination <= 1:
+    while pagination <= 5:
    
         jobs = search_linkedin_jobs(search_term=search_term, location=location, page=pagination)
        
@@ -119,7 +119,7 @@ def jobs_analysis(search_term, location, min_salary):
         pagination = pagination + 1
 
     #saving good jobs to s3 in json format
-    save_to_s3(data=jobs_analysis, bucket_name='linkedin-bot/output')
+    save_to_s3(data=jobs_analysis, bucket_name='linkedin-bot')
     logging.info('saved file to s3')
    
     return jobs_analysis
