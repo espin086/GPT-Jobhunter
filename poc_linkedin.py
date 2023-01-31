@@ -115,7 +115,9 @@ def jobs_analysis(search_term, location, min_salary, minsim):
                 del job['job_description']
 
                 if not job['salary']:
-                    logging.info('keeing job with no salary')
+                    logging.info('keeping job with no salary')
+                    logging.info('saved file to s3')
+                    save_to_s3(data=job, bucket_name='linkedin-bot')
                     jobs_analysis.append(job)
                     logging.debug(job)
                     salary = 0
@@ -123,8 +125,10 @@ def jobs_analysis(search_term, location, min_salary, minsim):
                 else:
                     logging.info('analyzing salary')
                     if max(job['salary']) > int(min_salary):
+                        save_to_s3(data=job, bucket_name='linkedin-bot')
                         jobs_analysis.append(job)
                         logging.info('keeping job with high salary')
+                        logging.info('saved file to s3')
                         logging.debug(job)
                     else:
                         logging.info('ignore job with low salary')
