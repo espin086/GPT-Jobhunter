@@ -112,8 +112,6 @@ def jobs_analysis(search_term, location, min_salary, minsim):
                 job['emails'] = re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", description)
                 job['salary'] = standardize_wages(re.findall(r'\$\d+[,\d+]*(?:[\.\d{2}]+)?', description))
 
-                del job['job_description']
-
                 if not job['salary']:
                     logging.info('keeping job with no salary')
                     logging.info('saved file to s3')
