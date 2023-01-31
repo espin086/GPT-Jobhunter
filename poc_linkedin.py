@@ -16,6 +16,11 @@ import datetime
 import argparse
 import pprint
 
+#this changes current directory to code runs as a cronjob
+import os
+script_dir = os.path.dirname(os.path.realpath(__file__))
+os.chdir(script_dir)
+
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.INFO)
@@ -78,7 +83,7 @@ def jobs_analysis(search_term, location, min_salary):
    
     pagination = 1
    
-    while pagination <= 5:
+    while pagination <= 1:
    
         jobs = search_linkedin_jobs(search_term=search_term, location=location, page=pagination)
        
@@ -109,7 +114,7 @@ def jobs_analysis(search_term, location, min_salary):
            
             else:
                 logging.info('analyzing salary')
-                if max(job['salary']) < int(min_salary):
+                if max(job['salary']) > int(min_salary):
                     logging.info('keeping job with high salary')
                     pp.pprint(job)
                 else:
