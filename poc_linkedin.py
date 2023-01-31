@@ -100,13 +100,12 @@ def jobs_analysis(search_term, location, min_salary):
             
             logging.info('calculating resume similarity')
             job['resume_similarity'] = text_similarity(text1=RESUME.encode('utf-8'), text2=description.encode('utf-8'))
+            resume_similarity = job['resume_similarity']
+            
+            logging.info(f'resume similarity: {resume_similarity}') 
             
             if job['resume_similarity'] > .15:
                 logging.info('high job similarity, analyzing job')
-                
-                
-                
-                
                 
 
                 logging.info('extracting emails and salaries')
