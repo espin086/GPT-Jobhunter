@@ -117,7 +117,7 @@ def jobs_analysis(search_term, location, min_salary):
                 if not job['salary']:
                     logging.info('keeing job with no salary')
                     jobs_analysis.append(job)
-                    pp.pprint(job)
+                    logging.debug(job)
                     salary = 0
 
                 else:
@@ -125,7 +125,7 @@ def jobs_analysis(search_term, location, min_salary):
                     if max(job['salary']) > int(min_salary):
                         jobs_analysis.append(job)
                         logging.info('keeping job with high salary')
-                        pp.pprint(job)
+                        logging.debug(job)
                     else:
                         logging.info('ignore job with low salary')
             else:
