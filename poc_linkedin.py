@@ -94,16 +94,20 @@ def jobs_analysis(search_term, location, min_salary):
             logging.info('------------------------------------ Analyzing Job ------------------------------------')
             
             
+            job_url = job['job_url']
+            job['job_description'] = get_text_in_url(url=job_url) #scraps text from site
+            description = job['job_description']
+            
+            logging.info('calculating resume similarity')
+            job['resume_similarity'] = text_similarity(text1=RESUME.encode('utf-8'), text2=description.encode('utf-8'))
             
             if job['resume_similarity'] > .15:
                 logging.info('high job similarity, analyzing job')
                 
-                job_url = job['job_url']
-                job['job_description'] = get_text_in_url(url=job_url) #scraps text from site
-                description = job['job_description']
                 
-                logging.info('calculating resume similarity')
-                job['resume_similarity'] = text_similarity(text1=RESUME.encode('utf-8'), text2=description.encode('utf-8'))
+                
+                
+                
 
                 logging.info('extracting emails and salaries')
                 job['emails'] = re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", description)
