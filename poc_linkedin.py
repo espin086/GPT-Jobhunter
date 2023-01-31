@@ -137,10 +137,6 @@ def jobs_analysis(search_term, location, min_salary, minsim):
 
        
         pagination = pagination + 1
-
-    #saving good jobs to s3 in json format
-    save_to_s3(data=jobs_analysis, bucket_name='linkedin-bot')
-    logging.info('saved file to s3')
    
     return jobs_analysis
    
