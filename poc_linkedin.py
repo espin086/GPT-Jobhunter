@@ -92,35 +92,40 @@ def jobs_analysis(search_term, location, min_salary):
         for job in jobs:
             time.sleep(.5)
             logging.info('------------------------------------ Analyzing Job ------------------------------------')
-            job_url = job['job_url']
-            job['job_description'] = get_text_in_url(url=job_url) #scraps text from site
-            description = job['job_description']
-           
-            logging.info('extracting emails and salaries')
-            job['emails'] = re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", description)
-            job['salary'] = standardize_wages(re.findall(r'\$\d+[,\d+]*(?:[\.\d{2}]+)?', description))
-           
-           
+            
             logging.info('calculating resume similarity')
             job['resume_similarity'] = text_similarity(text1=RESUME.encode('utf-8'), text2=description.encode('utf-8'))
-           
-            del job['job_description']
-           
-            if not job['salary']:
-                logging.info('keeing job with no salary')
-                jobs_analysis.append(job)
-                pp.pprint(job)
-                salary = 0
-           
-            else:
-                logging.info('analyzing salary')
-                if max(job['salary']) > int(min_salary):
+            
+            if job['resume_similarity'] > .15:
+                logging.info('high job similarity, analyzing job')
+                
+                job_url = job['job_url']
+                job['job_description'] = get_text_in_url(url=job_url) #scraps text from site
+                description = job['job_description']
+
+                logging.info('extracting emails and salaries')
+                job['emails'] = re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", description)
+                job['salary'] = standardize_wages(re.findall(r'\$\d+[,\d+]*(?:[\.\d{2}]+)?', description))
+
+                del job['job_description']
+
+                if not job['salary']:
+                    logging.info('keeing job with no salary')
                     jobs_analysis.append(job)
-                    logging.info('keeping job with high salary')
                     pp.pprint(job)
+                    salary = 0
+
                 else:
-                    logging.info('ignore job with low salary')
-                   
+                    logging.info('analyzing salary')
+                    if max(job['salary']) > int(min_salary):
+                        jobs_analysis.append(job)
+                        logging.info('keeping job with high salary')
+                        pp.pprint(job)
+                    else:
+                        logging.info('ignore job with low salary')
+            else:
+                logging.info('low job similarity, ignoring')
+
        
         pagination = pagination + 1
 
