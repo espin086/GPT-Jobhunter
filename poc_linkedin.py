@@ -153,7 +153,7 @@ if __name__ == "__main__":
     parser.add_argument('search', metavar='search', type=str, help='the term to search for, like job title')
     parser.add_argument('location', metavar='location', type=str, help='the location of the job')
     parser.add_argument('minsal', metavar='minsal', type=str, help='the minimum salary to consider')
-    parser.add_argument('minsim', metavar='minsim', type=float, choices=[Range(0.0, 1.0)], help='the minimum similarity score from resume to job description')
+    parser.add_argument('minsim', metavar='minsim', type=float, help='the minimum similarity score from resume to job description')
    
 
     args = parser.parse_args()
