@@ -1,113 +1,93 @@
-JJ Espinoza
+jj.espinoza.la@gmail.com
 Interview
+	JJ Espinoza
 Website
+	323-333-0336
 Linkedin
+	________________
 
 
-
-AI/ML Lead Architect
-Amazon Web Services (AWS)
-2020 - Present
-
-Major achievement: Developed AI/ML-powered script analysis tool for major Hollywood studios, resulting in $2 million annual cost savings on diversity initiatives.
-Created proposals for $5+ million in AI projects using chatGPT and AWS AI services for cloud consulting.
-Skills: ML Solutions Architect, cloud infrastructure, technical proposal writing, cloud-based model training
-Technical Lead, Marketing Science 
-Facebook
-2019 - 2020
-
-Major achievement: Developed custom analysis tools for Toyota resulting in 1.5x increase in marketing effectiveness, resulting in millions of dollars in profit for Toyota and revenue for Facebook using Python and SQL.
-Developed custom marketing analysis for Toyota using Python and SQL, scaled to the automotive industry though custom tools.
-Skills: ROI optimization, custom analysis tool development, SQL, effective communication and presentation
+Lead, Machine Learning Architect
+	Amazon Web Services (AWS)
+	2020 - Present
+	* Major achievement: Designed and executed $15 million worth of ML projects to provide top-notch cloud consulting services.
+* Implemented AI/ML-powered tools for Hollywood studios, delivering $2 million in cost savings and streamlining diversity initiatives.
+* Provided exceptional leadership to junior technical staff, guiding them to improve ML solutions and contribute to a positive team culture.
+* Utilized Python, SQL, CDK, Step Functions, Lambda for ML ops to execute AI projects, delivering advanced cloud consulting services.
+* Skills: executive comm, Staff development, ML Solutions Architect, thought leader, AWS Architecture, MLOps
+Founder and CEO 
+	PropertyBot
+	2018 - 2022
+	* Major achievement: Improved AI tech and processes with MLOps, leading to a patented accurate cost estimating system.
+* Entrepreneur and founder of a technology start-up utilizing patented AI technology to accurately estimate rehab costs.
+* Developed scalable custom computer vision using AWS Rekognition and API-based pipelines to deliver accurate rehab cost estimates.
+* Acquired and managed a portfolio of rentals and flips using patented AI technology, resulting in successful investment outcomes.
+* Skills: design thinking, decision analysis, MLOps, financing, capital budgeting, sales, talent acquisition
+Lead, Marketing Scientist 
+	Facebook
+	2019 - 2020
+	* Major achievement: Implemented MLOps, data engineering for Toyota, 1.5x increased effectiveness, generated millions.
+* Developed custom analysis tools for Toyota resulting in 1.5x increase in marketing effectiveness, resulting in millions of dollars in profit for Toyota and revenue for Facebook using Python and SQL. Scaled analysis to the entire automotive industry.
+* Provided clear and impactful presentations of marketing analysis results, effectively communicating insights to stakeholders.
+* Skills: ROI optimization, custom analysis tool development, SQL, effective communication and presentation
 Director, Machine Learning 
-20th Century Fox
-2017 - 2019
-
-Major achievement: Published four papers on computer vision for movie analysis, featured in podcasts and blog posts on industry-leading platforms, showcasing expertise in innovative research and data analysis.
-Developed machine learning pipeline using Google Cloud, CV and NLP for movie attendance analysis.
-Skills:  thought leader, Airflow, Linux, keynote speaker, Google Cloud, NLP, Computer Vision, AWS Cloud, SQL
+	20th Century Fox
+	2017 - 2019
+	* Major achievement: Established high-calibre ML team through industry connections, leading to successful creation of published and profitable ML ops system with advanced Google Cloud CV and NLP technology.
+* Brought in new high-calibre ML talent through established industry connections, contributing to the growth and success of the team.
+* Developed machine learning pipeline using Google Cloud, CV and NLP for movie attendance analysis.
+* Skills:  thought leader, Airflow, Linux, keynote speaker, Google Cloud, NLP, Computer Vision, AWS Cloud, SQL
 Director, Business Analtytics 
-NBCUniversal
-2016 - 2017
-
-Major achievement: Led department migration to cloud resulting in 35% cost savings and 4x ROI over 1 year for NBCUniversal.
-Led team, managed budget, used R & Python for advanced analysis and modeling, delivered insights to execs for business growth.
-Skills: Mentorship, machine learning model deployment, staff development, cloud infrastructure (AWS, GCP)
+	NBCUniversal
+	2016 - 2017
+	* Major achievement: Implemented econometric modeling and supervised team of data scientists to build and deploy machine learning models in the cloud, resulting in a 27% improvement in operations and optimized budget management.
+* Led successful department migration to cloud resulting in 35% cost savings and 4x ROI for NBCUniversal over 1 year.
+* Led and mentored data scientists, resulting in improved team performance through performance reviews, promotions, and coaching.
+* Skills: Mentorship, machine learning model deployment, staff development, cloud infrastructure (AWS, GCP)
 Manager, Management Science 
-Disney
-2012 - 2015
-
-Major achievement: Led econometric digital attribution model resulting in 21% profit increase during TV show launches.
-Led marketing modeling, mentored staff and collaborated with data engineering teams to advise executives at Disney.
-Skills: SAS statistical analysis, econometric modeling, executive level communication, project management methodologies
+	Disney
+	2012 - 2015
+	* Major achievement: Led econometric digital attribution model resulting in 21% profit increase during TV show launches.
+* Led marketing modeling, mentored staff and collaborated with data engineering teams to advise executives at Disney.
+* Skills: SAS statistical analysis, econometric modeling, executive level communication, project management methodologies
 Data Engineer/Statistical Programmer 
-EconOne Research
-2011 - 2012
-
-Major achievement: Wrote high-quality, efficient code for large-scale anti-trust lawsuits resulting in a $400 million settlement.
-Led data cleaning and preparation for anti-trust litigation, ensured data quality through code reviews and documentation.
-Skills: data wrangling, data transformation, data quality control, data exploration, data visualization for communication
-
-
-
-Executive Education, L.E.A.D.
-Executive Education, AI Strategy
-
-M.S. Econometrics
-B.S. Mathematics
-B.A. Economics
-
-Certificate, Solutions Architect
-Certificate, Machine Learning 
-Certificate, Cloud Practitioner
-Certificate, Machine Learning
-Certificate, Data Science on AWS
-Certificate, Streaming Systems
-Certificate, Data Engineering and ML
-Certificate, Serverless Analytics
-Certificate, Serverless ML
-Certificate, Python Programming
-Certificate, Data Science 
-Certificate, Executive Data Science
+	EconOne Research
+	2011 - 2012
+	* Major achievement: Wrote high-quality, efficient code for large-scale anti-trust lawsuits resulting in a $400 million settlement.
+* Led data cleaning and preparation for anti-trust litigation, ensured data quality through code reviews and documentation.
+* Skills: data wrangling, data transformation, data quality control, data exploration, data visualization for communication
+________________
 
 
-Stanford Business School
+Executive Education, L.E.A.D.: decision analysis, persuasion, finance, design thinking
+Executive Education, AI Strategy: building AI organizations, business case studies
+
+
+M.S. Econometrics: time series, mathematical economics, game theory, econometrics
+B.S. Mathematics: C++ programming, probability, statistics, calculus, optimization
+B.A. Economics: linear programming, operations research, microecoonomics
+
+
+Solutions Architect, ML Specialist: computer, storage, ML models, MLOps, AI services
+DE and ML on GCP, ML Fundamendals: AI engineering, MLOps, serverless SQL
+Data Science Specialization: ML, R Programming, Data,  Products, Regression
+	Stanford Business School
 Harvard Business School
+
 
 CSUF
 UCLA
 UCLA
 
-AWS
-AWS
-AWS
-Google Cloud
-Coursera
-Google Cloud
-Google Cloud
-Google Cloud
-Google Cloud
-Udemy
-Johns Hopkins
-Johns Hopkins
-2022
-2021
 
-2011
-2009
-2009
-
-2022
-2022
-2021
-2020
-2019
-2018
-2017
-2017
-2016
-2016
-2015
-2015
+AWS Cloud Certificates
+Google Cloud Certificates
+Johns Hopkins (Coursera)
 
 
+	
+
+Books: Python APIs
+	Patent: AI for Real Estate
+	Speaker: Harvard, UCLA, USC
+	AI APIs: written in Python
