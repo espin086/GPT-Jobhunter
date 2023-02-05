@@ -157,4 +157,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     jobs = jobs_analysis(search_term=args.search, location=args.location, min_salary=args.minsal, minsim=args.minsim)
-    print(jobs)
