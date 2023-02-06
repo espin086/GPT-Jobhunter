@@ -43,7 +43,7 @@ def standardize_wage(wage):
     wage = re.sub(r'[$,]', '', wage)
     wage = re.sub('[^0-9]','', wage)
     wage = float(wage)
-    if wage < 1000:
+    if wage < 25000:
         wage *= 1000
     return wage
    
@@ -83,14 +83,14 @@ def jobs_analysis(search_term, location, min_salary, minsim):
    
     pagination = 1
    
-    while pagination <= 2:
+    while pagination <= 3:
    
         jobs = search_linkedin_jobs(search_term=search_term, location=location, page=pagination)
        
         jobs_analysis = []
        
         for job in jobs:
-            time.sleep(2)
+            time.sleep(1)
             logging.info('------------------------------------ Analyzing Job ------------------------------------')
             
             
