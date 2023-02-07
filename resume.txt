@@ -7,7 +7,7 @@ Linkedin
 	________________
 
 
-Lead, Machine Learning Architect
+Head of AI/ML, M&E ProServe BDSI Delivery
 	Amazon Web Services (AWS)
 	2020 - Present
 	* Major achievement: Designed and executed $15 million worth of ML projects to provide top-notch cloud consulting services.
@@ -30,27 +30,27 @@ Lead, Marketing Scientist
 * Developed custom analysis tools for Toyota resulting in 1.5x increase in marketing effectiveness, resulting in millions of dollars in profit for Toyota and revenue for Facebook using Python and SQL. Scaled analysis to the entire automotive industry.
 * Provided clear and impactful presentations of marketing analysis results, effectively communicating insights to stakeholders.
 * Skills: ROI optimization, custom analysis tool development, SQL, effective communication and presentation
-Director, Machine Learning 
+Director, Cloud Machine Learning Services 
 	20th Century Fox
 	2017 - 2019
 	* Major achievement: Established high-calibre ML team through industry connections, leading to successful creation of published and profitable ML ops system with advanced Google Cloud CV and NLP technology.
 * Brought in new high-calibre ML talent through established industry connections, contributing to the growth and success of the team.
 * Developed machine learning pipeline using Google Cloud, CV and NLP for movie attendance analysis.
 * Skills:  thought leader, Airflow, Linux, keynote speaker, Google Cloud, NLP, Computer Vision, AWS Cloud, SQL
-Director, Business Analtytics 
+Director, Business Analtytics & Research
 	NBCUniversal
 	2016 - 2017
 	* Major achievement: Implemented econometric modeling and supervised team of data scientists to build and deploy machine learning models in the cloud, resulting in a 27% improvement in operations and optimized budget management.
 * Led successful department migration to cloud resulting in 35% cost savings and 4x ROI for NBCUniversal over 1 year.
 * Led and mentored data scientists, resulting in improved team performance through performance reviews, promotions, and coaching.
 * Skills: Mentorship, machine learning model deployment, staff development, cloud infrastructure (AWS, GCP)
-Manager, Management Science 
+Manager, Operations Research & Econometrics
 	Disney
 	2012 - 2015
 	* Major achievement: Led econometric digital attribution model resulting in 21% profit increase during TV show launches.
 * Led marketing modeling, mentored staff and collaborated with data engineering teams to advise executives at Disney.
 * Skills: SAS statistical analysis, econometric modeling, executive level communication, project management methodologies
-Data Engineer/Statistical Programmer 
+SAS Software Programmer/Analyst 
 	EconOne Research
 	2011 - 2012
 	* Major achievement: Wrote high-quality, efficient code for large-scale anti-trust lawsuits resulting in a $400 million settlement.
@@ -59,13 +59,13 @@ Data Engineer/Statistical Programmer
 ________________
 
 
-Executive Education, L.E.A.D.: decision analysis, persuasion, finance, design thinking
-Executive Education, AI Strategy: building AI organizations, business case studies
+Executive Education, L.E.A.D.: decision analysis, persuasion, finance, design thinking, strategy
+Executive Education, AI Strategy: building AI organizations, enterprise data architecture
 
 
 M.S. Econometrics: time series, mathematical economics, game theory, econometrics
-B.S. Mathematics: C++ programming, probability, statistics, calculus, optimization
-B.A. Economics: linear programming, operations research, microecoonomics
+B.S. Mathematics: programming, probability, statistics, calculus, optimization, probability, physics
+B.A. Economics: linear programming, operations research, microecoonomics, mathematical economics
 
 
 Solutions Architect, ML Specialist: computer, storage, ML models, MLOps, AI services
@@ -91,3 +91,4 @@ Books: Python APIs
 	Patent: AI for Real Estate
 	Speaker: Harvard, UCLA, USC
 	AI APIs: written in Python
+	20+ Manager, Direct Report, Colleague Recommendations
