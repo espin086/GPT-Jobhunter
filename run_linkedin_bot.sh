@@ -1,6 +1,6 @@
 MY_PATH="/home/ec2-user/jobhunter"
-MIN_SIMILARITY=.2
-MIN_SALARY=200000
+MIN_SIMILARITY=.04
+MIN_SALARY=150000
 
 
 cd $MY_PATH && python3 linkedin-bot.py "Director Analytics" "remote" $MIN_SALARY $MIN_SIMILARITY
