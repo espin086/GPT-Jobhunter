@@ -1,15 +1,4 @@
-jj.espinoza.la@gmail.com
-Interview
-	JJ Espinoza
-Website
-	323-333-0336
-Linkedin
-	________________
-
-
-Head of AI/ML, M&E ProServe BDSI Delivery
-	Amazon Web Services (AWS)
-	2020 - Present
+Head of AI/ML, 
 	* Major achievement: Designed and executed $15 million worth of ML projects to provide top-notch cloud consulting services.
 * Implemented AI/ML-powered tools for Hollywood studios, delivering $2 million in cost savings and streamlining diversity initiatives.
 * Provided exceptional leadership to junior technical staff, guiding them to improve ML solutions and contribute to a positive team culture.
@@ -55,40 +44,19 @@ SAS Software Programmer/Analyst
 	2011 - 2012
 	* Major achievement: Wrote high-quality, efficient code for large-scale anti-trust lawsuits resulting in a $400 million settlement.
 * Led data cleaning and preparation for anti-trust litigation, ensured data quality through code reviews and documentation.
-* Skills: data wrangling, data transformation, data quality control, data exploration, data visualization for communication
-________________
-
-
+* Skills: data wrangling, data transformation, data quality control, data exploration, data visualization for communication________________
 Executive Education, L.E.A.D.: decision analysis, persuasion, finance, design thinking, strategy
 Executive Education, AI Strategy: building AI organizations, enterprise data architecture
-
-
 M.S. Econometrics: time series, mathematical economics, game theory, econometrics
 B.S. Mathematics: programming, probability, statistics, calculus, optimization, probability, physics
 B.A. Economics: linear programming, operations research, microecoonomics, mathematical economics
 
-
 Solutions Architect, ML Specialist: computer, storage, ML models, MLOps, AI services
 DE and ML on GCP, ML Fundamendals: AI engineering, MLOps, serverless SQL
-Data Science Specialization: ML, R Programming, Data,  Products, Regression
-	Stanford Business School
-Harvard Business School
-
-
-CSUF
-UCLA
-UCLA
-
+ence Specialization: ML, R Programming, Data,  Products, Regression
+	Stanford Businl
 
 AWS Cloud Certificates
-Google Cloud Certificates
-Johns Hopkins (Coursera)
-
-
-	
-
-Books: Python APIs
-	Patent: AI for Real Estate
-	Speaker: Harvard, UCLA, USC
+Google Cloud CertificatesPython APIs
 	AI APIs: written in Python
 	20+ Manager, Direct Report, Colleague Recommendations
