@@ -9,6 +9,11 @@ import json
 import argparse
 import pprint
 import os
+import aws_secrets_manager
+
+
+
+
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.INFO)
@@ -39,7 +44,7 @@ def search_linkedin_jobs(search_term, location, page=1):
     }
     headers = {
     	"content-type": "application/json",
-    	"X-RapidAPI-Key": os.environ.get('API_KEY_RAPIDAPI'),
+    	"X-RapidAPI-Key": aws_secrets_manager.get_secret(secret_name="rapidapikey", region_name="us-west-1")["rapidapikey"],
     	"X-RapidAPI-Host": "linkedin-jobs-search.p.rapidapi.com"
     }
     
