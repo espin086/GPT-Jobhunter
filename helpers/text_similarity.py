@@ -16,7 +16,7 @@ import os
 import logging
 import pprint
 import argparse
-
+import aws_secrets_manager
 
 logging.basicConfig(level=logging.INFO)
 pp = pprint.PrettyPrinter(indent=4)
@@ -41,7 +41,7 @@ def text_similarity(text1, text2):
         payload = "text1={0}&text2={1}".format(text1,text2)
         headers = {
         	"content-type": "application/x-www-form-urlencoded",
-        	"X-RapidAPI-Key": os.environ.get('API_KEY_RAPIDAPI'),
+        	"X-RapidAPI-Key": aws_secrets_manager.get_secret(secret_name="rapidapikey", region_name="us-west-1")["rapidapikey"],
         	"X-RapidAPI-Host": "twinword-text-similarity-v1.p.rapidapi.com"
         }
         
