@@ -12,7 +12,7 @@ from email.message import EmailMessage
 import ssl
 import smtplib
 import argparse
-
+import aws_secrets_manager
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,8 +30,8 @@ def send_email(email, subject, body):
     Returns:
         None
     """
-	email_sender = os.environ.get('EMAIL')
-	email_password = os.environ.get('EMAIL_PASSWORD')
+	email_sender = aws_secrets_manager.get_secret(secret_name="googleemailapi", region_name="us-west-1")["google_email"]
+	email_password = aws_secrets_manager.get_secret(secret_name="googleemailapi", region_name="us-west-1")["api_key"]
 	email_receiver = email
 	email_bcc = "bump@go.rebump.cc"
 	
