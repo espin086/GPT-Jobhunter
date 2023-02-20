@@ -6,6 +6,7 @@ import importlib
 from helpers.search_jobs import search_linkedin_jobs
 from helpers.extract_text_from_site import get_text_in_url
 from helpers.text_similarity import text_similarity
+from helpers.emailer import send_email
 import time
 import logging
 import re
@@ -83,7 +84,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
    
     pagination = 1
    
-    while pagination <= 3:
+    while pagination <= 2:
    
         jobs = search_linkedin_jobs(search_term=search_term, location=location, page=pagination)
        
@@ -157,3 +158,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     jobs = jobs_analysis(search_term=args.search, location=args.location, min_salary=args.minsal, minsim=args.minsim)
+	
+
+	
+    send_email(email="jj.espinoza@gmail.com", subject="linkedin-bot ran", body="Ran analysis for {0} in the location {1}".format(args.search, args.location))
