@@ -1,4 +1,8 @@
-MY_PATH="/home/ec2-user/jobhunter"
+#makes the directory the current directory of the script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+MY_PATH="$DIR:$PATH"
+cd MY_PATH
+
 MIN_SIMILARITY=.04
 MIN_SALARY=150000
 
@@ -26,7 +30,7 @@ LOCATIONS=(
 
 for position in "${POSITIONS[@]}"; do
   for location in "${LOCATIONS[@]}"; do
-    cd $MY_PATH && python3 linkedin-bot.py "$position" "$location" $MIN_SALARY $MIN_SIMILARITY
+    python3 linkedin-bot.py "$position" "$location" $MIN_SALARY $MIN_SIMILARITY
   done
 done
 
