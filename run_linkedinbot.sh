@@ -1,3 +1,8 @@
+#!/usr/bin/sh
+
+PATH+=:/usr/bin
+
+
 #makes the directory the current directory of the script
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 MY_PATH="$DIR:$PATH"
@@ -33,4 +38,13 @@ for position in "${POSITIONS[@]}"; do
     python3 linkedin-bot.py "$position" "$location" $MIN_SALARY $MIN_SIMILARITY
   done
 done
+#this kick starts the step function
+echo "INFO: starting step function"
+python3 aws_start_stepfunc.py
+
+sleep 600
+
+echo "INFO: sending email"
+python3 helpers/emailer.py
+
 

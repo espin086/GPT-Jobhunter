@@ -126,13 +126,4 @@ def main(name, email, role, company, link):
 	
 if __name__ == "__main__":
 	
-	parser = argparse.ArgumentParser(description="Emails a recruiter about a job role I want to interview about")
-	parser.add_argument('name', metavar='name', type=str, help='enter name of recruiter')
-	parser.add_argument('email', metavar='email', type=str, help='enter email of recruiter')
-	parser.add_argument('role', metavar='role', type=str, help='role you are interested in')
-	parser.add_argument('company', metavar='company', type=str, help='name of company')
-	parser.add_argument('link', metavar='link', type=str, help='link to job posting')
-	
-	args = parser.parse_args()
-	
-	main(name=args.name, email=args.email, role=args.role, company=args.company, link=args.link)
+	send_email(email="jj.espinoza.la@gmail.com", subject="LinkedinBot Ran", body="Check Athena tables for latest jobs: {0}".format("https://us-west-1.console.aws.amazon.com/athena/home?region=us-west-1"))
