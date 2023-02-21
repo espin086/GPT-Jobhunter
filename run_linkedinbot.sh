@@ -1,6 +1,4 @@
-#!/usr/bin/sh
 
-PATH+=:/usr/bin
 
 
 #makes the directory the current directory of the script
@@ -30,7 +28,6 @@ POSITIONS=(
 
 LOCATIONS=(
   "remote"
-  "Los Angeles"
 )
 
 for position in "${POSITIONS[@]}"; do
