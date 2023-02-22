@@ -19,8 +19,8 @@ import pprint
 
 #this changes current directory to code runs as a cronjob
 import os
-script_dir = os.path.dirname(os.path.realpath(__file__))
-os.chdir(script_dir)
+#script_dir = os.path.dirname(os.path.realpath(__file__))
+#os.chdir(script_dir)
 
 
 pp = pprint.PrettyPrinter(indent=4)
