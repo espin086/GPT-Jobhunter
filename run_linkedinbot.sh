@@ -28,6 +28,9 @@ POSITIONS=(
 
 LOCATIONS=(
   "remote"
+  "Los Angeles"
+  "Los Angeles County"
+  "Orange County"
 )
 
 for position in "${POSITIONS[@]}"; do
