@@ -7,7 +7,7 @@ MY_PATH="$DIR:$PATH"
 cd /home/ec2-user/jobhunter
 
 MIN_SIMILARITY=.04
-MIN_SALARY=150000
+MIN_SALARY=100000
 
 POSITIONS=(
   "Director Analytics"
