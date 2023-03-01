@@ -12,17 +12,22 @@ import logging
 import re
 import json
 import datetime
-
-
 import argparse
 import pprint
 
-# this changes current directory to code runs as a cronjob
 import os
-
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.INFO)
+
+
+import yaml
+
+with open('config.yaml') as f:
+    data = yaml.load(f, Loader=yaml.FullLoader)
+    
+bucket_name = data['bucket_name']
+email = data['email']
 
 
 def save_to_s3(data, bucket_name):
@@ -131,7 +136,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
                 else:
                     logging.info("analyzing salary")
                     if max(job["salary"]) > int(min_salary):
-                        save_to_s3(data=job, bucket_name="linkedin-bot")
+                        save_to_s3(data=job, bucket_name=bucket_name)
                         jobs_analysis.append(job)
                         logging.info("keeping job with high salary")
                         logging.info("saved file to s3")
@@ -180,7 +185,7 @@ if __name__ == "__main__":
     )
 
     send_email(
-        email="jj.espinoza@gmail.com",
+        email=email,
         subject="linkedin-bot ran",
         body="Ran analysis for {0} in the location {1}".format(
             args.search, args.location

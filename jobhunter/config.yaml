@@ -1,0 +1,5 @@
+# S3 bucket details
+bucket_name: "linkedin-bot"
+
+# email for notifications
+email: "jj.espinoza.la@gmail.com"
