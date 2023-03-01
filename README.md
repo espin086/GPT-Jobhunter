@@ -1,4 +1,4 @@
-# LinkedinBot
+# JobHunter
 
 This module allows you to perform a job analysis on LinkedIn by searching for jobs using a given search term and location, extracting job descriptions from job URLs, and calculating the similarity between a given resume text and a job description.
 
