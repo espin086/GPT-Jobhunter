@@ -1,5 +1,6 @@
 boto3
 brotlipy
+bs4
 certifi
 numpy 
 pandas
