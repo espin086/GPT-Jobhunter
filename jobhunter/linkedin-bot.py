@@ -3,10 +3,10 @@ This is a module for performing a job analysis on LinkedIn. It imports functions
 """
 
 import importlib
-from helpers.search_jobs import search_linkedin_jobs
-from helpers.extract_text_from_site import get_text_in_url
-from helpers.text_similarity import text_similarity
-from helpers.emailer import send_email
+from utils.search_jobs import search_linkedin_jobs
+from utils.extract_text_from_site import get_text_in_url
+from utils.text_similarity import text_similarity
+from utils.emailer import send_email
 import time
 import logging
 import re
@@ -80,7 +80,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
     list: A list of dictionaries, each containing a job's title, url, description, and resume similarity score.
 
     """
-    RESUME = get_text_resume(file="resume.txt")
+    RESUME = get_text_resume(file="resumes/resume.txt")
 
     pagination = 1
 
