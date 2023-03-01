@@ -1,63 +1,67 @@
-"""
-This module calculates the similarity between two pieces of text using the Twinword Text Similarity API. It takes in two strings as input and makes a POST request to the API with the provided text. The API returns a json object containing the similarity score between the two texts. The function returns a dictionary containing the similarity score. The module also has a command line interface that takes the two texts as input and prints the similarity score in json format.
-
-To use the module, import it and call the text_similarity function with two strings as arguments. The function returns a dictionary containing the similarity score between the two texts as a key-value pair where key is 'similarity' and value is a float between 0 and 1.
-
-To use the command line interface, run the module as the main program and pass the two texts as command line arguments. The command line interface will print the similarity score in json format.
-
-If an exception is encountered during the API request, the error will be logged.
-"""
-
-
-import requests
-import json
-import os
 import logging
-import pprint
 import argparse
-import aws_secrets_manager
+import pprint
+import nltk
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 logging.basicConfig(level=logging.INFO)
 pp = pprint.PrettyPrinter(indent=4)
 
+nltk.download('stopwords')
+stop_words = set(stopwords.words('english'))
+
+
+def preprocess_text(text):
+    """
+    This function preprocesses the input text by converting to lower case, removing stop words and punctuation, and 
+    tokenizing the text.
+
+    Args:
+    text (str): The text to preprocess.
+
+    Returns:
+    str: The preprocessed text.
+    """
+    tokens = nltk.word_tokenize(text.lower())
+    words = [word for word in tokens if word.isalnum() and word not in stop_words]
+    return ' '.join(words)
+
 
 def text_similarity(text1, text2):
     """
-    This function calculates the similarity between two pieces of text using the Twinword Text Similarity API. It takes in two strings, text1 and text2, as input and makes a POST request to the API with the provided text. The API returns a json object containing the similarity score between the two texts. The function returns a dictionary containing the similarity score.
+    This function calculates the similarity between two pieces of text using the cosine similarity between their
+    preprocessed representations. It takes in two strings, text1 and text2, as input and returns a dictionary
+    containing the similarity score.
 
     Args:
     text1 (str): The first piece of text for comparison.
     text2 (str): The second piece of text for comparison.
 
     Returns:
-    dict: A dictionary containing the similarity score between the two texts as a key-value pair where key is 'similarity' and value is a float between 0 and 1.
+    dict: A dictionary containing the similarity score between the two texts as a key-value pair where key is
+    'similarity' and value is a float between 0 and 1.
 
     Raises:
     Exception: If an exception is encountered during the API request, it is logged as an error.
     """
     try:
-        url = "https://twinword-text-similarity-v1.p.rapidapi.com/similarity/"
+        text1_preprocessed = preprocess_text(text1)
+        text2_preprocessed = preprocess_text(text2)
 
-        payload = "text1={0}&text2={1}".format(text1, text2)
-        headers = {
-            "content-type": "application/x-www-form-urlencoded",
-            "X-RapidAPI-Key": aws_secrets_manager.get_secret(
-                secret_name="rapidapikey", region_name="us-west-1"
-            )["rapidapikey"],
-            "X-RapidAPI-Host": "twinword-text-similarity-v1.p.rapidapi.com",
-        }
-
-        response = requests.request("POST", url, data=payload, headers=headers)
-        json_object = json.loads(response.text)
+        vectorizer = TfidfVectorizer()
+        vectors = vectorizer.fit_transform([text1_preprocessed, text2_preprocessed])
+        similarity_score = cosine_similarity(vectors)[0][1]
 
         similarity = {}
-
-        similarity["similarity"] = json_object["similarity"]
+        similarity["similarity"] = similarity_score
         logging.info("Text similarity calculated")
 
-        return similarity
+        return float(similarity_score)
     except Exception as e:
-        logging.error(f"An error occured while making the API request:: {e}")
+        logging.error(f"An error occurred while calculating the text similarity: {e}")
 
 
 if __name__ == "__main__":
@@ -68,6 +72,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    result = text_similarity(text1=args.text1, text2=args.text1)
+    result = text_similarity(text1=args.text1, text2=args.text2)
 
     pp.pprint(result)

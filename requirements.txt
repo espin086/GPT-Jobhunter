@@ -2,7 +2,9 @@ boto3
 brotlipy
 bs4
 certifi
+nltk
 numpy 
 pandas
 requests-oauthlib
 scipy
+scikit-learn
