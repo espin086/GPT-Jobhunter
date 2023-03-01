@@ -6,8 +6,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 MY_PATH="$DIR:$PATH"
 cd /home/ec2-user/jobhunter
 
-MIN_SIMILARITY=.04
-MIN_SALARY=100000
+MIN_SIMILARITY=.00
+MIN_SALARY=0
 
 POSITIONS=(
   "Director Analytics"
