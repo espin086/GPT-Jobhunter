@@ -89,7 +89,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
 
     pagination = 1
 
-    while pagination <= 1:
+    while pagination <= 5:
         jobs = search_linkedin_jobs(
             search_term=search_term, location=location, page=pagination
         )
