@@ -26,8 +26,8 @@ import yaml
 with open('config.yaml') as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
     
-bucket_name = data['bucket_name']
-email = data['email']
+bucket_name = data['dev']['bucket']
+email = data['default']['email']
 
 
 def save_to_s3(data, bucket_name):

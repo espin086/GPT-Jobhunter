@@ -1,5 +1,39 @@
-# S3 bucket details
-bucket_name: "linkedin-bot"
+default:
+  email: "jj.espinoza.la@gmail.com"
+  region: "us-west-1"
 
-# email for notifications
-email: "jj.espinoza.la@gmail.com"
+prod:
+  bucket: "linkedin-bot"
+  step_function: "arn:aws:states:us-west-1:128472059203:stateMachine:linkedin-bot"
+
+dev:
+  bucket: "linkedin-bot"
+  step_function: "arn:aws:states:us-west-1:128472059203:stateMachine:linkedin-bot"
+  
+min_salary: 0
+min_similarity: 0
+
+positions:
+  - "Director Analytics"
+  - "Vice President Data Science"
+  - "Vice President Machine Learning"
+  - "Vice Presient Analytics"
+  - "Machine Learning Lead"
+  - "Head of Machine Learning"
+  - "Lead Data Science"
+  - "Lead Machine Learning"
+  - "Lead Analytics"
+  - "Head Data Science"
+  - "Head Machine Learning"
+  - "Head Analytics"
+  - "Director Data Science"
+  - "Director Machine Learning"
+
+locations:
+  - "remote"
+  - "Los Angeles"
+  - "Los Angeles County"
+  - "Orange County"
+
+
+

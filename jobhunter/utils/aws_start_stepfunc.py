@@ -1,4 +1,14 @@
 import boto3
+import yaml
+
+
+with open('../config.yaml') as f:
+    data = yaml.load(f, Loader=yaml.FullLoader)
+    
+arn = data['dev']['step_function']
+print(arn)
+region = data['default']['region']
+
 
 
 def start_state_machine(region_name, arn):
@@ -14,6 +24,6 @@ def start_state_machine(region_name, arn):
 
 if __name__ == "__main__":
     start_state_machine(
-        region_name="us-west-1",
-        arn="arn:aws:states:us-west-1:128472059203:stateMachine:linkedin-bot",
+        region_name=region,
+        arn=arn,
     )
