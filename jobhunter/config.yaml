@@ -3,11 +3,11 @@ default:
   region: "us-west-1"
 
 prod:
-  bucket: "linkedin-bot"
+  bucket: "prod-linkedin-bot"
   step_function: "arn:aws:states:us-west-1:128472059203:stateMachine:linkedin-bot"
 
 dev:
-  bucket: "linkedin-bot"
+  bucket: "dev-linkedin-bot"
   step_function: "arn:aws:states:us-west-1:128472059203:stateMachine:linkedin-bot"
   
 min_salary: 0
