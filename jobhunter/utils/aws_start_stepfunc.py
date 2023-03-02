@@ -2,7 +2,7 @@ import boto3
 import yaml
 
 
-with open('../config.yaml') as f:
+with open('config.yaml') as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
     
 arn = data['dev']['step_function']

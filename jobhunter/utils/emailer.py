@@ -12,7 +12,7 @@ from email.message import EmailMessage
 import ssl
 import smtplib
 import argparse
-import utils.aws_secrets_manager
+import aws_secrets_manager
 
 logging.basicConfig(level=logging.INFO)
 
@@ -29,10 +29,10 @@ def send_email(email, subject, body):
     Returns:
         None
     """
-    email_sender = utils.aws_secrets_manager.get_secret(
+    email_sender = aws_secrets_manager.get_secret(
         secret_name="googleemailapi", region_name="us-west-1"
     )["google_email"]
-    email_password = utils.aws_secrets_manager.get_secret(
+    email_password = aws_secrets_manager.get_secret(
         secret_name="googleemailapi", region_name="us-west-1"
     )["api_key"]
     email_receiver = email
