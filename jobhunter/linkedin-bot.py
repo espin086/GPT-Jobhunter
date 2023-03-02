@@ -128,7 +128,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
                 if not job["salary"]:
                     logging.info("keeping job with no salary")
                     logging.info("saved file to s3")
-                    save_to_s3(data=job, bucket_name="linkedin-bot")
+                    save_to_s3(data=job, bucket_name=bucket_name)
                     jobs_analysis.append(job)
                     logging.debug(job)
                     salary = 0
