@@ -13,6 +13,9 @@ dev:
 min_salary: 0
 min_similarity: 0
 
+
+
+
 positions:
   - "Director Analytics"
   - "Vice President Data Science"
