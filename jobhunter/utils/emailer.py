@@ -12,7 +12,7 @@ from email.message import EmailMessage
 import ssl
 import smtplib
 import argparse
-import aws_secrets_manager
+import utils.aws_secrets_manager
 
 logging.basicConfig(level=logging.INFO)
 
