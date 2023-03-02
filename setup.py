@@ -14,6 +14,7 @@ setup(
         'certifi',
         'nltk',
         'numpy',
+        'pyyaml',
         'pandas',
         'requests-oauthlib',
         'scipy',
