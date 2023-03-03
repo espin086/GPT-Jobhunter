@@ -27,12 +27,8 @@ from utils.extract_text_from_site import get_text_in_url
 from utils.text_similarity import text_similarity
 
 
-
-
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.INFO)
-
-
 
 
 with open("config.yaml") as f:
@@ -46,7 +42,6 @@ def save_to_s3(data, bucket_name):
     """
     Saves a list of dictionaries to a JSON file on S3.
     """
-
 
     s3 = boto3.resource("s3")
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -67,7 +62,7 @@ def standardize_wage(wage):
 
     Args:
         wage (str): A string representing the wage amount to standardize.
-    
+
     Returns:
         float: The standardized wage as a numeric value.
 
@@ -86,7 +81,7 @@ def standardize_wages(wages):
 
     Args:
     wages (list): A list of strings representing wages.
-    
+
     Returns:
     list: A list of standardized wage values as floats.
 
@@ -113,22 +108,22 @@ def get_text_resume(file):
 def jobs_analysis(search_term, location, min_salary, minsim):
     """
     Perform a job analysis by searching for jobs on LinkedIn.
-    
+
     This function uses the search_linkedin_jobs function to retrieve a list of jobs using a given search term and location. Then, it extracts the job description from each job's webpage using the get_text_in_url function. The function then calculates the similarity between the job description and a given resume text using the text_similarity function. It appends this similarity score to the job dictionary and adds the dictionary to a list of job analysis, which it returns.
-    
+
     Args:
-    
+
     search_term (str): Job title or role to search for on LinkedIn
     location (str): Location to search for jobs in
     Returns:
-    
+
     list: A list of dictionaries, each containing a job's title, URL, description, and resume similarity score.
     """
     resume = get_text_resume(file="resumes/resume.txt")
 
     pagination = 1
 
-    while pagination <= 1:
+    while pagination <= 5:
         jobs = search_linkedin_jobs(
             search_term=search_term, location=location, page=pagination
         )

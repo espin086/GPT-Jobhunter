@@ -31,7 +31,7 @@ for position in POSITIONS:
                 str(MIN_SALARY),
                 str(MIN_SIMILARITY),
             ],
-            check=True
+            check=True,
         )
 
 # start the AWS Step Function
