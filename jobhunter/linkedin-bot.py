@@ -3,7 +3,7 @@ This is a module for performing a job analysis on LinkedIn. It imports functions
 """
 
 import importlib
-from utils.search_jobs import search_linkedin_jobs
+from utils.search_linkedin_jobs import search_linkedin_jobs
 from utils.extract_text_from_site import get_text_in_url
 from utils.text_similarity import text_similarity
 import time
@@ -22,11 +22,11 @@ logging.basicConfig(level=logging.INFO)
 
 import yaml
 
-with open('config.yaml') as f:
+with open("config.yaml") as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
-    
-bucket_name = data['dev']['bucket']
-email = data['default']['email']
+
+bucket_name = data["dev"]["bucket"]
+email = data["default"]["email"]
 
 
 def save_to_s3(data, bucket_name):
@@ -108,9 +108,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
             description = job["job_description"]
 
             logging.info("calculating resume similarity")
-            job["resume_similarity"] = text_similarity(
-                text1=RESUME, text2=description
-            )
+            job["resume_similarity"] = text_similarity(text1=RESUME, text2=description)
             logging.info("similarity: {}".format(job["resume_similarity"]))
 
             if job["resume_similarity"] > minsim:
