@@ -25,7 +25,7 @@ for position in POSITIONS:
         subprocess.run(
             [
                 "python3",
-                "linkedin-bot.py",
+                "linkedin_bot.py",
                 position,
                 location,
                 str(MIN_SALARY),
