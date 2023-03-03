@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 pp = pprint.PrettyPrinter(indent=4)
 
 nltk.download('stopwords')
+nltk.download('punkt')
 stop_words = set(stopwords.words('english'))
 
 
