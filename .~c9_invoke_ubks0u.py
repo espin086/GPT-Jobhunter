@@ -20,9 +20,6 @@ import pprint
 # this changes current directory to code runs as a cronjob
 import os
 
-# script_dir = os.path.dirname(os.path.realpath(__file__))
-# os.chdir(script_dir)
-
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.INFO)
@@ -108,13 +105,11 @@ def jobs_analysis(search_term, location, min_salary, minsim):
 
             logging.info("calculating resume similarity")
             job["resume_similarity"] = text_similarity(
-                text1=RESUME.encode("utf-8"), text2=description.encode("utf-8")
+                text1=RESUME, text2=description.encode("utf-8")
             )
-            resume_similarity = job["resume_similarity"]["similarity"]
+            
 
-            logging.info(f"resume similarity: {resume_similarity}")
-
-            if resume_similarity > minsim:
+            if job["resume_similarity"] > minsim:
                 logging.info("high job similarity, analyzing job")
 
                 logging.info("extracting emails and salaries")
