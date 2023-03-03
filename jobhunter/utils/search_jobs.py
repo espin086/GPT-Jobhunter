@@ -9,7 +9,7 @@ import json
 import argparse
 import pprint
 import os
-import aws_secrets_manager
+import utils.aws_secrets_manager
 
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -36,7 +36,7 @@ def search_linkedin_jobs(search_term, location, page=1):
     payload = {"search_terms": search_term, "location": location, "page": "1"}
     headers = {
         "content-type": "application/json",
-        "X-RapidAPI-Key": aws_secrets_manager.get_secret(
+        "X-RapidAPI-Key": utils.aws_secrets_manager.get_secret(
             secret_name="rapidapikey", region_name="us-west-1"
         )["rapidapikey"],
         "X-RapidAPI-Host": "linkedin-jobs-search.p.rapidapi.com",
