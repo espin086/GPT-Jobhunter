@@ -6,7 +6,6 @@ import importlib
 from utils.search_jobs import search_linkedin_jobs
 from utils.extract_text_from_site import get_text_in_url
 from utils.text_similarity import text_similarity
-from utils.emailer import send_email
 import time
 import logging
 import re
@@ -182,12 +181,4 @@ if __name__ == "__main__":
         location=args.location,
         min_salary=args.minsal,
         minsim=args.minsim,
-    )
-
-    send_email(
-        email=email,
-        subject="linkedin-bot ran",
-        body="Ran analysis for {0} in the location {1}".format(
-            args.search, args.location
-        ),
     )
