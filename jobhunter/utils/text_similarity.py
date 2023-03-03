@@ -10,14 +10,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 logging.basicConfig(level=logging.INFO)
 pp = pprint.PrettyPrinter(indent=4)
 
-nltk.download('stopwords')
-nltk.download('punkt')
-stop_words = set(stopwords.words('english'))
+nltk.download("stopwords")
+nltk.download("punkt")
+stop_words = set(stopwords.words("english"))
 
 
 def preprocess_text(text):
     """
-    This function preprocesses the input text by converting to lower case, removing stop words and punctuation, and 
+    This function preprocesses the input text by converting to lower case, removing stop words and punctuation, and
     tokenizing the text.
 
     Args:
@@ -28,7 +28,7 @@ def preprocess_text(text):
     """
     tokens = nltk.word_tokenize(text.lower())
     words = [word for word in tokens if word.isalnum() and word not in stop_words]
-    return ' '.join(words)
+    return " ".join(words)
 
 
 def text_similarity(text1, text2):
