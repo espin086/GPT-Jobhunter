@@ -107,7 +107,6 @@ def jobs_analysis(search_term, location, min_salary, minsim):
             job["resume_similarity"] = text_similarity(
                 text1=RESUME, text2=description.encode("utf-8")
             )
-            
 
             if job["resume_similarity"] > minsim:
                 logging.info("high job similarity, analyzing job")

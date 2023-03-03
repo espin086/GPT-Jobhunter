@@ -17,26 +17,13 @@ min_similarity: 0
 
 
 positions:
-  - "Director Analytics"
-  - "Vice President Data Science"
-  - "Vice President Machine Learning"
-  - "Vice Presient Analytics"
-  - "Machine Learning Lead"
-  - "Head of Machine Learning"
-  - "Lead Data Science"
-  - "Lead Machine Learning"
-  - "Lead Analytics"
-  - "Head Data Science"
-  - "Head Machine Learning"
-  - "Head Analytics"
-  - "Director Data Science"
-  - "Director Machine Learning"
+  - "Machine Learning"
+  - "Data Science"
 
 locations:
   - "remote"
   - "Los Angeles"
-  - "Los Angeles County"
-  - "Orange County"
+ 
 
 
 
