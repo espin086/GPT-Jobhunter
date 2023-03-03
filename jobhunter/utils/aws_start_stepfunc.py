@@ -2,13 +2,12 @@ import boto3
 import yaml
 
 
-with open('config.yaml') as f:
+with open("config.yaml") as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
-    
-arn = data['dev']['step_function']
-print(arn)
-region = data['default']['region']
 
+arn = data["dev"]["step_function"]
+print(arn)
+region = data["default"]["region"]
 
 
 def start_state_machine(region_name, arn):
