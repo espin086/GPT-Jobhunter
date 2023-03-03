@@ -17,6 +17,7 @@ setup(
         "numpy",
         "pyyaml",
         "pandas",
+        "pylint",
         "pytest-cov",
         "requests-oauthlib",
         "scipy",
