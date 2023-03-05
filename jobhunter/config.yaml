@@ -17,13 +17,13 @@ min_similarity: 0
 
 
 positions:
-  - "Machine Learning"
-  - "Data Science"
-  - "Artificial Intelligence"
-  - "Cloud Computing"
-  - "Data Analysis"
-  - "Leadership"
-  - "Entreprenuership"
+  - "Director Machine Learning"
+  - "Director Data Science"
+  - "Director Artificial Intelligence"
+  - "Director Data Analytics"
+ 
+
+
 
 locations:
   - "remote"
