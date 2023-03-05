@@ -18,9 +18,14 @@ min_similarity: 0
 
 positions:
   - "Director Machine Learning"
+  - "Vice President Machine Learning"
   - "Director Data Science"
+  - "Vice President Data Science"
   - "Director Artificial Intelligence"
+  - "Vice President Artificial Intelligence"
   - "Director Data Analytics"
+  - "Vice President of Data Analytics"
+  
  
 
 
