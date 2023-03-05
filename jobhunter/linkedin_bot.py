@@ -123,64 +123,68 @@ def jobs_analysis(search_term, location, min_salary, minsim):
 
     pagination = 1
 
-    while pagination <= 5:
-        jobs = search_linkedin_jobs(
-            search_term=search_term, location=location, page=pagination
-        )
+    try: 
 
-        jobs_analysis = []
-
-        for job in jobs:
-            time.sleep(1)
-            logging.info(
-                "------------------------------------ Analyzing Job ------------------------------------"
+        while pagination <= 5:
+            jobs = search_linkedin_jobs(
+                search_term=search_term, location=location, page=pagination
             )
 
-            job_url = job["job_url"]
-            job["job_description"] = get_text_in_url(
-                url=job_url
-            )  # scraps text from site
-            description = job["job_description"]
+            jobs_analysis = []
 
-            logging.info("calculating resume similarity")
-            job["resume_similarity"] = text_similarity(text1=resume, text2=description)
-            logging.info("similarity: {}".format(job["resume_similarity"]))
-
-            if job["resume_similarity"] > minsim:
-                logging.info("high job similarity, analyzing job")
-
-                logging.info("extracting emails and salaries")
-                job["emails"] = re.findall(
-                    r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", description
-                )
-                job["salary"] = standardize_wages(
-                    re.findall(r"\$\d+[,\d+]*(?:[\.\d{2}]+)?", description)
+            for job in jobs:
+                time.sleep(1)
+                logging.info(
+                    "------------------------------------ Analyzing Job ------------------------------------"
                 )
 
-                if not job["salary"]:
-                    logging.info("keeping job with no salary")
-                    logging.info("saved file to s3")
-                    save_to_s3(data=job, bucket_name=bucket_name)
-                    jobs_analysis.append(job)
-                    logging.debug(job)
-                    job["salary"] = 0
+                job_url = job["job_url"]
+                job["job_description"] = get_text_in_url(
+                    url=job_url
+                )  # scraps text from site
+                description = job["job_description"]
 
-                else:
-                    logging.info("analyzing salary")
-                    if max(job["salary"]) > int(min_salary):
+                logging.info("calculating resume similarity")
+                job["resume_similarity"] = text_similarity(text1=resume, text2=description)
+                logging.info("similarity: {}".format(job["resume_similarity"]))
+
+                if job["resume_similarity"] > minsim:
+                    logging.info("high job similarity, analyzing job")
+
+                    logging.info("extracting emails and salaries")
+                    job["emails"] = re.findall(
+                        r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", description
+                    )
+                    job["salary"] = standardize_wages(
+                        re.findall(r"\$\d+[,\d+]*(?:[\.\d{2}]+)?", description)
+                    )
+
+                    if not job["salary"]:
+                        logging.info("keeping job with no salary")
+                        logging.info("saved file to s3")
                         save_to_s3(data=job, bucket_name=bucket_name)
                         jobs_analysis.append(job)
-                        logging.info("keeping job with high salary")
-                        logging.info("saved file to s3")
                         logging.debug(job)
+                        job["salary"] = 0
+
                     else:
-                        logging.info("ignore job with low salary")
-            else:
-                logging.info("low job similarity, ignoring")
+                        logging.info("analyzing salary")
+                        if max(job["salary"]) > int(min_salary):
+                            save_to_s3(data=job, bucket_name=bucket_name)
+                            jobs_analysis.append(job)
+                            logging.info("keeping job with high salary")
+                            logging.info("saved file to s3")
+                            logging.debug(job)
+                        else:
+                            logging.info("ignore job with low salary")
+                else:
+                    logging.info("low job similarity, ignoring")
 
-        pagination = pagination + 1
+            pagination = pagination + 1
 
-    return jobs_analysis
+        return jobs_analysis
+    except: 
+        logging.info("ERROR: in getting page")
 
 
 if __name__ == "__main__":
