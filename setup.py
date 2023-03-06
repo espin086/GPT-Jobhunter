@@ -23,4 +23,9 @@ setup(
         "scipy",
         "scikit-learn",
     ],
+    entry_points={
+        "console_scripts": [
+            "jobhunter = jobhunter.__main__:entrypoint",
+        ]
+    },
 )
