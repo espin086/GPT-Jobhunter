@@ -3,22 +3,21 @@ This is a module for performing a job analysis on LinkedIn. It imports functions
 """
 
 import importlib
-from helpers.search_jobs import search_linkedin_jobs
-from helpers.extract_text_from_site import get_text_in_url
-from helpers.text_similarity import text_similarity
-from helpers.emailer import send_email
 import time
 import logging
 import re
 import json
 import datetime
-
-
 import argparse
 import pprint
 
 # this changes current directory to code runs as a cronjob
 import os
+
+from jobhunter.utils.search_linkedin_jobs import search_linkedin_jobs
+from jobhunter.utils.extract_text_from_site import get_text_in_url
+from jobhunter.utils.text_similarity import text_similarity
+from jobhunter.utils.emailer import send_email
 
 
 pp = pprint.PrettyPrinter(indent=4)
