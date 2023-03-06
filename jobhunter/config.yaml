@@ -9,12 +9,10 @@ prod:
 dev:
   bucket: "dev-linkedin-bot"
   step_function: "arn:aws:states:us-west-1:128472059203:stateMachine:dev-linkedin-bot"
-  
+
+
 min_salary: 0
 min_similarity: 0
-
-
-
 
 positions:
   - "Director Machine Learning"
@@ -25,15 +23,7 @@ positions:
   - "Vice President Artificial Intelligence"
   - "Director Data Analytics"
   - "Vice President of Data Analytics"
-  
- 
-
-
 
 locations:
   - "remote"
   - "Los Angeles"
- 
-
-
-
