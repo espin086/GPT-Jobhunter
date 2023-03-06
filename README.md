@@ -38,4 +38,4 @@ or
 Calling the command line application
 
 
-```jobhunter search <LOCATION> 30000 200000```
+```jobhunter <JOB TITLE> <LOCATION> <PAGE #>```

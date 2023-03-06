@@ -76,22 +76,28 @@ def main(search_term, location, page):
     return results
 
 
-if __name__ == "__main__":
+def entrypoint():
     parser = argparse.ArgumentParser(description="This searches for jobs on LinkedIn")
 
     parser.add_argument(
         "search",
-        metavar="search",
         type=str,
+        metavar="search",
         help="the term to search for, like job title",
     )
+
     parser.add_argument(
-        "location", metavar="location", type=str, help="the location of the job"
+        "location",
+        type=str,
+        metavar="location",
+        help="the location of the job"
     )
+
     parser.add_argument(
         "page",
-        metavar="page",
         type=int,
+        default=1,
+        metavar="page",
         help="the page of results, page 1, 2, 3,...etc.",
     )
 
@@ -100,3 +106,7 @@ if __name__ == "__main__":
     result = main(search_term=args.search, location=args.location, page=args.page)
 
     pp.pprint(result)
+
+
+if __name__ == "__main__":
+    entrypoint()

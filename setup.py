@@ -25,7 +25,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "jobhunter = jobhunter.__main__:entrypoint",
+            "jobhunter = jobhunter.utils.search_linkedin_jobs:entrypoint",
         ]
     },
 )
