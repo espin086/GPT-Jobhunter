@@ -38,5 +38,4 @@ or
 Calling the command line application
 
 
-```jobhunter search location```
-
+```jobhunter search <LOCATION> 30000 200000```
