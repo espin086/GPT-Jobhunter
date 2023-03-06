@@ -9,7 +9,8 @@ import json
 import argparse
 import pprint
 import os
-import utils.aws_secrets_manager
+
+import jobhunter.utils.aws_secrets_manager
 
 
 pp = pprint.PrettyPrinter(indent=4)
