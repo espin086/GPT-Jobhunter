@@ -8,11 +8,15 @@ main(name, email, role, company, link): Sends an email for a job application usi
 """
 import logging
 import os
-from email.message import EmailMessage
 import ssl
-import smtplib
 import argparse
-import aws_secrets_manager
+
+import smtplib
+
+import jobhunter.utils.aws_secrets_manager
+
+from email.message import EmailMessage
+
 
 logging.basicConfig(level=logging.INFO)
 
