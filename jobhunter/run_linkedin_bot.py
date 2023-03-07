@@ -8,6 +8,7 @@ it starts an AWS Step Function, waits for 7 minutes, and sends an email notifica
 
 import subprocess
 import yaml
+import random
 
 
 with open("config.yaml", "r") as f:
@@ -18,6 +19,11 @@ POSITIONS = CONFIG["positions"]
 LOCATIONS = CONFIG["locations"]
 MIN_SALARY = CONFIG["min_salary"]
 MIN_SIMILARITY = CONFIG["min_similarity"]
+
+
+#randomize positions and locations
+random.shuffle(POSITIONS)
+random.shuffle(LOCATIONS)
 
 # iterate over the POSITIONS and locations and run the linkedin-bot.py script
 for position in POSITIONS:
