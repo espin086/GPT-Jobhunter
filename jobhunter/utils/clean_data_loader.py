@@ -75,5 +75,5 @@ def clean_data():
 
 if __name__ == "__main__":
     df = clean_data()
-    print(df.head())
+    print(df.columns())
 
