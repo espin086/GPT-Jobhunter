@@ -40,13 +40,6 @@ for position in POSITIONS:
             check=True,
         )
 
-# start the AWS Step Function
-print("INFO: starting step function")
-subprocess.run(["python3", "utils/aws_start_stepfunc.py"], check=True)
-
-# wait for 10 minutes
-print("INFO: waiting for 7 minutes")
-subprocess.run(["sleep", "420"], check=True)
 
 # send an email notification
 print("INFO: sending email")

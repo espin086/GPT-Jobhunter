@@ -22,6 +22,7 @@ import argparse
 import pprint
 import yaml
 import boto3
+import os
 from utils.search_linkedin_jobs import search_linkedin_jobs
 from utils.extract_text_from_site import get_text_in_url
 from utils.text_similarity import text_similarity
@@ -38,16 +39,15 @@ bucket_name = data["dev"]["bucket"]
 email = data["default"]["email"]
 
 
-def save_to_s3(data, bucket_name):
+def save_locally(data):
     """
-    Saves a list of dictionaries to a JSON file on S3.
+    Saves a list of dictionaries to a JSON file locally in the ../data/temp directory.
     """
-
-    s3 = boto3.resource("s3")
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    file_name = f"output/{timestamp}.json"
-    s3.Object(bucket_name, file_name).put(Body=json.dumps(data))
-    logging.info("Saved data to %s/%s", bucket_name, file_name)
+    file_path = os.path.join("..", "data", "temp", f"{timestamp}.json")
+    with open(file_path, "w") as f:
+        json.dump(data, f)
+    logging.info("Saved data to %s", file_path)
     return None
 
 
@@ -164,7 +164,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
                     if not job["salary"]:
                         logging.info("keeping job with no salary")
                         logging.info("saved file to s3")
-                        save_to_s3(data=job, bucket_name=bucket_name)
+                        save_locally(data=job)
                         jobs_analysis.append(job)
                         logging.debug(job)
                         job["salary"] = 0
@@ -172,7 +172,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
                     else:
                         logging.info("analyzing salary")
                         if max(job["salary"]) > int(min_salary):
-                            save_to_s3(data=job, bucket_name=bucket_name)
+                            save_locally(data=job)
                             jobs_analysis.append(job)
                             logging.info("keeping job with high salary")
                             logging.info("saved file to s3")
