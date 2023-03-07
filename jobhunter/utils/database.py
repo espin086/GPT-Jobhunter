@@ -10,14 +10,15 @@ c = conn.cursor()
 # Create a table
 c.execute('''CREATE TABLE IF NOT EXISTS jobs
              (id INTEGER PRIMARY KEY,
-              posted_date TEXT,
-              resume_similarity REAL,
-              job_title TEXT, 
-              company TEXT, 
-              salary INTEGER,
-              job_location TEXT,
+              date TEXT,
+              resume_sim REAL,
+              title TEXT, 
+              company_name TEXT, 
+              salary_max INTEGER,
+              location TEXT,
               job_url TEXT,
-              job_description TEXT)''')
+              company_url TEXT,
+              description TEXT)''')
 
 # Commit the changes and close the connection
 conn.commit()

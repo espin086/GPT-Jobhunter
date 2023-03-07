@@ -1,7 +1,9 @@
 import json
 import os
 import pandas as pd
+import sqlite3
 
+import jobhunter.utils.database
 
 def load_to_pandas():
 
@@ -73,7 +75,37 @@ def clean_data():
     df['salary_max'] = df['salary_max'].astype(int)
     return df
 
+def update_database(df, db_file, table_name, key_column):
+
+    # Connect to the SQLite database
+    conn = sqlite3.connect(db_file)
+
+    # Check for duplicates
+    duplicates_query = f"SELECT {key_column} FROM {table_name}"
+    duplicates = pd.read_sql(duplicates_query, conn)
+
+    # Use the pandas `merge()` function to find rows that are not already in the SQLite database
+    new_data = pd.merge(df, duplicates, on=key_column, how='left', indicator=True)
+    new_data = new_data[new_data['_merge'] == 'left_only'].drop('_merge', axis=1)
+
+    # Append the new data to the SQLite database
+    new_data.to_sql(table_name, conn, if_exists='append', index=False)
+
+    # Close the connection to the SQLite database
+    conn.close()
+
+def delete_local_json(directory):
+    # Loop through all the files in the directory
+    for filename in os.listdir(directory):
+        # Create the full file path by joining the directory and filename
+        file_path = os.path.join(directory, filename)
+        
+        # Check if the file is a file (not a directory) and if so, delete it
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
 if __name__ == "__main__":
     df = clean_data()
-    print(df.columns())
+    update_database(df=df, db_file="../../data/jobhunter.db", table_name="jobs", key_column="job_url")
+    delete_local_json(directory="../../data/temp/")
 
