@@ -1,7 +1,8 @@
 import os
+import argparse
+
 import requests
 import openai
-import argparse
 
 openai.organization = os.getenv("OPENAI_ORGANIZATION")
 openai.api_key = os.getenv("OPENAI_API_KEY")
