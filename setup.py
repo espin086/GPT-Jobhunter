@@ -19,6 +19,7 @@ setup(
         "pandas",
         "pylint",
         "pytest-cov",
+        "pytest-cov",
         "requests-oauthlib",
         "scipy",
         "scikit-learn",
