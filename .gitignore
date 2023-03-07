@@ -134,4 +134,5 @@ dmypy.json
 secret_gmail_api.json
 
 #data
-data/*
+data/temp/*
+data/*.db
