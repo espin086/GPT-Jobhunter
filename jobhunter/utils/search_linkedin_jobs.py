@@ -9,7 +9,8 @@ import json
 import argparse
 import pprint
 import os
-import utils.aws_secrets_manager
+
+import jobhunter.utils.aws_secrets_manager
 
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -36,7 +37,7 @@ def search_linkedin_jobs(search_term, location, page=1):
     payload = {"search_terms": search_term, "location": location, "page": "1"}
     headers = {
         "content-type": "application/json",
-        "X-RapidAPI-Key": utils.aws_secrets_manager.get_secret(
+        "X-RapidAPI-Key": jobhunter.utils.aws_secrets_manager.get_secret(
             secret_name="rapidapikey", region_name="us-west-1"
         )["rapidapikey"],
         "X-RapidAPI-Host": "linkedin-jobs-search.p.rapidapi.com",
@@ -75,22 +76,28 @@ def main(search_term, location, page):
     return results
 
 
-if __name__ == "__main__":
+def entrypoint():
     parser = argparse.ArgumentParser(description="This searches for jobs on LinkedIn")
 
     parser.add_argument(
         "search",
-        metavar="search",
         type=str,
+        metavar="search",
         help="the term to search for, like job title",
     )
+
     parser.add_argument(
-        "location", metavar="location", type=str, help="the location of the job"
+        "location",
+        type=str,
+        metavar="location",
+        help="the location of the job"
     )
+
     parser.add_argument(
         "page",
-        metavar="page",
         type=int,
+        default=1,
+        metavar="page",
         help="the page of results, page 1, 2, 3,...etc.",
     )
 
@@ -99,3 +106,7 @@ if __name__ == "__main__":
     result = main(search_term=args.search, location=args.location, page=args.page)
 
     pp.pprint(result)
+
+
+if __name__ == "__main__":
+    entrypoint()
