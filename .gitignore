@@ -132,3 +132,6 @@ dmypy.json
 
 #credentials
 secret_gmail_api.json
+
+#data
+data/*
