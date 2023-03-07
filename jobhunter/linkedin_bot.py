@@ -123,7 +123,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
 
     pagination = 1
 
-    try: 
+    try:
 
         while pagination <= 5:
             jobs = search_linkedin_jobs(
@@ -145,7 +145,9 @@ def jobs_analysis(search_term, location, min_salary, minsim):
                 description = job["job_description"]
 
                 logging.info("calculating resume similarity")
-                job["resume_similarity"] = text_similarity(text1=resume, text2=description)
+                job["resume_similarity"] = text_similarity(
+                    text1=resume, text2=description
+                )
                 logging.info("similarity: {}".format(job["resume_similarity"]))
 
                 if job["resume_similarity"] > minsim:
@@ -183,7 +185,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
             pagination = pagination + 1
 
         return jobs_analysis
-    except: 
+    except:
         logging.info("ERROR: in getting page")
 
 

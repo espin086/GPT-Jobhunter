@@ -33,10 +33,9 @@ Using inside of Python code
 ```jobs = jobs_analysis(search_term='software engineer', location='San Francisco, CA')```
 ```pprint.pprint(jobs)```
 
-or 
+or
 
 Calling the command line application
 
 
-```python job_analysis.py search location```
-
+```jobhunter <JOB TITLE> <LOCATION> <PAGE #>```
