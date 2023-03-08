@@ -8,6 +8,7 @@ setup(
     description="Automated job discovery using machine learning",
     packages=find_packages(),
     install_requires=[
+        "apache-airflow",
         "boto3",
         "black",
         "brotlipy",
