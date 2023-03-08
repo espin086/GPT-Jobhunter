@@ -6,41 +6,41 @@ This module allows you to perform a job analysis on LinkedIn by searching for jo
 
 1. Clone this repository using the following command: 
 
-`git clone https://github.com/espin086/jobhunter.git`
+    git clone https://github.com/espin086/jobhunter.git
 
 2. Enter into repository and run the make command
 
-`cd jobhunter`
-`make`
+    cd jobhunter
+    make
 
 3. Update the resume.txt file with a text version of your resume. To confirm
 your resume has been updated use this command.
 
-`cat jobhunter/jobhunter/resumes/resume.txt`
+    cat jobhunter/jobhunter/resumes/resume.txt
 
 4. Update the jobs and locations you'd like to search for jobs in the file called `config.yaml`, here are examples:
 
-`positions:`
-  `- "Director Machine Learning"`
-  `- "Vice President Machine Learning"`
-  
-`locations:`
-  `- "remote"`
-  `- "Los Angeles"`
+    positions:
+    - "Director Machine Learning"
+    - "Vice President Machine Learning"
+    
+    locations:
+    - "remote"
+    - "Los Angeles"
 
 5. Sign-up for an API key to access the Linkedin data, [go to this link to get API KEY](https://rapidapi.com/jaypat87/api/linkedin-jobs-search).
 
 6. Update this file located here:
 
-`jobhunter/jobhunter/utils/search_linkedin_jobs.py`
+jobhunter/jobhunter/utils/search_linkedin_jobs.py
 
 Delete this line in the file above:
 
-`import jobhunter.utils.aws_secrets_manager`
+    import jobhunter.utils.aws_secrets_manager
 
 Add your RapidAPI Key to this dictionary key:
 
-`"X-RapidAPI-Key"`
+    "X-RapidAPI-Key"
 
 That is all you need to set up JobHunter.
 
@@ -48,19 +48,19 @@ That is all you need to set up JobHunter.
 
 1. Run a command to collect jobs and calculate similarity scores.
 
-`python3 jobhunter/run_linkedin_bot.py`
+    python3 jobhunter/run_linkedin_bot.py
 
 2. Run code to create a local SQLite Database:
 
-`python3 jobhunter/jobhunter/utils/database.py`
+    python3 jobhunter/jobhunter/utils/database.py
 
 3. Run code to process, clean, and store the data into a local SQLite database
 
-`python3 jobhunter/jobhunter/utils/clean_data_loader.py`
+    python3 jobhunter/jobhunter/utils/clean_data_loader.py
 
 4. Run report on latest jobs and their similarity to your resume:
 
-`python3 jobhunter/jobhunter/utils/get_latest_jobs.py`
+    python3 jobhunter/jobhunter/utils/get_latest_jobs.py
 
     You will receive output that looks like this after you run the step above:
 
