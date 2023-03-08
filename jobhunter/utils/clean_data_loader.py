@@ -106,6 +106,10 @@ def delete_local_json(directory):
 
 if __name__ == "__main__":
     df = clean_data()
+<<<<<<< HEAD
     update_database(df=df, db_file="../../data/jobhunter.db", table_name="jobs", key_column="job_url")
     delete_local_json(directory="../../data/temp/")
+=======
+    print(df.columns())
+>>>>>>> e01112f (removed info for AWS Glue/Step Func based transformations)
 
