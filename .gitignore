@@ -132,3 +132,11 @@ dmypy.json
 
 #credentials
 secret_gmail_api.json
+
+dags/airflow-webserver.pid
+dags/airflow.cfg
+dags/airflow.db
+dags/py_env/
+dags/webserver_config.py
+dags/logs/
+data/temp/*
