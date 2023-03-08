@@ -133,7 +133,6 @@ def jobs_analysis(search_term, location, min_salary, minsim):
             jobs_analysis = []
 
             for job in jobs:
-                time.sleep(1)
                 logging.info(
                     "------------------------------------ Analyzing Job ------------------------------------"
                 )
