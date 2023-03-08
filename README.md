@@ -60,7 +60,7 @@ That is all you need to set up JobHunter.
 
 4. Run report on latest jobs and their similarity to your resume:
 
-    `python3 jobhunter/jobhunter/utils/get_latest_jobs.py`
+`python3 jobhunter/jobhunter/utils/get_latest_jobs.py`
 
     You will receive output that looks like this after you run the step above:
 
