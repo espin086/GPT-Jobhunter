@@ -20,19 +20,19 @@ dag = DAG(
 
 run_linkedin_bot_script = BashOperator(
     task_id="run_linkedin_bot_script",
-    bash_command="python3 ../jobhunter/linkedin_bot.py 'director of data science' 'los angeles' 0 0",
+    bash_command="python3 /Users/jjespinoza/Documents/jobhunter/jobhunter/linkedin_bot.py 'director of data science' 'los angeles' 0 0",
     dag=dag,
 )
 
 run_database_script = BashOperator(
     task_id="run_database_script",
-    bash_command="python3 ../jobhunter/utils/database.py",
+    bash_command="python3 /Users/jjespinoza/Documents/jobhunter/jobhunter/utils/database.py",
     dag=dag,
 )
 
 run_clean_data_loader_script = BashOperator(
     task_id="run_clean_data_loader_script",
-    bash_command="python3 ../jobhunter/utils/clean_data_loader.py",
+    bash_command="python3 /Users/jjespinoza/Documents/jobhunter/jobhunter/utils/clean_data_loader.py",
     dag=dag,
 )
 
