@@ -48,19 +48,19 @@ That is all you need to set up JobHunter.
 
 1. Run a command to collect jobs and calculate similarity scores.
 
-    python3 jobhunter/run_linkedin_bot.py
+    `python3 jobhunter/run_linkedin_bot.py`
 
 2. Run code to create a local SQLite Database:
 
-    python3 jobhunter/jobhunter/utils/database.py
+    `python3 jobhunter/jobhunter/utils/database.py`
 
 3. Run code to process, clean, and store the data into a local SQLite database
 
-    python3 jobhunter/jobhunter/utils/clean_data_loader.py
+    `python3 jobhunter/jobhunter/utils/clean_data_loader.py`
 
 4. Run report on latest jobs and their similarity to your resume:
 
-    python3 jobhunter/jobhunter/utils/get_latest_jobs.py
+    `python3 jobhunter/jobhunter/utils/get_latest_jobs.py`
 
     You will receive output that looks like this after you run the step above:
 
