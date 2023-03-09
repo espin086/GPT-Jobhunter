@@ -6,7 +6,7 @@ Website
 Linkedin
 Machine Learning T echnical Lead
 Amazon W eb Services (A WS)
-2020 - Present
+2020 - 2023
 ●
 Major achievement:
 Led 5-year roadmap development
@@ -87,6 +87,7 @@ analysis for major antitrust lawsuit, resulting in $400M settlement.
 Employed econometrics to quantify impact of pricing, costs, demand, and supply factors on airline ticket prices. 
 ●
 Skills: Data Engineering, Econometrics, Economic Analysis, Regression Analysis, T ime-Series Analysis
+www
 Executive Education, L.E.A.D.
 :
 decision analysis,
