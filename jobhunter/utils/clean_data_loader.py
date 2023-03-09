@@ -3,12 +3,12 @@ import os
 import pandas as pd
 import sqlite3
 
-import jobhunter.utils.database
+# import jobhunter.utils.database
 
 def load_to_pandas():
 
     # Set the directory path where the JSON files are located
-    directory_path = '../../data/temp/'
+    directory_path = '/Users/jjespinoza/Documents/jobhunter/data/temp/'
 
     # Create an empty list to store the data
     data_list = []
@@ -106,6 +106,6 @@ def delete_local_json(directory):
 
 if __name__ == "__main__":
     df = clean_data()
-    update_database(df=df, db_file="../../data/jobhunter.db", table_name="jobs", key_column="job_url")
-    delete_local_json(directory="../../data/temp/")
+    update_database(df=df, db_file="/Users/jjespinoza/Documents/jobhunter/data/jobhunter.db", table_name="jobs", key_column="job_url")
+    delete_local_json(directory='/Users/jjespinoza/Documents/jobhunter/data/temp/')
 
