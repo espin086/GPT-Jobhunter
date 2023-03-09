@@ -27,7 +27,8 @@ def menu():
             pass
 
         elif choice == '2':
-            os.system(f"python3 ../jobhunter/run_linkedin_bot.py")
+            os.system(f"python3 ../jobhunter/run_linkedin_bot.py > /dev/null 2>&1 &")
+            print("INFO: getting jobs for you...come back in 10 mins and check your saved jobs!")
             os.system(f"python3 ../jobhunter/utils/database.py")
             os.system(f"python3 ../jobhunter/utils/clean_data_loader.py")
             pass
