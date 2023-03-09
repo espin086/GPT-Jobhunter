@@ -27,16 +27,7 @@ def menu():
             pass
 
         elif choice == '2':
-            # Do search jobs
-            search_term = str(input("Enter job title: "))
-            search_term = re.sub(r'[^\w\s]', '_', search_term)
-            search_term = re.sub(r'\s', '_', search_term)
-            
-            location = str(input("Enter location or remote: "))
-            location = re.sub(r'[^\w\s]', '_', location)
-            location = re.sub(r'\s', '_', location)
-
-            os.system(f"python3 ../jobhunter/linkedin_bot.py {search_term} {location} 0 0 ")
+            os.system(f"python3 ../jobhunter/run_linkedin_bot.py")
             os.system(f"python3 ../jobhunter/utils/database.py")
             os.system(f"python3 ../jobhunter/utils/clean_data_loader.py")
             pass
