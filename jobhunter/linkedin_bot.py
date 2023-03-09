@@ -23,16 +23,17 @@ import pprint
 import yaml
 import boto3
 import os
-from utils.search_linkedin_jobs import search_linkedin_jobs
-from utils.extract_text_from_site import get_text_in_url
-from utils.text_similarity import text_similarity
+import sqlite3
+from jobhunter.utils.search_linkedin_jobs import search_linkedin_jobs
+from jobhunter.utils.extract_text_from_site import get_text_in_url
+from jobhunter.utils.text_similarity import text_similarity
 
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.INFO)
 
 
-with open("config.yaml") as f:
+with open("/Users/jjespinoza/Documents/jobhunter/jobhunter/config.yaml") as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
 
 bucket_name = data["dev"]["bucket"]
@@ -119,7 +120,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
 
     list: A list of dictionaries, each containing a job's title, URL, description, and resume similarity score.
     """
-    resume = get_text_resume(file="resumes/resume.txt")
+    resume = get_text_resume(file="/Users/jjespinoza/Documents/jobhunter/jobhunter/resumes/resume.txt")
 
     pagination = 1
 
@@ -137,6 +138,10 @@ def jobs_analysis(search_term, location, min_salary, minsim):
                     "------------------------------------ Analyzing Job ------------------------------------"
                 )
 
+                #TODO: check that the job we are searching for isn't already in our database
+                # check if the job_url is in the database
+                
+            
                 job_url = job["job_url"]
                 job["job_description"] = get_text_in_url(
                     url=job_url
@@ -180,7 +185,6 @@ def jobs_analysis(search_term, location, min_salary, minsim):
                             logging.info("ignore job with low salary")
                 else:
                     logging.info("low job similarity, ignoring")
-
             pagination = pagination + 1
 
         return jobs_analysis
