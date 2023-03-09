@@ -21,6 +21,8 @@ setup(
         "pylint",
         "pytest-cov",
         "pytest-cov",
+        "PyPDF2",
+        "python-docx",
         "requests-oauthlib",
         "scipy",
         "scikit-learn",

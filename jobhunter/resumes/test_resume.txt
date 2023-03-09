@@ -1,0 +1,136 @@
+jj.espinoza.la@gmail.com
+Interview
+JJ Espinoza
+Website
+323-333-0336
+Linkedin
+Machine Learning T echnical Lead
+Amazon W eb Services (A WS)
+2020 - Present
+●
+Major achievement:
+Led 5-year roadmap development
+with stakeholders, securing multimillion dollar initiative. 
+●
+Enabled growth of successful data practice through coaching, mentorship, and technical review of junior staf f. 
+●
+Mentored junior staf f, improving ML  solutions and fostering a positive team culture through hiring and promotion documentation. 
+●
+Advised on innovative tech like MLOps, chatGPT , computer vision, and NLP , leveraging ML  and Solutions Architect certifications. 
+●
+Skills: T echnical leadership, T eam mentorship, Machine Learning Expertise, Innovative T echnology
+Founder and Chief T echnology Officer (CT O)
+PropertyBot
+2018 - 2022
+●
+Major achievement: Built and led remote team for patented iBuying system, scaling PropertyBot with developers and V As. 
+●
+Raised investment funds by presenting a compelling AI vision and strategy for real estate investing to investors. 
+●
+Personally designed and coded a patented AI system on Google Cloud using Python, earning a U.S. patent. 
+●
+Leveraged patented AI technology to acquire and profitably flip rental properties, delivering consistently successful investment outcomes. 
+●
+Skills: T eam Leadership, Fundraising, AI Development, Patent Innovation, Real Estate Investing
+Lead, Data Scientist (Marketing)
+Facebook
+2019 - 2020
+●
+Major achievement: Led the senior team of 10+ marketing scientists, providing thought leadership on MMM and MT A modeling. 
+●
+Represented Facebook as Marketing Scientist SME, advising on experimentation best practices, delivering 20%+ ROI.
+●
+Created scalable data pipelines with Airflow , analyzing data for 10+ colleagues, driving millions in profits for automotive clients. 
+●
+Skills: Thought Leadership, Marketing Analytics, Data Pipelines, ROI Optimization, Experimentation
+Director of Data Science and Machine Learning
+20th Century Fox
+2017 - 2019
+●
+Major achievement: Co-founded theatrical data science team, scaling to 5+ data scientists, engineers, and cloud architects.
+●
+Enhanced marketing models for moviegoer targeting resulting in revenue upside for 20th Century Fox.
+●
+Developed innovative ML  system leading to 5 technical papers, Google Cloud Blog post, and industry recognition. 
+●
+Skills:  Cloud Architecture, Data Science Leadership, Machine Learning Development, Marketing Analytics
+Director , Advanced Analtytics
+NBCUniversal
+2016 - 2017
+●
+Major achievement: Hired data scientists and engineers, resulting in enhanced insights for senior executives.
+●
+Managed budget and team to create econometrics that revolutionized international film distribution and marketing.
+●
+Hands-on coach developing econometrics and ML  model to drive innovation, motivation, and engagement. 
+●
+Skills: T eam Management, Econometrics, Data Science, Data Engineering, Business Analysis, Machine Learning
+Manager of Marketing Analytics and Data Science
+Disney
+2012 - 2015
+●
+Major achievement: Built high-performing team by hiring top data scientists and collaborating with other hiring managers. 
+●
+Led overseas team to develop innovative and robust machine learning models for executive facing data products.
+●
+Demonstrated great collaboration and cross-functional partnership while operating complex econometric and optimization models. 
+●
+Skills: T eam Management, MMM/MT A Modeling, Cross-functional Collaboration, Machine Learning, Econometrics
+Econometrician
+EconOne Research
+2011 - 2012
+●
+Major achievement:
+Led data engineering and economic
+analysis for major antitrust lawsuit, resulting in $400M settlement. 
+●
+Employed econometrics to quantify impact of pricing, costs, demand, and supply factors on airline ticket prices. 
+●
+Skills: Data Engineering, Econometrics, Economic Analysis, Regression Analysis, T ime-Series Analysis
+Executive Education, L.E.A.D.
+:
+decision analysis,
+persuasion, finance, design thinking, strategy 
+Executive Education, AI Strategy:
+building AI organizations,
+enterprise data architecture
+M.S. Econometrics:
+time series, mathematical economics,
+game theory , econometrics 
+B.S. Mathematics:
+programming, probability , statistics,
+calculus, optimization, probability , physics 
+B.A. Economics:
+linear programming, operations research,
+microecoonomics, mathematical economics
+Solutions Architect
+,
+ML Specialist
+:
+computer , storage,
+ML models, MLOps, AI services 
+DE and ML  on GCP
+,
+ML Fundamendals
+:
+AI engineering,
+MLOps, serverless SQL 
+Executive Data Science
+: Building Data Science teams,
+Managing Data Analysis
+Stanford Business School
+Harvard Business School
+CSUF
+UCLA
+UCLA
+AWS Cloud Certificates
+Google Cloud Certificates
+Johns Hopkins (Coursera)
+Books:
+Python APIs
+Technical Papers
+Speaker:
+Harvard, UCLA, USC
+AI APIs:
+written in Python
+20+ Manager, Direct Report, Colleague Recommendations
