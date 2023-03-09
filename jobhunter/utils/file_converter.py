@@ -1,5 +1,7 @@
 import PyPDF2
 import docx
+import os
+import argparse
 
 def convert_to_txt(filepath, output_dir):
     """Converts a pdf or word file to plain text format and saves it in a different location.
@@ -30,16 +32,19 @@ def convert_to_txt(filepath, output_dir):
             text += para.text + '\n'
 
     # Save the plain text to a file in the output directory
-    output_filepath = f"{output_dir}/{filepath.split('/')[-1].split('.')[0]}.txt"
+    os.makedirs(output_dir, exist_ok=True)
+    output_filepath = os.path.join(output_dir, 'resume.txt')
     with open(output_filepath, 'w', encoding='utf-8') as txt_file:
         txt_file.write(text)
 
     return output_filepath
 
 
+if __name__ == "__main__": 
+    parser = argparse.ArgumentParser(description='Convert a pdf or word file to plain text format')
+    parser.add_argument('input_file', help='The file path of the input file')
+    parser.add_argument('-o', '--output_dir', help='The directory path where the output file will be saved', default='../resumes')
+    args = parser.parse_args()
 
-
-input_filepath = '/Users/jjespinoza/Downloads/test_resume.pdf'
-output_dir = '../resumes'
-output_filepath = convert_to_txt(input_filepath, output_dir)
-print(f"The plain text file is saved at {output_filepath}")
+    output_filepath = convert_to_txt(args.input_file, args.output_dir)
+    print(f"The plain text file is saved at {output_filepath}")
