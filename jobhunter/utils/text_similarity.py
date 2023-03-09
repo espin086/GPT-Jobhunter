@@ -3,9 +3,8 @@ import argparse
 import pprint
 import nltk
 from nltk.corpus import stopwords
-from sklearn.feature_extraction.text import TfidfVectorizer
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from sklearn.metrics.pairwise import cosine_similarity
-
 
 logging.basicConfig(level=logging.INFO)
 pp = pprint.PrettyPrinter(indent=4)
@@ -14,27 +13,39 @@ nltk.download("stopwords")
 nltk.download("punkt")
 stop_words = set(stopwords.words("english"))
 
-
 def preprocess_text(text):
     """
     This function preprocesses the input text by converting to lower case, removing stop words and punctuation, and
-    tokenizing the text.
+    tokenizing the text into sentences.
 
     Args:
     text (str): The text to preprocess.
 
     Returns:
-    str: The preprocessed text.
+    list: A list of sentences in the preprocessed text.
     """
-    tokens = nltk.word_tokenize(text.lower())
-    words = [word for word in tokens if word.isalnum() and word not in stop_words]
-    return " ".join(words)
+    sentences = nltk.sent_tokenize(text.lower())
+    return [nltk.word_tokenize(sentence) for sentence in sentences if sentence not in stop_words]
+
+def generate_doc2vec(sentences):
+    """
+    This function generates doc2vec vectors for each sentence in the input list.
+
+    Args:
+    sentences (list): A list of sentences.
+
+    Returns:
+    list: A list of doc2vec vectors for each sentence.
+    """
+    documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(sentences)]
+    model = Doc2Vec(documents, vector_size=100, window=5, min_count=1, workers=4)
+    return [model.infer_vector(doc) for doc in documents]
 
 
 def text_similarity(text1, text2):
     """
     This function calculates the similarity between two pieces of text using the cosine similarity between their
-    preprocessed representations. It takes in two strings, text1 and text2, as input and returns a dictionary
+    doc2vec representations. It takes in two strings, text1 and text2, as input and returns a dictionary
     containing the similarity score.
 
     Args:
@@ -52,15 +63,17 @@ def text_similarity(text1, text2):
         text1_preprocessed = preprocess_text(text1)
         text2_preprocessed = preprocess_text(text2)
 
-        vectorizer = TfidfVectorizer()
-        vectors = vectorizer.fit_transform([text1_preprocessed, text2_preprocessed])
-        similarity_score = cosine_similarity(vectors)[0][1]
+        documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(text1_preprocessed + text2_preprocessed)]
+        model = Doc2Vec(documents, vector_size=50, window=2, min_count=1, workers=4, epochs=100)
+        text1_vec = model.infer_vector(text1_preprocessed[0])
+        text2_vec = model.infer_vector(text2_preprocessed[0])
+        similarity_score = cosine_similarity([text1_vec], [text2_vec])[0][0]
 
         similarity = {}
         similarity["similarity"] = similarity_score
         logging.info("Text similarity calculated")
 
-        return float(similarity_score)
+        return similarity_score
     except Exception as e:
         logging.error(f"An error occurred while calculating the text similarity: {e}")
 
