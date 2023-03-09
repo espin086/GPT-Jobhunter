@@ -22,6 +22,7 @@ def menu():
             file_path = input("Enter the path to your resume file: ")
             if os.path.exists(file_path):
                 os.system(f"python3 ../jobhunter/utils/file_converter.py {file_path}")
+                os.system(f"python3 ../jobhunter/utils/job_title_generator.py --resume_file /Users/jjespinoza/Documents/jobhunter/jobhunter/resumes/resume.txt ")
             else:
                 print("Invalid file path. Please try again.")
 
