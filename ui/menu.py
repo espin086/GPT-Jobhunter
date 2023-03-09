@@ -10,7 +10,7 @@ def menu():
         print("╠══════════════════════════════╣")
         print("║    0. Set Up                 ║")
         print("║    1. Upload Resume          ║")
-        print("║    2. Search Jobs            ║")
+        print("║    2. Find Jobs              ║")
         print("║    3. View Saved Jobs        ║")
         print("║    q. Quit                   ║")
         print("╚══════════════════════════════╝")
@@ -32,14 +32,14 @@ def menu():
 
         elif choice == '2':
             os.system(f"python3 ../jobhunter/run_linkedin_bot.py > /dev/null 2>&1 &")
-            print("JOBHUNTER: Slaving away to find you the perfect job... take a coffee break, we'll be done in 10!")
+            print("JOBHUNTER: Slaving away to find you the perfect job... take a coffee break, we'll be done in 15!")
             time.sleep(60)
             print("JOBHUNTER: We're using our top secret AI tech to match you with your dream job...hope you're ready to impress your future boss!")
             time.sleep(120)
             print("JOBHUNTER: We'll even figure out how to get you paid what you deserve...because let's face it, you're worth it!")
             time.sleep(180)
-            print("JOBHUNTER: Just a heads up, we're putting the final touches on your job matches... only 4 more minutes to go! Better start stretching those fingers for all the job applications you'll be filling out soon ;)")
-            time.sleep(240)
+            print("JOBHUNTER: Just a heads up, we're putting the final touches on your job matches... only 9 more minutes to go! Better start stretching those fingers for all the job applications you'll be filling out soon ;)")
+            time.sleep(540)
             print("JOBHUNER: Ta-da! We've worked our magic and found you some amazing job matches. Hit enter 3 and let's check them out!")
 
             os.system(f"python3 ../jobhunter/utils/database.py")
