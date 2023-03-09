@@ -9,12 +9,11 @@ def get_latest_jobs():
 
     # execute the query
     c.execute("""SELECT DISTINCT date, resume_sim, title, company_name, salary_max, job_url
-    FROM jobs 
-    WHERE date = (
-        SELECT MAX(date) FROM jobs
-    )
-    ORDER BY CAST(resume_sim as float) DESC
-    LIMIT 30
+FROM jobs 
+WHERE date BETWEEN strftime('%Y-%m-%d', (SELECT MAX(date) FROM jobs), '-14 day') AND (SELECT MAX(date) FROM jobs)
+ORDER BY CAST(resume_sim as float) DESC
+LIMIT 30;
+
     """
     )
 
