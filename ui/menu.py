@@ -1,3 +1,5 @@
+import os
+
 def menu():
     while True:
         print("╔══════════════════════════════╗")
@@ -17,6 +19,16 @@ def menu():
             pass
         elif choice == '2':
             # Do upload resume
+            file_path = input("Enter the path to your resume file: ")
+            if os.path.exists(file_path):
+                os.system(f"python3 ../jobhunter/utils/file_converter.py {file_path}")
+            else:
+                print("Invalid file path. Please try again.")
+
+
+
+
+
             pass
         elif choice == '3':
             # Do view saved jobs
