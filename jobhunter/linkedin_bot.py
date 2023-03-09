@@ -32,7 +32,7 @@ pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.INFO)
 
 
-with open("config.yaml") as f:
+with open("/Users/jjespinoza/Documents/jobhunter/jobhunter/config.yaml") as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
 
 bucket_name = data["dev"]["bucket"]
@@ -119,7 +119,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
 
     list: A list of dictionaries, each containing a job's title, URL, description, and resume similarity score.
     """
-    resume = get_text_resume(file="resumes/resume.txt")
+    resume = get_text_resume(file="/Users/jjespinoza/Documents/jobhunter/jobhunter/resumes/resume.txt")
 
     pagination = 1
 

@@ -1,7 +1,7 @@
 import sqlite3
 
 # Create a connection to the database
-conn = sqlite3.connect('../../data/jobhunter.db')
+conn = sqlite3.connect('/Users/jjespinoza/Documents/jobhunter/data/jobhunter.db')
 
 # Create a cursor object to execute SQL commands
 c = conn.cursor()
