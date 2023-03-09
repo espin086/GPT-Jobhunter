@@ -140,3 +140,4 @@ dags/py_env/
 dags/webserver_config.py
 dags/logs/
 data/temp/*
+data/*.db
