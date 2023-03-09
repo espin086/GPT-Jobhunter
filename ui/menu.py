@@ -8,6 +8,7 @@ def menu():
         print("║         Job Hunter           ║")
         print("║     Find Your Dream Job      ║")
         print("╠══════════════════════════════╣")
+        print("║    0. Set Up                 ║")
         print("║    1. Upload Resume          ║")
         print("║    2. Search Jobs            ║")
         print("║    3. View Saved Jobs        ║")
@@ -16,8 +17,10 @@ def menu():
 
         choice = input("Enter your choice: ")
 
-
-        if choice == '1':
+        if choice == '0':
+            os.system(f"python3 ../jobhunter/utils/envconfig.py")
+        
+        elif choice == '1':
             # Do upload resume
             file_path = input("Enter the path to your resume file: ")
             if os.path.exists(file_path):
