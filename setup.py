@@ -16,6 +16,7 @@ setup(
         "certifi",
         "nltk",
         "numpy",
+        "openai",
         "pyyaml",
         "pandas",
         "pylint",
