@@ -14,6 +14,7 @@ setup(
         "brotlipy",
         "bs4",
         "certifi",
+        "gensim",
         "nltk",
         "numpy",
         "openai",
