@@ -1,5 +1,6 @@
 import os
 import re
+import time
 
 def menu():
     while True:
@@ -28,9 +29,19 @@ def menu():
 
         elif choice == '2':
             os.system(f"python3 ../jobhunter/run_linkedin_bot.py > /dev/null 2>&1 &")
-            print("INFO: getting jobs for you...come back in 10 mins and check your saved jobs!")
+            print("JOBHUNTER: Slaving away to find you the perfect job... take a coffee break, we'll be done in 10!")
+            time.sleep(60)
+            print("JOBHUNTER: We're using our top secret AI tech to match you with your dream job...hope you're ready to impress your future boss!")
+            time.sleep(120)
+            print("JOBHUNTER: We'll even figure out how to get you paid what you deserve...because let's face it, you're worth it!")
+            time.sleep(180)
+            print("JOBHUNTER: Just a heads up, we're putting the final touches on your job matches... only 4 more minutes to go! Better start stretching those fingers for all the job applications you'll be filling out soon ;)")
+            time.sleep(240)
+            print("JOBHUNER: Ta-da! We've worked our magic and found you some amazing job matches. Hit enter 3 and let's check them out!")
+
             os.system(f"python3 ../jobhunter/utils/database.py")
             os.system(f"python3 ../jobhunter/utils/clean_data_loader.py")
+            print("INFO: all done! Checkout your matching jobs by pressing entering 3!")
             pass
         
         elif choice == '3':
