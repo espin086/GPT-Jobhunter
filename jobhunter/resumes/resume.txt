@@ -1,62 +1,137 @@
-Head of AI/ML, 
-	* Major achievement: Designed and executed $15 million worth of ML projects to provide top-notch cloud consulting services.
-* Implemented AI/ML-powered tools for Hollywood studios, delivering $2 million in cost savings and streamlining diversity initiatives.
-* Provided exceptional leadership to junior technical staff, guiding them to improve ML solutions and contribute to a positive team culture.
-* Utilized Python, SQL, CDK, Step Functions, Lambda for ML ops to execute AI projects, delivering advanced cloud consulting services.
-* Skills: executive comm, Staff development, ML Solutions Architect, thought leader, AWS Architecture, MLOps
-Founder and CEO 
-	PropertyBot
-	2018 - 2022
-	* Major achievement: Improved AI tech and processes with MLOps, leading to a patented accurate cost estimating system.
-* Entrepreneur and founder of a technology start-up utilizing patented AI technology to accurately estimate rehab costs.
-* Developed scalable custom computer vision using AWS Rekognition and API-based pipelines to deliver accurate rehab cost estimates.
-* Acquired and managed a portfolio of rentals and flips using patented AI technology, resulting in successful investment outcomes.
-* Skills: design thinking, decision analysis, MLOps, financing, capital budgeting, sales, talent acquisition
-Lead, Marketing Scientist 
-	Facebook
-	2019 - 2020
-	* Major achievement: Implemented MLOps, data engineering for Toyota, 1.5x increased effectiveness, generated millions.
-* Developed custom analysis tools for Toyota resulting in 1.5x increase in marketing effectiveness, resulting in millions of dollars in profit for Toyota and revenue for Facebook using Python and SQL. Scaled analysis to the entire automotive industry.
-* Provided clear and impactful presentations of marketing analysis results, effectively communicating insights to stakeholders.
-* Skills: ROI optimization, custom analysis tool development, SQL, effective communication and presentation
-Director, Cloud Machine Learning Services 
-	20th Century Fox
-	2017 - 2019
-	* Major achievement: Established high-calibre ML team through industry connections, leading to successful creation of published and profitable ML ops system with advanced Google Cloud CV and NLP technology.
-* Brought in new high-calibre ML talent through established industry connections, contributing to the growth and success of the team.
-* Developed machine learning pipeline using Google Cloud, CV and NLP for movie attendance analysis.
-* Skills:  thought leader, Airflow, Linux, keynote speaker, Google Cloud, NLP, Computer Vision, AWS Cloud, SQL
-Director, Business Analtytics & Research
-	NBCUniversal
-	2016 - 2017
-	* Major achievement: Implemented econometric modeling and supervised team of data scientists to build and deploy machine learning models in the cloud, resulting in a 27% improvement in operations and optimized budget management.
-* Led successful department migration to cloud resulting in 35% cost savings and 4x ROI for NBCUniversal over 1 year.
-* Led and mentored data scientists, resulting in improved team performance through performance reviews, promotions, and coaching.
-* Skills: Mentorship, machine learning model deployment, staff development, cloud infrastructure (AWS, GCP)
-Manager, Operations Research & Econometrics
-	Disney
-	2012 - 2015
-	* Major achievement: Led econometric digital attribution model resulting in 21% profit increase during TV show launches.
-* Led marketing modeling, mentored staff and collaborated with data engineering teams to advise executives at Disney.
-* Skills: SAS statistical analysis, econometric modeling, executive level communication, project management methodologies
-SAS Software Programmer/Analyst 
-	EconOne Research
-	2011 - 2012
-	* Major achievement: Wrote high-quality, efficient code for large-scale anti-trust lawsuits resulting in a $400 million settlement.
-* Led data cleaning and preparation for anti-trust litigation, ensured data quality through code reviews and documentation.
-* Skills: data wrangling, data transformation, data quality control, data exploration, data visualization for communication________________
-Executive Education, L.E.A.D.: decision analysis, persuasion, finance, design thinking, strategy
-Executive Education, AI Strategy: building AI organizations, enterprise data architecture
-M.S. Econometrics: time series, mathematical economics, game theory, econometrics
-B.S. Mathematics: programming, probability, statistics, calculus, optimization, probability, physics
-B.A. Economics: linear programming, operations research, microecoonomics, mathematical economics
-
-Solutions Architect, ML Specialist: computer, storage, ML models, MLOps, AI services
-DE and ML on GCP, ML Fundamendals: AI engineering, MLOps, serverless SQL
-ence Specialization: ML, R Programming, Data,  Products, Regression
-	Stanford Businl
-
+jj.espinoza.la@gmail.com
+Interview
+JJ Espinoza
+Website
+323-333-0336
+Linkedin
+Machine Learning T echnical Lead
+Amazon W eb Services (A WS)
+2020 - 2023
+●
+Major achievement:
+Led 5-year roadmap development
+with stakeholders, securing multimillion dollar initiative. 
+●
+Enabled growth of successful data practice through coaching, mentorship, and technical review of junior staf f. 
+●
+Mentored junior staf f, improving ML  solutions and fostering a positive team culture through hiring and promotion documentation. 
+●
+Advised on innovative tech like MLOps, chatGPT , computer vision, and NLP , leveraging ML  and Solutions Architect certifications. 
+●
+Skills: T echnical leadership, T eam mentorship, Machine Learning Expertise, Innovative T echnology
+Founder and Chief T echnology Officer (CT O)
+PropertyBot
+2018 - 2022
+●
+Major achievement: Built and led remote team for patented iBuying system, scaling PropertyBot with developers and V As. 
+●
+Raised investment funds by presenting a compelling AI vision and strategy for real estate investing to investors. 
+●
+Personally designed and coded a patented AI system on Google Cloud using Python, earning a U.S. patent. 
+●
+Leveraged patented AI technology to acquire and profitably flip rental properties, delivering consistently successful investment outcomes. 
+●
+Skills: T eam Leadership, Fundraising, AI Development, Patent Innovation, Real Estate Investing
+Lead, Data Scientist (Marketing)
+Facebook
+2019 - 2020
+●
+Major achievement: Led the senior team of 10+ marketing scientists, providing thought leadership on MMM and MT A modeling. 
+●
+Represented Facebook as Marketing Scientist SME, advising on experimentation best practices, delivering 20%+ ROI.
+●
+Created scalable data pipelines with Airflow , analyzing data for 10+ colleagues, driving millions in profits for automotive clients. 
+●
+Skills: Thought Leadership, Marketing Analytics, Data Pipelines, ROI Optimization, Experimentation
+Director of Data Science and Machine Learning
+20th Century Fox
+2017 - 2019
+●
+Major achievement: Co-founded theatrical data science team, scaling to 5+ data scientists, engineers, and cloud architects.
+●
+Enhanced marketing models for moviegoer targeting resulting in revenue upside for 20th Century Fox.
+●
+Developed innovative ML  system leading to 5 technical papers, Google Cloud Blog post, and industry recognition. 
+●
+Skills:  Cloud Architecture, Data Science Leadership, Machine Learning Development, Marketing Analytics
+Director , Advanced Analtytics
+NBCUniversal
+2016 - 2017
+●
+Major achievement: Hired data scientists and engineers, resulting in enhanced insights for senior executives.
+●
+Managed budget and team to create econometrics that revolutionized international film distribution and marketing.
+●
+Hands-on coach developing econometrics and ML  model to drive innovation, motivation, and engagement. 
+●
+Skills: T eam Management, Econometrics, Data Science, Data Engineering, Business Analysis, Machine Learning
+Manager of Marketing Analytics and Data Science
+Disney
+2012 - 2015
+●
+Major achievement: Built high-performing team by hiring top data scientists and collaborating with other hiring managers. 
+●
+Led overseas team to develop innovative and robust machine learning models for executive facing data products.
+●
+Demonstrated great collaboration and cross-functional partnership while operating complex econometric and optimization models. 
+●
+Skills: T eam Management, MMM/MT A Modeling, Cross-functional Collaboration, Machine Learning, Econometrics
+Econometrician
+EconOne Research
+2011 - 2012
+●
+Major achievement:
+Led data engineering and economic
+analysis for major antitrust lawsuit, resulting in $400M settlement. 
+●
+Employed econometrics to quantify impact of pricing, costs, demand, and supply factors on airline ticket prices. 
+●
+Skills: Data Engineering, Econometrics, Economic Analysis, Regression Analysis, T ime-Series Analysis
+www
+Executive Education, L.E.A.D.
+:
+decision analysis,
+persuasion, finance, design thinking, strategy 
+Executive Education, AI Strategy:
+building AI organizations,
+enterprise data architecture
+M.S. Econometrics:
+time series, mathematical economics,
+game theory , econometrics 
+B.S. Mathematics:
+programming, probability , statistics,
+calculus, optimization, probability , physics 
+B.A. Economics:
+linear programming, operations research,
+microecoonomics, mathematical economics
+Solutions Architect
+,
+ML Specialist
+:
+computer , storage,
+ML models, MLOps, AI services 
+DE and ML  on GCP
+,
+ML Fundamendals
+:
+AI engineering,
+MLOps, serverless SQL 
+Executive Data Science
+: Building Data Science teams,
+Managing Data Analysis
+Stanford Business School
+Harvard Business School
+CSUF
+UCLA
+UCLA
 AWS Cloud Certificates
-Google Cloud CertificatesPython APIs
-	AI APIs: written in Python
-	20+ Manager, Direct Report, Colleague Recommendations
+Google Cloud Certificates
+Johns Hopkins (Coursera)
+Books:
+Python APIs
+Technical Papers
+Speaker:
+Harvard, UCLA, USC
+AI APIs:
+written in Python
+20+ Manager, Direct Report, Colleague Recommendations

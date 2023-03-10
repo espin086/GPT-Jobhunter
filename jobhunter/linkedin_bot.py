@@ -23,16 +23,18 @@ import pprint
 import yaml
 import boto3
 import os
-from utils.search_linkedin_jobs import search_linkedin_jobs
-from utils.extract_text_from_site import get_text_in_url
-from utils.text_similarity import text_similarity
+import sqlite3
+from jobhunter.utils.search_linkedin_jobs import search_linkedin_jobs
+from jobhunter.utils.extract_text_from_site import get_text_in_url
+from jobhunter.utils.text_similarity import text_similarity
+from utils.is_url_in_jobs_table import check_url_in_db
 
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.INFO)
 
 
-with open("config.yaml") as f:
+with open("/Users/jjespinoza/Documents/jobhunter/jobhunter/config.yaml") as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
 
 bucket_name = data["dev"]["bucket"]
@@ -43,7 +45,7 @@ def save_locally(data):
     """
     Saves a list of dictionaries to a JSON file locally in the ../data/temp directory.
     """
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
     file_path = os.path.join("..", "data", "temp", f"{timestamp}.json")
     with open(file_path, "w") as f:
         json.dump(data, f)
@@ -119,7 +121,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
 
     list: A list of dictionaries, each containing a job's title, URL, description, and resume similarity score.
     """
-    resume = get_text_resume(file="resumes/resume.txt")
+    resume = get_text_resume(file="/Users/jjespinoza/Documents/jobhunter/jobhunter/resumes/resume.txt")
 
     pagination = 1
 
@@ -133,55 +135,62 @@ def jobs_analysis(search_term, location, min_salary, minsim):
             jobs_analysis = []
 
             for job in jobs:
-                time.sleep(1)
                 logging.info(
                     "------------------------------------ Analyzing Job ------------------------------------"
                 )
 
+                #TODO: check that the job we are searching for isn't already in our database
+                # check if the job_url is in the database
+                
+            
                 job_url = job["job_url"]
-                job["job_description"] = get_text_in_url(
-                    url=job_url
-                )  # scraps text from site
-                description = job["job_description"]
 
-                logging.info("calculating resume similarity")
-                job["resume_similarity"] = text_similarity(
-                    text1=resume, text2=description
-                )
-                logging.info("similarity: {}".format(job["resume_similarity"]))
+                if check_url_in_db(job_url) == False:
+                    logging.info("NEW job!!!")
+                    job["job_description"] = get_text_in_url(
+                        url=job_url
+                    )  # scraps text from site
+                    description = job["job_description"]
 
-                if job["resume_similarity"] > minsim:
-                    logging.info("high job similarity, analyzing job")
-
-                    logging.info("extracting emails and salaries")
-                    job["emails"] = re.findall(
-                        r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", description
+                    logging.info("calculating resume similarity")
+                    job["resume_similarity"] = text_similarity(
+                        text1=resume, text2=description
                     )
-                    job["salary"] = standardize_wages(
-                        re.findall(r"\$\d+[,\d+]*(?:[\.\d{2}]+)?", description)
-                    )
+                    logging.info("similarity: {}".format(job["resume_similarity"]))
 
-                    if not job["salary"]:
-                        logging.info("keeping job with no salary")
-                        logging.info("saved file to s3")
-                        save_locally(data=job)
-                        jobs_analysis.append(job)
-                        logging.debug(job)
-                        job["salary"] = 0
+                    if job["resume_similarity"] > minsim:
+                        logging.info("high job similarity, analyzing job")
 
-                    else:
-                        logging.info("analyzing salary")
-                        if max(job["salary"]) > int(min_salary):
+                        logging.info("extracting emails and salaries")
+                        job["emails"] = re.findall(
+                            r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", description
+                        )
+                        job["salary"] = standardize_wages(
+                            re.findall(r"\$\d+[,\d+]*(?:[\.\d{2}]+)?", description)
+                        )
+
+                        if not job["salary"]:
+                            logging.info("keeping job with no salary")
+                            logging.info("saved file to s3")
                             save_locally(data=job)
                             jobs_analysis.append(job)
-                            logging.info("keeping job with high salary")
-                            logging.info("saved file to s3")
                             logging.debug(job)
-                        else:
-                            logging.info("ignore job with low salary")
-                else:
-                    logging.info("low job similarity, ignoring")
+                            job["salary"] = 0
 
+                        else:
+                            logging.info("analyzing salary")
+                            if max(job["salary"]) > int(min_salary):
+                                save_locally(data=job)
+                                jobs_analysis.append(job)
+                                logging.info("keeping job with high salary")
+                                logging.info("saved file to s3")
+                                logging.debug(job)
+                            else:
+                                logging.info("ignore job with low salary")
+                    else:
+                        logging.info("low job similarity, ignoring")
+                else:
+                    logging.info("job already in database, so ignoring")
             pagination = pagination + 1
 
         return jobs_analysis
