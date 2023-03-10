@@ -11,7 +11,7 @@ import yaml
 import random
 
 
-with open("config.yaml", "r") as f:
+with open("/Users/jjespinoza/Documents/jobhunter/jobhunter/config.yaml", "r") as f:
     CONFIG = yaml.safe_load(f)
 
 # iterate over the POSITIONS and locations and run the linkedin-bot.py script
@@ -31,7 +31,7 @@ for position in POSITIONS:
         subprocess.run(
             [
                 "python3",
-                "linkedin_bot.py",
+                "/Users/jjespinoza/Documents/jobhunter/jobhunter/linkedin_bot.py",
                 position,
                 location,
                 str(MIN_SALARY),
@@ -40,7 +40,3 @@ for position in POSITIONS:
             check=True,
         )
 
-
-# send an email notification
-print("INFO: sending email")
-subprocess.run(["python3", "utils/emailer.py"], check=True)

@@ -10,8 +10,7 @@ import argparse
 import pprint
 import os
 
-import jobhunter.utils.aws_secrets_manager
-
+RAPID_API_KEY = os.getenv("RAPID_API_KEY")
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.INFO)
@@ -37,9 +36,7 @@ def search_linkedin_jobs(search_term, location, page=1):
     payload = {"search_terms": search_term, "location": location, "page": "1"}
     headers = {
         "content-type": "application/json",
-        "X-RapidAPI-Key": jobhunter.utils.aws_secrets_manager.get_secret(
-            secret_name="rapidapikey", region_name="us-west-1"
-        )["rapidapikey"],
+        "X-RapidAPI-Key": RAPID_API_KEY,
         "X-RapidAPI-Host": "linkedin-jobs-search.p.rapidapi.com",
     }
 
