@@ -131,6 +131,7 @@ def jobs_analysis(search_term, location, min_salary, minsim):
             jobs = search_linkedin_jobs(
                 search_term=search_term, location=location, page=pagination
             )
+            logging.info(f"got {pagination} job page")
 
             jobs_analysis = []
 
@@ -145,52 +146,50 @@ def jobs_analysis(search_term, location, min_salary, minsim):
             
                 job_url = job["job_url"]
 
-                if check_url_in_db(job_url) == False:
-                    logging.info("NEW job!!!")
-                    job["job_description"] = get_text_in_url(
-                        url=job_url
-                    )  # scraps text from site
-                    description = job["job_description"]
+                
+                logging.info("NEW job!!!")
+                job["job_description"] = get_text_in_url(
+                    url=job_url
+                )  # scraps text from site
+                description = job["job_description"]
 
-                    logging.info("calculating resume similarity")
-                    job["resume_similarity"] = text_similarity(
-                        text1=resume, text2=description
+                logging.info("calculating resume similarity")
+                job["resume_similarity"] = text_similarity(
+                    text1=resume, text2=description
+                )
+                logging.info("similarity: {}".format(job["resume_similarity"]))
+
+                if job["resume_similarity"] > minsim:
+                    logging.info("high job similarity, analyzing job")
+
+                    logging.info("extracting emails and salaries")
+                    job["emails"] = re.findall(
+                        r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", description
                     )
-                    logging.info("similarity: {}".format(job["resume_similarity"]))
+                    job["salary"] = standardize_wages(
+                        re.findall(r"\$\d+[,\d+]*(?:[\.\d{2}]+)?", description)
+                    )
 
-                    if job["resume_similarity"] > minsim:
-                        logging.info("high job similarity, analyzing job")
+                    if not job["salary"]:
+                        logging.info("keeping job with no salary")
+                        logging.info("saved file to s3")
+                        save_locally(data=job)
+                        jobs_analysis.append(job)
+                        logging.debug(job)
+                        job["salary"] = 0
 
-                        logging.info("extracting emails and salaries")
-                        job["emails"] = re.findall(
-                            r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", description
-                        )
-                        job["salary"] = standardize_wages(
-                            re.findall(r"\$\d+[,\d+]*(?:[\.\d{2}]+)?", description)
-                        )
-
-                        if not job["salary"]:
-                            logging.info("keeping job with no salary")
-                            logging.info("saved file to s3")
+                    else:
+                        logging.info("analyzing salary")
+                        if max(job["salary"]) > int(min_salary):
                             save_locally(data=job)
                             jobs_analysis.append(job)
+                            logging.info("keeping job with high salary")
+                            logging.info("saved file to s3")
                             logging.debug(job)
-                            job["salary"] = 0
-
                         else:
-                            logging.info("analyzing salary")
-                            if max(job["salary"]) > int(min_salary):
-                                save_locally(data=job)
-                                jobs_analysis.append(job)
-                                logging.info("keeping job with high salary")
-                                logging.info("saved file to s3")
-                                logging.debug(job)
-                            else:
-                                logging.info("ignore job with low salary")
-                    else:
-                        logging.info("low job similarity, ignoring")
+                            logging.info("ignore job with low salary")
                 else:
-                    logging.info("job already in database, so ignoring")
+                    logging.info("low job similarity, ignoring")
             pagination = pagination + 1
 
         return jobs_analysis

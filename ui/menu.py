@@ -4,17 +4,17 @@ import time
 
 def menu():
     while True:
-        print("╔══════════════════════════════╗")
-        print("║         Job Hunter           ║")
-        print("║     Find Your Dream Job      ║")
-        print("╠══════════════════════════════╣")
-        print("║    0. Set Up                 ║")
-        print("║    1. Upload Resume          ║")
-        print("║    2. Find Jobs              ║")
-        print("║    3. View Saved Jobs        ║")
-        print("║    4. Apply to Your Top Jobs ║")
-        print("║    q. Quit                   ║")
-        print("╚══════════════════════════════╝")
+        print("╔════════════════════════════════╗")
+        print("║            Job Hunter          ║")
+        print("║        Job hunt, simplified!   ║")
+        print("╠════════════════════════════════╣")
+        print("║    0. Let's get Started!       ║")
+        print("║    1. Show off Your Resume!    ║")
+        print("║    2. Hunt for Those Jobs!     ║")
+        print("║    3. Dig into your top picks! ║")
+        print("║    4. Recruiters, at top picks!║")
+        print("║    q. Quit, But Why?           ║")
+        print("╚════════════════════════════════╝")
 
         choice = input("Enter your choice: ")
 
@@ -52,10 +52,13 @@ def menu():
             # Do view saved jobs
             os.system(f"python3 ../jobhunter/utils/get_latest_jobs.py")
             pass
+
         elif choice == '4':
-            # Open up job urls
-            os.system(f"python3 ../jobhunter/utils/job_url_opener.py")
+            # Open up linkedin search for recruiters for top pics
+            os.system(f"python3 ../jobhunter/utils/linkedin_recruiter_outreach.py")
             pass
+
+
         elif choice == 'q':
             print("Exiting program...")
             break
