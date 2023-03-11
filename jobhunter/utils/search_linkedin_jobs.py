@@ -40,7 +40,7 @@ def search_linkedin_jobs(search_term, location, page=1):
         "X-RapidAPI-Host": "linkedin-jobs-search.p.rapidapi.com",
     }
 
-    logging.info(
+    logging.debug(
         "Making request to LinkedIn jobs API with search term: {}, location: {}".format(
             search_term, location
         )
