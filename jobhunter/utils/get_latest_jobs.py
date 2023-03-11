@@ -11,7 +11,7 @@ def get_latest_jobs():
     # execute the query
     c.execute("""SELECT DISTINCT date, resume_sim, title, company_name, salary_max, job_url
 FROM jobs 
-WHERE date BETWEEN strftime('%Y-%m-%d', (SELECT MAX(date) FROM jobs), '-1 day') AND (SELECT MAX(date) FROM jobs)
+WHERE date BETWEEN strftime('%Y-%m-%d', (SELECT MAX(date) FROM jobs), '-2 day') AND (SELECT MAX(date) FROM jobs)
     AND title not like '%manager%'
     AND title not like '%health%'
     AND title not like '%clinic%'
