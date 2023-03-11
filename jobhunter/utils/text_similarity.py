@@ -87,5 +87,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     result = text_similarity(text1=args.text1, text2=args.text2)
-
-    pp.pprint(result)
+    print(result)
