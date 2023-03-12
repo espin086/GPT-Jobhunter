@@ -25,7 +25,7 @@ def print_jobs_sorted(daysback, similarity_threshold):
     # set the current date
     current_date = datetime.date.today()
 
-    # set the start date (14 days ago)
+    # setting how far back to go
     start_date = current_date - datetime.timedelta(days=daysback)
     
     c = conn.cursor()
@@ -46,4 +46,4 @@ def print_jobs_sorted(daysback, similarity_threshold):
 
 if __name__ == "__main__":
     mean_similarity, median_similarity, min_similarity, max_similarity, q1_similarity, q2_similarity, q3_similarity = get_similarity_stats()
-    print_jobs_sorted(daysback=14, similarity_threshold=median_similarity)
+    print_jobs_sorted(daysback=30, similarity_threshold=median_similarity)
