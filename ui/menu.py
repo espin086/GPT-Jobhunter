@@ -32,18 +32,8 @@ def menu():
             pass
 
         elif choice == '2':
-            os.system(f"python3 ../jobhunter/run_linkedin_bot.py")
-            print("JOBHUNTER: Slaving away to find you the perfect job... take a coffee break, we'll be done in 21 mins!")
-            time.sleep(60)
-            print("JOBHUNTER: We're using our top secret AI tech to match you with your dream job...hope you're ready to impress your future boss!")
-            time.sleep(120)
-            print("JOBHUNTER: We'll even figure out how to get you paid what you deserve...because let's face it, you're worth it!")
-            time.sleep(780)
-            print("JOBHUNTER: Just a heads up, we're putting the final touches on your job matches... only 5 more minutes to go! Better start stretching those fingers for all the job applications you'll be filling out soon ;)")
-            time.sleep(300)
-            print("JOBHUNTER: Ta-da! We've worked our magic and found you some amazing job matches. Hit enter 3 and let's check them out!")
-
             os.system(f"python3 ../jobhunter/utils/database.py")
+            os.system(f"python3 ../jobhunter/run_linkedin_bot.py")
             os.system(f"python3 ../jobhunter/utils/clean_data_loader.py")
             print("INFO: all done! Checkout your matching jobs by pressing entering 3!")
             pass
