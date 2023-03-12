@@ -5,7 +5,6 @@ import datetime
 import pprint
 import os
 import yaml
-import tqdm
 from utils.search_linkedin_jobs import search_linkedin_jobs
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -15,11 +14,6 @@ logging.basicConfig(level=logging.DEBUG)
 # Open the configuration file
 with open('config.yaml', 'r') as f:
     config = yaml.safe_load(f)
-
-
-
-
-
 
 def save_raw_data(data, source):
     """
