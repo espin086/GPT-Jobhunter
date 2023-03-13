@@ -41,7 +41,7 @@ def save_jobs(search_term, location, pages):
         for item in job:
             save_raw_data(item, source="linkedinjobs")
 
-def save_all_jobs():
+def extract():
     positions = config['positions']
     locations = config['locations']
     for position in positions:
@@ -51,7 +51,7 @@ def save_all_jobs():
     pass
 
 if __name__ == "__main__": 
-    save_all_jobs()
+    extract()
 
 
 
