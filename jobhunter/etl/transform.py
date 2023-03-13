@@ -19,6 +19,8 @@ def import_job_data_from_dir(dirpath):
                     data = json.load(f)
                     if all(key in data for key in ['job_url', 'linkedin_job_url_cleaned', 'company_name', 'company_url', 'linkedin_company_url_cleaned', 'job_title', 'job_location', 'posted_date', 'normalized_company_name']):
                         data_list.append(data)
+                    else:
+                        print("WARNING: raw data schema does not conform")
                 except ValueError:
                     pass
     return data_list
@@ -227,15 +229,18 @@ def save_raw_data_list(data_list, source):
     """
     for i, data in enumerate(data_list):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-        file_path = os.path.join("..", "data", "processed", f"{source}-{i+1}-{timestamp}.json")
+        file_path = os.path.join("../../", "data", "processed", f"{source}-{i+1}-{timestamp}.json")
         with open(file_path, "w") as f:
             json.dump(data, f)
+        print(f"INFO: saved data to {file_path}")
     return None
 
 #----------main----------
-resume = read_resume_text(resume_file_path='resumes/resume.txt')
+resume = read_resume_text(resume_file_path='../resumes/resume.txt')
 
-data = import_job_data_from_dir(dirpath="../data/raw")
+
+data = import_job_data_from_dir(dirpath="../../data/raw")
+print(data)
 data = drop_variables(raw_data=data)
 data = remove_duplicates(raw_data=data)
 key_map = {

@@ -98,9 +98,9 @@ def check_and_upload_to_db(json_list):
 
     #-----------------main-------------------
 def main():
-    data = load_json_files(directory='../data/processed')
+    data = load_json_files(directory='../../data/processed')
     data = add_primary_key(json_list=data)
-    create_db_if_not_there()
+    # create_db_if_not_there()
     check_and_upload_to_db(json_list=data)
 
 if __name__ == "__main__":
