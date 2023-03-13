@@ -5,14 +5,20 @@ import datetime
 import pprint
 import os
 import yaml
-from jobhunter.utils.search_linkedin_jobs import search_linkedin_jobs
+import time
+from tqdm import tqdm
+from utils.search_linkedin_jobs import search_linkedin_jobs
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.DEBUG)
 
+FILE_PATH="/Users/jjespinoza/Documents/jobhunter"
+
+# Get the absolute path of the config file
+config_file = f"{FILE_PATH}/jobhunter/config.yaml"
 
 # Open the configuration file
-with open('../config.yaml', 'r') as f:
+with open(config_file, 'r') as f:
     config = yaml.safe_load(f)
 
 def save_raw_data(data, source):
@@ -20,15 +26,16 @@ def save_raw_data(data, source):
     Saves a list of dictionaries to a JSON file locally in the ../data/raw directory.
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-    file_path = os.path.join("../..", "data", "raw", f"{source}-{timestamp}.json")
+    file_path = os.path.join(FILE_PATH, "data", "raw", f"{source}-{timestamp}.json")
     with open(file_path, "w") as f:
         json.dump(data, f)
-    logging.info("Saved data to %s", file_path)
+    logging.debug("Saved data to %s", file_path)
     return None
 
 def get_all_jobs(search_term, location, pages):
     all_jobs = []
     for page in range(0,pages):
+        time.sleep(.1)
         jobs = search_linkedin_jobs(
                 search_term=search_term, location=location, page=page
                 )
@@ -44,9 +51,9 @@ def save_jobs(search_term, location, pages):
 def extract():
     positions = config['positions']
     locations = config['locations']
-    for position in positions:
+    for position in tqdm(positions):
         for location in locations:
-            save_jobs(search_term=position, location=location, pages=20)
+            save_jobs(search_term=position, location=location, pages=10)
 
     pass
 

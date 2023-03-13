@@ -2,28 +2,43 @@ import json
 import os
 import time
 import re
-import numpy as np
+
 import datetime
-from pathlib import Path
+from tqdm import tqdm
+
 from typing import List
-from jobhunter.utils.extract_text_from_site import get_text_in_url
-from jobhunter.utils.text_similarity import text_similarity
+from utils.extract_text_from_site import get_text_in_url
+from utils.text_similarity import text_similarity
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+
+
+FILE_PATH='/Users/jjespinoza/Documents/jobhunter/'
 
 def import_job_data_from_dir(dirpath):
-    data_list = []
-    for filename in os.listdir(dirpath):
-        if filename.startswith('linkedinjob') and filename.endswith('.json'):
-            filepath = os.path.join(dirpath, filename)
-            with open(filepath, 'r') as f:
-                try:
-                    data = json.load(f)
-                    if all(key in data for key in ['job_url', 'linkedin_job_url_cleaned', 'company_name', 'company_url', 'linkedin_company_url_cleaned', 'job_title', 'job_location', 'posted_date', 'normalized_company_name']):
-                        data_list.append(data)
-                    else:
-                        print("WARNING: raw data schema does not conform")
-                except ValueError:
-                    pass
+    data_list = [
+        json.load(open(os.path.join(dirpath, filename)))
+        for filename in os.listdir(dirpath)
+        if filename.startswith('linkedinjob') and filename.endswith('.json')
+    ]
+    data_list = [
+        data
+        for data in data_list
+        if all(key in data for key in ['job_url', 'linkedin_job_url_cleaned', 'company_name', 'company_url', 'linkedin_company_url_cleaned', 'job_title', 'job_location', 'posted_date', 'normalized_company_name'])
+    ]
+    invalid_files = [
+        filename
+        for filename in os.listdir(dirpath)
+        if filename.startswith('linkedinjob') and filename.endswith('.json')
+        and os.path.join(dirpath, filename) not in [os.path.join(dirpath, data.get('filename', '')) for data in data_list]
+    ]
+    for filename in invalid_files:
+        logging.warning("WARNING: raw data schema does not conform in file {}".format(filename))
+    logging.info(f"INFO: here is the data_list: {data_list}")
     return data_list
+
 
 def delete_json_keys(json_obj, *keys):
     # Loop through the keys to delete and remove them from the JSON object
@@ -41,13 +56,10 @@ def drop_variables(raw_data):
     return clean_data
 
 def remove_duplicates(raw_data):
-    try: 
-        tuples = [tuple(d.items()) for d in data]
-        unique_tuples = set(tuples)
-        unique_dicts = [dict(t) for t in unique_tuples]
-        return unique_dicts
-    except NameError as e:
-        return f"Error: {e}. Please make sure you are passing a list of dictionaries to the function."
+    tuples = [tuple(d.items()) for d in raw_data]
+    unique_tuples = set(tuples)
+    unique_dicts = [dict(t) for t in unique_tuples]
+    return unique_dicts
     
 
 
@@ -62,31 +74,30 @@ def rename_keys(json_list, key_map):
     Returns:
         list: A list of dictionaries with renamed keys.
     """
-    try: 
-        # Create a new list to hold the renamed dictionaries
-        renamed_list = []
+    
+    # Create a new list to hold the renamed dictionaries
+    renamed_list = []
 
-        # Iterate over each dictionary in the list
-        for dictionary in json_list:
-            # Create a new dictionary to hold the renamed key-value pairs
-            renamed_dict = {}
+    # Iterate over each dictionary in the list
+    for dictionary in json_list:
+        # Create a new dictionary to hold the renamed key-value pairs
+        renamed_dict = {}
 
-            # Iterate over each key-value pair in the dictionary
-            for key, value in dictionary.items():
-                # If the key is in the key map, rename it and add it to the renamed dictionary
-                if key in key_map:
-                    renamed_dict[key_map[key]] = value
-                # Otherwise, add the original key-value pair to the renamed dictionary
-                else:
-                    renamed_dict[key] = value
+        # Iterate over each key-value pair in the dictionary
+        for key, value in dictionary.items():
+            # If the key is in the key map, rename it and add it to the renamed dictionary
+            if key in key_map:
+                renamed_dict[key_map[key]] = value
+            # Otherwise, add the original key-value pair to the renamed dictionary
+            else:
+                renamed_dict[key] = value
 
-            # Add the renamed dictionary to the renamed list
-            renamed_list.append(renamed_dict)
+        # Add the renamed dictionary to the renamed list
+        renamed_list.append(renamed_dict)
 
-        # Return the renamed list
-        return renamed_list
-    except AttributeError as e:
-        return f"Error: {e}. Please make sure you are passing a list of dictionaries to the function."
+    # Return the renamed list
+    return renamed_list
+    
 
 def convert_keys_to_lowercase(json_list, *keys):
     for obj in json_list:
@@ -103,24 +114,21 @@ def add_description_to_json_list(json_list):
     the output of the function and saves it to each item in the JSON list as the key
     'description'.
     """
-    try:
-        for item in json_list:
-            job_url = item.get('job_url')
-            if job_url:
-                time.sleep(.25)
-                try:
-                    description = get_text_in_url(job_url)
-                    item['description'] = description
-                except:
-                    item['description'] = ''
-
-            else:
+    logging.info("gathering jobs from the web")
+    for item in tqdm(json_list):
+        job_url = item.get('job_url')
+        if job_url:
+            try:
+                description = get_text_in_url(job_url)
+                item['description'] = description
+            except:
                 item['description'] = ''
-                
-        return json_list
-    except AttributeError as e:
-        return f"Error: {e}. Please make sure you are passing a list of dictionaries to the function."
 
+        else:
+            item['description'] = ''
+            
+    return json_list
+    
 
 
 
@@ -153,40 +161,34 @@ def extract_salary(text):
     return salary_low, salary_high
 
 def extract_salaries(json_list):
-    try:
-        # Create a new list to store the modified JSON dictionaries
-        new_json_list = []
+    # Create a new list to store the modified JSON dictionaries
+    new_json_list = []
+    
+    for json_dict in json_list:
+        # Extract the description from the current dictionary
+        description = json_dict['description']
         
-        for json_dict in json_list:
-            # Extract the description from the current dictionary
-            description = json_dict['description']
-            
-            # Use the extract_salary() function to extract the salary information
-            salary_low, salary_high = extract_salary(description)
+        # Use the extract_salary() function to extract the salary information
+        salary_low, salary_high = extract_salary(description)
 
-            if salary_low is not None:
-                salary_low = float(salary_low)
-            else:
-                salary_low = None
+        if salary_low is not None:
+            salary_low = float(salary_low)
+        else:
+            salary_low = None
 
-            if salary_high is not None:
-                salary_high = float(salary_high)
-            else:
-                salary_high = None
-            
-            # Add the salary information to the dictionary
-            json_dict['salary_low'] = salary_low
-            json_dict['salary_high'] = salary_high
-            
-            # Add the modified dictionary to the new list
-            new_json_list.append(json_dict)
+        if salary_high is not None:
+            salary_high = float(salary_high)
+        else:
+            salary_high = None
         
-        return new_json_list
-    except AttributeError as e:
-        return f"Error: {e}. Please make sure you are passing a list of dictionaries to the function." 
-    except TypeError as e:
-        return "Error: Please make sure you are passing a list of dictionaries to the function, and that each dictionary has a 'description' key."
-
+        # Add the salary information to the dictionary
+        json_dict['salary_low'] = salary_low
+        json_dict['salary_high'] = salary_high
+        
+        # Add the modified dictionary to the new list
+        new_json_list.append(json_dict)
+    
+    return new_json_list
 
 
 def read_resume_text(resume_file_path):
@@ -215,20 +217,19 @@ def compute_resume_similarity(json_list, resume_text):
     Returns:
         A new list of JSONs, each of which has a 'resume_similarity' field added.
     """
-    try:
-        new_json_list = []
-        for json_obj in json_list:
-            description = json_obj.get('description')
-            similarity = text_similarity(description, resume_text)
-            if similarity is not None:
-                similarity = float(similarity)
-            else:
-                similarity = None
-            json_obj['resume_similarity'] = similarity
-            new_json_list.append(json_obj)
-        return new_json_list
-    except AttributeError as e:
-        return "Error: Please make sure you are passing a list of dictionaries to the function, and that each dictionary has a 'description' key."
+    
+    new_json_list = []
+    for json_obj in tqdm(json_list):
+        description = json_obj.get('description')
+        similarity = text_similarity(description, resume_text)
+        if similarity is not None:
+            similarity = float(similarity)
+        else:
+            similarity = None
+        json_obj['resume_similarity'] = similarity
+        new_json_list.append(json_obj)
+    return new_json_list
+    
 
 
 
@@ -248,14 +249,10 @@ def save_raw_data_list(data_list, source):
     Saves a list of dictionaries to individual JSON files locally in the ../data/raw directory.
     """
     required_keys = ['job_url', 'title', 'company_url', 'location', 'date', 'company', 'description', 'salary_low', 'salary_high', 'resume_similarity']
-
     for i, data in enumerate(data_list):
         # Check if the data contains all the required keys
-        if not all(key in data for key in required_keys):
-            raise ValueError(f"Data at index {i} is missing one or more required keys: {required_keys}")
-        
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-        file_path = os.path.join("../../", "data", "processed", f"{source}-{i+1}-{timestamp}.json")
+        file_path = os.path.join(FILE_PATH, "data", "processed", f"{source}-{i+1}-{timestamp}.json")
         with open(file_path, "w") as f:
             json.dump(data, f)
         print(f"INFO: saved data to {file_path}")
@@ -263,8 +260,8 @@ def save_raw_data_list(data_list, source):
 
 #----------main----------
 def transform():
-    resume = read_resume_text(resume_file_path='../resumes/resume.txt')
-    data = import_job_data_from_dir(dirpath="../../data/raw")
+    resume = read_resume_text(resume_file_path=f"{FILE_PATH}/jobhunter/resumes/resume.txt")
+    data = import_job_data_from_dir(dirpath=f"{FILE_PATH}" + "data/raw")
     data = drop_variables(raw_data=data)
     data = remove_duplicates(raw_data=data)
     key_map = {
