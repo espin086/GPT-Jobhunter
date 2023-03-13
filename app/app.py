@@ -45,7 +45,7 @@ def menu():
 
         elif choice == '4':
             # Open up linkedin search for recruiters for top pics
-            os.system(f"python3 ../jobhunter/utils/linkedin_recruiter_outreach.py")
+            os.system(f"python3 jobhunter/utils/linkedin_recruiter_outreach.py")
             pass
 
 
