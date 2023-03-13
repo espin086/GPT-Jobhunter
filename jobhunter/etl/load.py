@@ -2,6 +2,7 @@ import sqlite3
 import os
 import json
 
+FILE_PATH = '/Users/jjespinoza/Documents/jobhunter'
 
 def load_json_files(directory):
     """
@@ -27,7 +28,7 @@ def load_json_files(directory):
 def create_db_if_not_there():
 
     # Create a connection to the database
-    conn = sqlite3.connect('/Users/jjespinoza/Documents/jobhunter/data/jobhunter.db')
+    conn = sqlite3.connect(f'{FILE_PATH}/database/jobhunter.db')
 
     # Create a cursor object to execute SQL commands
     c = conn.cursor()
@@ -56,34 +57,25 @@ def create_db_if_not_there():
 
 def add_primary_key(json_list):
     for item in json_list:
-        company = item.get("company", "")
-        title = item.get("title", "")
-        primary_key = f"{company} - {title}"
-        item["primary_key"] = primary_key
+        try:
+            company = item.get("company", "")
+            title = item.get("title", "")
+            primary_key = f"{company} - {title}"
+            item["primary_key"] = primary_key
+        except AttributeError as e:
+            print(f"ERROR: {e} occurred while processing {item}. Skipping item.")
+        
     return json_list
 
 
 
 def check_and_upload_to_db(json_list):
-    conn = sqlite3.connect('/Users/jjespinoza/Documents/jobhunter/data/jobhunter.db')
+    conn = sqlite3.connect(f'{FILE_PATH}/database/jobhunter.db')
     c = conn.cursor()
 
-    # Check if there are any records in the table
-    c.execute("SELECT COUNT(*) FROM jobs")
-    count = c.fetchone()[0]
-
-    if count == 0:
-        # Load the first record from the JSON list
-        item = json_list[0]
-        primary_key = item.get("primary_key", "")
-        c.execute("INSERT INTO jobs (primary_key, date, resume_similarity, title, company, salary_low, salary_high, location, job_url, company_url, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                  (primary_key, item.get("date", ""), item.get("resume_similarity", ""), item.get("title", ""), item.get("company", ""), item.get("salary_low", ""), item.get("salary_high", ""), item.get("location", ""), item.get("job_url", ""), item.get("company_url", ""), item.get("description", "")))
-        conn.commit()
-        print(f"{primary_key} uploaded to database")
-    else:
-        # Loop through the JSON list and check/insert records
-        for item in json_list:
-            primary_key = item.get("primary_key", "")
+    for item in json_list:
+        try:
+            primary_key = item["primary_key"]
             c.execute("SELECT * FROM jobs WHERE primary_key=?", (primary_key,))
             result = c.fetchone()
             if result:
@@ -92,15 +84,19 @@ def check_and_upload_to_db(json_list):
                 c.execute("INSERT INTO jobs (primary_key, date, resume_similarity, title, company, salary_low, salary_high, location, job_url, company_url, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                           (primary_key, item.get("date", ""), item.get("resume_similarity", ""), item.get("title", ""), item.get("company", ""), item.get("salary_low", ""), item.get("salary_high", ""), item.get("location", ""), item.get("job_url", ""), item.get("company_url", ""), item.get("description", "")))
                 conn.commit()
-                print(f"{primary_key} uploaded to database")
+                print(f"UPLOADED: {primary_key} uploaded to database")
+        except KeyError as e:
+            print(f"SKIPPED: Skipping item due to missing key: {e}")
+        except Exception as e:
+            print(f"SKIPPED: Skipping item due to error: {e}")
 
-    conn.close()
+
 
     #-----------------main-------------------
 def load():
-    data = load_json_files(directory='../../data/processed')
+    data = load_json_files(directory=f'{FILE_PATH}/data/processed')
     data = add_primary_key(json_list=data)
-    # create_db_if_not_there()
+    create_db_if_not_there()
     check_and_upload_to_db(json_list=data)
 
 if __name__ == "__main__":

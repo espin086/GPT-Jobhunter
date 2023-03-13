@@ -3,7 +3,9 @@ import datetime
 
 import statistics
 
-conn = sqlite3.connect('../../data/jobhunter.db')
+FILE_PATH = '/Users/jjespinoza/Documents/jobhunter'
+
+conn = sqlite3.connect(f'{FILE_PATH}/database/jobhunter.db')
 
 def get_similarity_stats():
     c = conn.cursor()
@@ -46,4 +48,4 @@ def print_jobs_sorted(daysback, similarity_threshold):
 
 if __name__ == "__main__":
     mean_similarity, median_similarity, min_similarity, max_similarity, q1_similarity, q2_similarity, q3_similarity = get_similarity_stats()
-    print_jobs_sorted(daysback=30, similarity_threshold=q1_similarity)
+    print_jobs_sorted(daysback=30, similarity_threshold=median_similarity)
