@@ -5,14 +5,14 @@ import datetime
 import pprint
 import os
 import yaml
-from utils.search_linkedin_jobs import search_linkedin_jobs
+from jobhunter.utils.search_linkedin_jobs import search_linkedin_jobs
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.DEBUG)
 
 
 # Open the configuration file
-with open('config.yaml', 'r') as f:
+with open('../config.yaml', 'r') as f:
     config = yaml.safe_load(f)
 
 def save_raw_data(data, source):
@@ -20,7 +20,7 @@ def save_raw_data(data, source):
     Saves a list of dictionaries to a JSON file locally in the ../data/raw directory.
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-    file_path = os.path.join("..", "data", "raw", f"{source}-{timestamp}.json")
+    file_path = os.path.join("../..", "data", "raw", f"{source}-{timestamp}.json")
     with open(file_path, "w") as f:
         json.dump(data, f)
     logging.info("Saved data to %s", file_path)
