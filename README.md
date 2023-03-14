@@ -84,13 +84,16 @@ Be sure to give your branch a descriptive name that reflects the changes you pla
 4. Make Changes: Now you can make the changes you want to the codebase. Be sure to follow any guidelines provided by the project's contributors and to test your changes thoroughly before submitting them.
 
 5. Commit Changes: Once you're satisfied with your changes, you can commit them using the command:
-`git add .`
-`git commit -m "description of your changes"`
 
+```bash
+git add .
+git commit -m "description of your changes"
+```
 
 Be sure to provide a clear and concise description of your changes in your commit message.
 
 6. Push Changes: Finally, you can push your changes to your forked repository using the command:
+
 `git push origin new-branch-name`
 
 This will create a new branch in your forked repository and push your changes to it.
