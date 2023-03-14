@@ -3,7 +3,7 @@ This module contains a single function, get_text_in_url, which is used to extrac
 """
 
 
-from urllib.request import urlopen
+import urllib.request
 from bs4 import BeautifulSoup
 import argparse
 import logging
@@ -22,11 +22,11 @@ def get_text_in_url(url):
     Returns:
     str : A string containing the cleaned text from the webpage
     """
-    logging.info(f"Fetching HTML from {url}")
-    html = urlopen(url).read()
+    logging.debug(f"Fetching HTML from {url}")
+    html = urllib.request.urlopen(url).read()
     soup = BeautifulSoup(html, features="html.parser")
 
-    logging.info("Removing script and style elements from HTML")
+    logging.debug("Removing script and style elements from HTML")
     # kill all script and style elements
     for script in soup(["script", "style"]):
         script.extract()  # rip it out
@@ -34,7 +34,7 @@ def get_text_in_url(url):
     # get text
     text = soup.get_text()
 
-    logging.info("Cleaning extracted text")
+    logging.debug("Cleaning extracted text")
     # break into lines and remove leading and trailing space on each
     lines = (line.strip() for line in text.splitlines())
     # break multi-headlines into a line each
