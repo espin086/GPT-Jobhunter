@@ -50,7 +50,7 @@ export OPENAI_API_KEY="variable_value"
 
 
     You will receive output that looks like this after you run the step above:
-
+```bash
     ------------------------------
     Date: 2023-03-08
     Resume Similarity: 0.087
@@ -66,7 +66,7 @@ export OPENAI_API_KEY="variable_value"
     Company Name: dickclarkproductions
     Salary Max: 180000
     Job URL: https://www.linkedin.com/jobs/view/vice-president-of-analytics-at-dick-clark-productions-3509854976
-
+```
     
 
 ## Contributing to this Project
