@@ -139,5 +139,6 @@ dags/airflow.db
 dags/py_env/
 dags/webserver_config.py
 dags/logs/
-data/temp/*
-data/*.db
+data/raw/*
+data/processed/*
+database/*.db
