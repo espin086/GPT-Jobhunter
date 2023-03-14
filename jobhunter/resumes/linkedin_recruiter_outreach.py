@@ -2,7 +2,7 @@ import webbrowser
 import re
 
 from get_latest_jobs import get_latest_jobs
-from gpt_linkedin_con_message import recruiter_message
+from jobhunter.jobhunter.resumes.gpt_linkedin_con_message import recruiter_message
 
 
 def linkedin_search(company, title):

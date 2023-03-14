@@ -3,6 +3,9 @@ import docx
 import os
 import argparse
 
+
+FILE_PATH='/Users/jjespinoza/Documents/jobhunter'
+
 def convert_to_txt(filepath, output_dir):
     """Converts a pdf or word file to plain text format and saves it in a different location.
 
@@ -41,10 +44,6 @@ def convert_to_txt(filepath, output_dir):
 
 
 if __name__ == "__main__": 
-    parser = argparse.ArgumentParser(description='Convert a pdf or word file to plain text format')
-    parser.add_argument('input_file', help='The file path of the input file')
-    parser.add_argument('-o', '--output_dir', help='The directory path where the output file will be saved', default='/Users/jjespinoza/Documents/jobhunter/jobhunter/resumes')
-    args = parser.parse_args()
-
-    output_filepath = convert_to_txt(args.input_file, args.output_dir)
+    filepath = input("Enter the filepath of the resume (including the file extension): ")
+    output_filepath = convert_to_txt(filepath, f'{FILE_PATH}/jobhunter/resumes')
     print(f"The plain text file is saved at {output_filepath}")
