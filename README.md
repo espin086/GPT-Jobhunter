@@ -10,16 +10,16 @@ This module allows you to perform a job analysis on LinkedIn by searching for jo
 
 2. Enter into repository and run the make command
 
-    cd jobhunter
-    make
+`cd jobhunter`
+`make`
 
 3. Update the resume.txt file with a text version of your resume. To confirm
 your resume has been updated use this command.
 
-    cat jobhunter/jobhunter/resumes/resume.txt
+`cat jobhunter/jobhunter/resumes/resume.txt`
 
 4. Update the jobs and locations you'd like to search for jobs in the file called `config.yaml`, here are examples:
-
+```yaml
     positions:
     - "Director Machine Learning"
     - "Vice President Machine Learning"
@@ -27,43 +27,30 @@ your resume has been updated use this command.
     locations:
     - "remote"
     - "Los Angeles"
-
+```
 5. Sign-up for an API key to access the Linkedin data, [go to this link to get API KEY](https://rapidapi.com/jaypat87/api/linkedin-jobs-search).
 
-6. Update this file located here:
+6. Sign-up for an API key to access the OpenAI and GPT, [go to this link to get API KEY](https://openai.com/blog/openai-api).
 
-jobhunter/jobhunter/utils/search_linkedin_jobs.py
+7. Update environment variables with your API KEY information with the following commands (mac/linux):
+```bash
+nano ~/.bash_profile
+export RAPID_API_KEY="variable_value"
+export OPENAI_ORGANIZATION="variable_value"
+export OPENAI_API_KEY="variable_value"
+```
+8. Run `main.py` and watch your job report print to the screen.
 
-Delete this line in the file above:
-
-    import jobhunter.utils.aws_secrets_manager
-
-Add your RapidAPI Key to this dictionary key:
-
-    "X-RapidAPI-Key"
-
-That is all you need to set up JobHunter.
 
 ## Usage
 
 1. Run a command to collect jobs and calculate similarity scores.
 
-    `python3 jobhunter/run_linkedin_bot.py`
+    `python3 jobhunter/main.py`
 
-2. Run code to create a local SQLite Database:
-
-    `python3 jobhunter/jobhunter/utils/database.py`
-
-3. Run code to process, clean, and store the data into a local SQLite database
-
-    `python3 jobhunter/jobhunter/utils/clean_data_loader.py`
-
-4. Run report on latest jobs and their similarity to your resume:
-
-`python3 jobhunter/jobhunter/utils/get_latest_jobs.py`
 
     You will receive output that looks like this after you run the step above:
-
+```bash
     ------------------------------
     Date: 2023-03-08
     Resume Similarity: 0.087
@@ -79,7 +66,7 @@ That is all you need to set up JobHunter.
     Company Name: dickclarkproductions
     Salary Max: 180000
     Job URL: https://www.linkedin.com/jobs/view/vice-president-of-analytics-at-dick-clark-productions-3509854976
-
+```
     
 
 ## Contributing to this Project
@@ -97,13 +84,16 @@ Be sure to give your branch a descriptive name that reflects the changes you pla
 4. Make Changes: Now you can make the changes you want to the codebase. Be sure to follow any guidelines provided by the project's contributors and to test your changes thoroughly before submitting them.
 
 5. Commit Changes: Once you're satisfied with your changes, you can commit them using the command:
-`git add .`
-`git commit -m "description of your changes"`
 
+```bash
+git add .
+git commit -m "description of your changes"
+```
 
 Be sure to provide a clear and concise description of your changes in your commit message.
 
 6. Push Changes: Finally, you can push your changes to your forked repository using the command:
+
 `git push origin new-branch-name`
 
 This will create a new branch in your forked repository and push your changes to it.
