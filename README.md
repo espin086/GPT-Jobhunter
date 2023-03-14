@@ -30,37 +30,26 @@ your resume has been updated use this command.
 
 5. Sign-up for an API key to access the Linkedin data, [go to this link to get API KEY](https://rapidapi.com/jaypat87/api/linkedin-jobs-search).
 
-6. Update this file located here:
+6. Sign-up for an API key to access the OpenAI and GPT, [go to this link to get API KEY](https://openai.com/blog/openai-api).
 
-jobhunter/jobhunter/utils/search_linkedin_jobs.py
+7. Update environment variables with your API KEY information with the following commands (mac/linux):
 
-Delete this line in the file above:
+- nano ~/.bash_profile
+- export RAPID_API_KEY="variable_value"
+- export OPENAI_ORGANIZATION="variable_value"
+- export OPENAI_API_KEY="variable_value"
 
-    import jobhunter.utils.aws_secrets_manager
+8. Run `main.py` and watch your job report print to the screen.
 
-Add your RapidAPI Key to this dictionary key:
 
-    "X-RapidAPI-Key"
 
-That is all you need to set up JobHunter.
 
 ## Usage
 
 1. Run a command to collect jobs and calculate similarity scores.
 
-    `python3 jobhunter/run_linkedin_bot.py`
+    `python3 jobhunter/main.py`
 
-2. Run code to create a local SQLite Database:
-
-    `python3 jobhunter/jobhunter/utils/database.py`
-
-3. Run code to process, clean, and store the data into a local SQLite database
-
-    `python3 jobhunter/jobhunter/utils/clean_data_loader.py`
-
-4. Run report on latest jobs and their similarity to your resume:
-
-`python3 jobhunter/jobhunter/utils/get_latest_jobs.py`
 
     You will receive output that looks like this after you run the step above:
 
