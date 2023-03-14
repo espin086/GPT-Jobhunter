@@ -10,16 +10,16 @@ This module allows you to perform a job analysis on LinkedIn by searching for jo
 
 2. Enter into repository and run the make command
 
-    cd jobhunter
-    make
+`cd jobhunter`
+`make`
 
 3. Update the resume.txt file with a text version of your resume. To confirm
 your resume has been updated use this command.
 
-    cat jobhunter/jobhunter/resumes/resume.txt
+`cat jobhunter/jobhunter/resumes/resume.txt`
 
 4. Update the jobs and locations you'd like to search for jobs in the file called `config.yaml`, here are examples:
-
+```yaml
     positions:
     - "Director Machine Learning"
     - "Vice President Machine Learning"
@@ -27,21 +27,19 @@ your resume has been updated use this command.
     locations:
     - "remote"
     - "Los Angeles"
-
+```
 5. Sign-up for an API key to access the Linkedin data, [go to this link to get API KEY](https://rapidapi.com/jaypat87/api/linkedin-jobs-search).
 
 6. Sign-up for an API key to access the OpenAI and GPT, [go to this link to get API KEY](https://openai.com/blog/openai-api).
 
 7. Update environment variables with your API KEY information with the following commands (mac/linux):
-
-- nano ~/.bash_profile
-- export RAPID_API_KEY="variable_value"
-- export OPENAI_ORGANIZATION="variable_value"
-- export OPENAI_API_KEY="variable_value"
-
+```bash
+nano ~/.bash_profile
+export RAPID_API_KEY="variable_value"
+export OPENAI_ORGANIZATION="variable_value"
+export OPENAI_API_KEY="variable_value"
+```
 8. Run `main.py` and watch your job report print to the screen.
-
-
 
 
 ## Usage
