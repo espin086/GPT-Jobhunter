@@ -22,7 +22,7 @@ Advised on innovative techs like MLOps, chatGPT , computer vision, and NLP , lev
 ●
 Developed and implemented data-driven strategies that improved outcomes by 20% through machine learning models.
 ●
-Skills: T echnical leadership, T eam mentorship, Machine Learning Expertise, Innovative T echnology
+Skills: Step Functions, MLOps, AWS SageMaker , Innovative T echnology , AWS Lambda, DynamoDB, S3
 Founder and Chief T echnology Officer (CT O)
 PropertyBot
 2018 - 2022
@@ -35,7 +35,7 @@ Personally designed and coded a patented AI system on Google Cloud using Python,
 ●
 Leveraged patented AI technology to acquire and profitably flip rental properties, delivering consistently successful investment outcomes. 
 ●
-Skills: T eam Leadership, Fundraising, AI Development, Patent Innovation, Real Estate Investing
+Skills: T eam Leadership, GCP , AI Development, Patent Innovation, Real Estate Investing, Python
 Lead, Data Scientist (Marketing)
 Facebook
 2019 - 2020
@@ -50,7 +50,7 @@ Developed and implemented innovative measurement solutions for advertising campa
 ●
 Collaborated with cross-functional teams, including engineering, product, and sales, to deliver high-quality solutions for clients.
 ●
-Skills: Thought Leadership, Marketing Analytics, Data Pipelines, ROI Optimization, Experimentation
+Skills: Regression Analysis, Marketing Analytics, Airflow , SQL, ROI Optimization, Experimentation
 Director of Data Science and Machine Learning
 20th Century Fox
 2017 - 2019
@@ -63,7 +63,7 @@ Enhanced marketing models for moviegoer targeting resulting in revenue upside fo
 ●
 Developed an innovative ML  system leading to 5 technical papers, a Google Cloud Blog post, and industry recognition. 
 ●
-Skills:  Cloud Architecture, Data Science Leadership, Machine Learning Development, Marketing Analytics
+Skills:  Cloud Architecture, Data Science Leadership, Airflow , GCP  BigQuery , Marketing Analytics
 Director , Advanced Analytics
 NBCUniversal
 2016 - 2017
@@ -76,7 +76,7 @@ Managed budget and team to create econometrics that revolutionized international
 ●
 Hands-on coach developing econometrics and ML  model to drive innovation, motivation, and engagement. 
 ●
-Skills: T eam Management, Econometrics, Data Science, Data Engineering, Business Analysis, Machine Learning
+Skills: T eam Management, Econometrics, Data Science, R Programming, Business Analysis, Machine Learning
 Manager of Marketing Analytics and Data Science
 Disney
 2012 - 2015
@@ -89,7 +89,7 @@ Led overseas team to develop innovative and robust machine learning models for e
 ●
 Demonstrated collaboration and cross-functional partnership while operating complex econometric and optimization models. 
 ●
-Skills: T eam Management, MMM/MT A Modeling, Cross-functional Collaboration, Machine Learning, Econometrics
+Skills: SQL, MMM/MT A Modeling, R, Python, Cross-functional Collaboration, Machine Learning, Econometrics
 Econometrician
 EconOne Research
 2011 - 2012
@@ -102,14 +102,14 @@ Developed and implemented scalable data engineering pipelines for handling large
 ●
 Employed econometrics to quantify the impact of pricing, costs, demand, and supply factors on airline ticket prices. 
 ●
-Skills: Data Engineering, Econometrics, Economic Analysis, Regression Analysis, T ime-Series Analysis
+Skills: SQL, Econometrics, Economic Analysis, Regression Analysis, T ime-Series Analysis
 Education
 M.S. Econometrics:
 time series, mathematical economics,
 game theory , econometrics 
 B.S. Mathematics:
 programming, probability , statistics,
-calculus, optimization, probability , physics 
+calculus, optimization, probability 
 B.A. Economics:
 linear programming, operations research,
 microeconomics, mathematical economics

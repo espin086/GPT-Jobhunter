@@ -4,7 +4,7 @@ python3 job_title_generator.py --resume_file ../resumes/resume.txt
 """
 
 import argparse
-from openai_models import generate_completion
+from jobhunter.jobhunter.utils.openai_models import generate_completion
 
 
 def get_top_job_titles(resume_text):
