@@ -53,7 +53,7 @@ def extract():
     locations = config['locations']
     for position in tqdm(positions):
         for location in locations:
-            save_jobs(search_term=position, location=location, pages=10)
+            save_jobs(search_term=position, location=location, pages=20)
 
     pass
 
