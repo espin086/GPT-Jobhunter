@@ -10,15 +10,19 @@ This module allows you to perform a job analysis on LinkedIn by searching for jo
 
 2. Enter into repository and run the make command
 
-`cd jobhunter`
-`make`
+```bash
+cd jobhunter
+make
+```
 
 3. Update the resume.txt file with a text version of your resume. To confirm
 your resume has been updated use this command.
 
-`cat jobhunter/jobhunter/resumes/resume.txt`
-
+```bash
+cat jobhunter/jobhunter/resumes/resume.txt
+```
 4. Update the jobs and locations you'd like to search for jobs in the file called `config.yaml`, here are examples:
+
 ```yaml
     positions:
     - "Director Machine Learning"

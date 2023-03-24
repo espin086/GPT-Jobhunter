@@ -48,4 +48,4 @@ def print_jobs_sorted(daysback, similarity_threshold):
 
 if __name__ == "__main__":
     mean_similarity, median_similarity, min_similarity, max_similarity, q1_similarity, q2_similarity, q3_similarity = get_similarity_stats()
-    print_jobs_sorted(daysback=7, similarity_threshold=min_similarity)
+    print_jobs_sorted(daysback=3, similarity_threshold=min_similarity)
