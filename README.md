@@ -43,6 +43,12 @@ export RAPID_API_KEY="variable_value"
 export OPENAI_ORGANIZATION="variable_value"
 export OPENAI_API_KEY="variable_value"
 ```
+
+
+```bash
+source ~/.bash_profile
+```
+
 8. Run `main.py` and watch your job report print to the screen.
 
 
