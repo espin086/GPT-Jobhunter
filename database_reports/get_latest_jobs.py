@@ -3,9 +3,10 @@ import datetime
 
 import statistics
 
-FILE_PATH = '/Users/jjespinoza/Documents/jobhunter'
+FILE_PATH = "/Users/jjespinoza/Documents/jobhunter"
 
-conn = sqlite3.connect(f'{FILE_PATH}/database/jobhunter.db')
+conn = sqlite3.connect(f"{FILE_PATH}/database/jobhunter.db")
+
 
 def get_similarity_stats():
     c = conn.cursor()
@@ -19,8 +20,15 @@ def get_similarity_stats():
     q1_similarity = round(statistics.quantiles(similarities, n=4)[0], 2)
     q2_similarity = round(statistics.quantiles(similarities, n=4)[1], 2)
     q3_similarity = round(statistics.quantiles(similarities, n=4)[2], 2)
-    return mean_similarity, median_similarity, min_similarity, max_similarity, q1_similarity, q2_similarity, q3_similarity
-
+    return (
+        mean_similarity,
+        median_similarity,
+        min_similarity,
+        max_similarity,
+        q1_similarity,
+        q2_similarity,
+        q3_similarity,
+    )
 
 
 def print_jobs_sorted(daysback, similarity_threshold):
@@ -29,13 +37,19 @@ def print_jobs_sorted(daysback, similarity_threshold):
 
     # setting how far back to go
     start_date = current_date - datetime.timedelta(days=daysback)
-    
+
     c = conn.cursor()
-    c.execute("SELECT date, company, title, resume_similarity, salary_low, salary_high, job_url FROM jobs WHERE date >= ? AND resume_similarity > ? ORDER BY date DESC, resume_similarity DESC", (start_date, similarity_threshold,))
+    c.execute(
+        "SELECT date, company, title, resume_similarity, salary_low, salary_high, job_url FROM jobs WHERE date >= ? AND resume_similarity > ? ORDER BY date DESC, resume_similarity DESC",
+        (
+            start_date,
+            similarity_threshold,
+        ),
+    )
     results = c.fetchall()
     for row in results:
-        print("-"*40)
-        print("date: " + row[0]) 
+        print("-" * 40)
+        print("date: " + row[0])
         print("company: " + row[1])
         print("title: " + row[2])
         print("similarity: " + str(row[3]))
@@ -45,7 +59,14 @@ def print_jobs_sorted(daysback, similarity_threshold):
     conn.close()
 
 
-
 if __name__ == "__main__":
-    mean_similarity, median_similarity, min_similarity, max_similarity, q1_similarity, q2_similarity, q3_similarity = get_similarity_stats()
-    print_jobs_sorted(daysback=3, similarity_threshold=min_similarity)
+    (
+        mean_similarity,
+        median_similarity,
+        min_similarity,
+        max_similarity,
+        q1_similarity,
+        q2_similarity,
+        q3_similarity,
+    ) = get_similarity_stats()
+    print_jobs_sorted(daysback=30, similarity_threshold=min_similarity)
