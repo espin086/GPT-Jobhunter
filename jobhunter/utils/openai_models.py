@@ -8,7 +8,12 @@ openai.organization = os.getenv("OPENAI_ORGANIZATION")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def generate_completion(model, prompt, temperature, max_tokens):
+def generate_completion(
+        prompt,
+        model='text-davinci-003',
+        temperature=0.5,
+        max_tokens=1000
+):
     completion = openai.Completion.create(
         engine=model,
         prompt=prompt,

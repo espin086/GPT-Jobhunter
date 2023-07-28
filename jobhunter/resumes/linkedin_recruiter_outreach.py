@@ -10,6 +10,7 @@ def linkedin_search(company, title):
     webbrowser.open(url)
     return None
 
+
 def clean_company_names():
     dedup_company_list = []
     clean_companies = []
@@ -19,6 +20,7 @@ def clean_company_names():
     for company in dedup_company_list:
         clean_companies.append(re.sub(r"\s+", "-", company))
     return clean_companies
+
 
 def open_search_links(title):
     companies = clean_company_names()
