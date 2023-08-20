@@ -1,3 +1,5 @@
+.streamlit/
+
 #remove database
 data/*.db
 
