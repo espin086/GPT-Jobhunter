@@ -1,0 +1,1 @@
+jobhunter/etl/utils/wiki-news-300d-1M.vec.zip filter=lfs diff=lfs merge=lfs -text
