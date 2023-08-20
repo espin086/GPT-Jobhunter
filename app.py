@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import openai
 
 from data.data_access import (
     init_db,
@@ -118,7 +119,39 @@ def add_applicants_page():
 
 def recommended_job_titles_page():
     st.subheader("Recommended Job Titles")
-    # Here, you can add your logic to display recommended job titles
+
+    # Fetch and list applicants
+    applicant_list = get_all_applicants()
+    applicant_names = ["Select"] + [f"{a[1]} {a[2]}" for a in applicant_list]
+    selected_applicant_name = st.selectbox("Select Applicant", applicant_names)
+
+    if selected_applicant_name != "Select":
+        selected_applicant = [
+            a for a in applicant_list if f"{a[1]} {a[2]}" == selected_applicant_name
+        ][0]
+
+        # Fetch the resume text for the selected applicant
+        resume_text = selected_applicant[5]
+
+        # Truncate or otherwise reduce the size of the resume text
+        max_resume_length = 1000  # This is an arbitrary number; adjust as needed
+        if len(resume_text.split()) > max_resume_length:
+            resume_text = " ".join(resume_text.split()[:max_resume_length]) + "..."
+
+        if st.button("Get Recommended Job Titles"):
+            # Configure OpenAI
+            openai.api_key = st.secrets["openai"]["key"]
+
+            # Make the API call
+            response = openai.Completion.create(
+                engine="davinci",
+                prompt=f"Based on the following resume give me the top 5 job titles for this person: {resume_text}",
+                max_tokens=200,  # Adjust based on your needs
+            )
+
+            recommended_jobs = response.choices[0].text.strip().split("\n")
+
+            st.write(recommended_jobs)
 
 
 def find_best_jobs_with_ai_page():
