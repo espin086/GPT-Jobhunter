@@ -1,0 +1,4 @@
+pandas==1.5.3
+PyPDF2==3.0.1
+python_docx==0.8.11
+streamlit==1.25.0
