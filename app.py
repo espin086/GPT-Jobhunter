@@ -1,100 +1,17 @@
 import streamlit as st
-import sqlite3
 import pandas as pd
-from PyPDF2 import PdfReader
-from docx import Document
-from data.data_access import init_db
 
+from data.data_access import (
+    init_db,
+    add_applicant,
+    get_all_applicants,
+    update_applicant,
+    delete_applicant,
+)
+from logic.process_data import convert_resume
 
 # initialize database
 init_db()
-
-
-# Database functions
-def add_applicant(
-    first_name,
-    last_name,
-    email,
-    phone_number,
-    resume_path,
-    preferred_job_title,
-    preferred_location,
-):
-    conn = sqlite3.connect("data/job_search.db")
-    c = conn.cursor()
-    c.execute(
-        "INSERT INTO applicants (first_name, last_name, email, phone_number, resume_path, preferred_job_title, preferred_location) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (
-            first_name,
-            last_name,
-            email,
-            phone_number,
-            resume_path,
-            preferred_job_title,
-            preferred_location,
-        ),
-    )
-    conn.commit()
-    conn.close()
-
-
-def get_all_applicants():
-    conn = sqlite3.connect("data/job_search.db")
-    c = conn.cursor()
-    c.execute("SELECT * FROM applicants")
-    data = c.fetchall()
-    conn.close()
-    return data
-
-
-def update_applicant(id, **kwargs):
-    conn = sqlite3.connect("data/job_search.db")
-    c = conn.cursor()
-    for key, value in kwargs.items():
-        c.execute(f"UPDATE applicants SET {key} = ? WHERE id = ?", (value, id))
-    conn.commit()
-    conn.close()
-
-
-def delete_applicant(id):
-    conn = sqlite3.connect("data/job_search.db")
-    c = conn.cursor()
-    c.execute("DELETE FROM applicants WHERE id = ?", (id,))
-    conn.commit()
-    conn.close()
-
-
-def convert_resume(uploaded_file):
-    with st.spinner("Converting resume..."):
-        try:
-            # Determine the format based on file extension
-            file_type = uploaded_file.name.split(".")[-1]
-
-            if file_type == "pdf":
-                # For PDFs
-                reader = PdfReader(uploaded_file)
-                text = ""
-                for page_num in range(len(reader.pages)):
-                    text += reader.pages[page_num].extract_text()
-
-            elif file_type in ["doc", "docx"]:
-                # For Word documents
-                doc = Document(uploaded_file)
-                text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
-
-            elif file_type == "txt":
-                # For Text files
-                text = uploaded_file.read().decode("utf-8")
-
-            else:
-                st.error("Unsupported file type!")
-                return None
-
-            return text
-
-        except Exception as e:
-            st.error(f"Error converting file: {e}")
-            return None
 
 
 def add_applicants_page():
@@ -200,12 +117,12 @@ def add_applicants_page():
 
 
 def recommended_job_titles_page():
-    st.title("Recommended Job Titles")
+    st.subheader("Recommended Job Titles")
     # Here, you can add your logic to display recommended job titles
 
 
 def find_best_jobs_with_ai_page():
-    st.title("Find Best Jobs with AI")
+    st.subheader("Find Best Jobs with AI")
     # Here, you can add your logic to find the best jobs using AI
 
 
