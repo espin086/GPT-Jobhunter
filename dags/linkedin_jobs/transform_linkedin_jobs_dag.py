@@ -11,6 +11,9 @@ from transform_linkedin_jobs_tasks.create_dim_job_title import (
 from transform_linkedin_jobs_tasks.create_dim_job_description import (
     main as create_dim_job_description_main,
 )
+from transform_linkedin_jobs_tasks.load_dim_job_description import (
+    main as task_load_dim_job_description,
+)
 
 default_args = {
     "owner": "airflow",
@@ -25,7 +28,7 @@ dag = DAG(
     "transform_linkedin_jobs",
     default_args=default_args,
     description="DAG to create dim and fact tables from LinkedIn jobs data",
-    schedule_interval="0 1 * * *",  # Run daily at 1 AM UTC
+    schedule_interval="0 1 * * 5",  # Run daily at 1 AM UTC
     catchup=False,  # Disable catchup to avoid backfilling
 )
 
@@ -55,6 +58,12 @@ task_create_dim_job_description = PythonOperator(
     dag=dag,
 )
 
+task_load_dim_job_description = PythonOperator(
+    task_id="task_load_dim_job_description",
+    python_callable=task_load_dim_job_description,
+    dag=dag,
+)
+
 
 # Dummy operator to end the DAG
 end_operator = DummyOperator(task_id="end", dag=dag)
@@ -65,7 +74,12 @@ end_operator = DummyOperator(task_id="end", dag=dag)
     >> [
         task_create_dim_date_table,
         task_create_dim_job_title,
-        task_create_dim_job_description,
     ]
+    >> end_operator
+)
+(
+    start_operator
+    >> task_create_dim_job_description
+    >> task_load_dim_job_description
     >> end_operator
 )

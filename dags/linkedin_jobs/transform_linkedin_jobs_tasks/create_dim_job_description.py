@@ -1,117 +1,133 @@
 import requests
-from google.cloud import bigquery
+from google.cloud import storage
 import pandas as pd
 import time
-
-import urllib.request
-import logging
-
+import json
+import random
 from bs4 import BeautifulSoup
+import logging
+import urllib.request
+import socket
+from google.cloud import bigquery
+
+logging.basicConfig(level=logging.INFO)
 
 
+# Define the existing functions here...
 def get_text_in_url(url):
-    """
-    This function takes in a single argument, a url, and returns the text on the webpage as a string. It uses the urlopen function from the urllib library to open the url, then uses the BeautifulSoup library to parse the HTML of the webpage. It removes all script and style elements from the HTML, then uses the .get_text() method from BeautifulSoup to extract the text from the webpage. The function then performs additional text cleaning operations such as removing leading and trailing whitespace, breaking multi-headlines into a line each, and dropping blank lines.
+    try:
+        logging.info(f"Fetching HTML from {url}")
+        # Set a custom timeout value for the urlopen function (in seconds)
+        # You can adjust this value based on your needs
+        timeout = 10
+        html = urllib.request.urlopen(url, timeout=timeout).read()
+        soup = BeautifulSoup(html, features="html.parser")
 
-    Args:
-    url (str): The url of the webpage from which text will be extracted
+        logging.info("Removing script and style elements from HTML")
+        # kill all script and style elements
+        for script in soup(["script", "style"]):
+            script.extract()  # rip it out
 
-    Returns:
-    str : A string containing the cleaned text from the webpage
-    """
-    logging.debug(f"Fetching HTML from {url}")
-    html = urllib.request.urlopen(url).read()
-    soup = BeautifulSoup(html, features="html.parser")
+        # get text
+        text = soup.get_text()
 
-    logging.debug("Removing script and style elements from HTML")
-    # kill all script and style elements
-    for script in soup(["script", "style"]):
-        script.extract()  # rip it out
+        logging.info("Cleaning extracted text")
+        # break into lines and remove leading and trailing space on each
+        lines = (line.strip() for line in text.splitlines())
+        # break multi-headlines into a line each
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        # drop blank lines
+        text = "\n".join(chunk for chunk in chunks if chunk)
 
-    # get text
-    text = soup.get_text()
+        return text
 
-    logging.debug("Cleaning extracted text")
-    # break into lines and remove leading and trailing space on each
-    lines = (line.strip() for line in text.splitlines())
-    # break multi-headlines into a line each
-    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-    # drop blank lines
-    text = "\n".join(chunk for chunk in chunks if chunk)
-
-    return text
-
-
-# Initialize the BigQuery client
-client = bigquery.Client()
-
-
-def download_job_description(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.text
-    else:
-        return None
+    except urllib.error.HTTPError as e:
+        logging.warning(
+            f"Failed to fetch HTML from {url}. HTTP Error {e.code}: {e.reason}"
+        )
+        return ""
+    except urllib.error.URLError as e:
+        logging.warning(f"Failed to fetch HTML from {url}. Error: {e.reason}")
+        return ""
+    except socket.timeout:
+        logging.warning(f"Timed out while fetching HTML from {url}.")
+        return ""
+    except Exception as e:
+        logging.warning(
+            f"An error occurred while fetching HTML from {url}. Error: {str(e)}"
+        )
+        return ""
 
 
-def download_job_descriptions_and_upload_to_bq():
+def scrape_and_save_job_descriptions(job_urls_to_scrape, bucket_name, folder_name):
+    # Rest of the code remains the same
+
+    for url in job_urls_to_scrape:
+        description = get_text_in_url(url)
+        if description:
+            job_descriptions_dict = {"url": url, "description": description}
+            json_data = json.dumps(
+                [job_descriptions_dict], indent=4
+            )  # Wrap in a list for BigQuery
+
+            # Create a unique filename based on the URL
+            file_name = url.replace("/", "_").replace(":", "_") + ".json"
+
+            # Upload the JSON data to Cloud Storage
+            storage_client = storage.Client()
+            bucket = storage_client.bucket(bucket_name)
+            blob = bucket.blob(folder_name + file_name)
+            blob.upload_from_string(json_data)
+
+        time.sleep(random.uniform(0.5, 1.5))
+        print(f"Downloaded job description for {url}")
+
+    print("All job descriptions saved to JSON and uploaded to Cloud Storage.")
+
+
+def main():
+    bucket_name = "jobhunter"  # Replace with your actual bucket name
+    folder_name = "raw-json-job-descriptions/"  # Folder path within the bucket
+
+    # Initialize the BigQuery client
+    client = bigquery.Client()
+
     # Query the job_url column from BigQuery
     query = """
-    SELECT DISTINCT job_url
+    SELECT DISTINCT linkedin_job_url_cleaned
     FROM `ai-solutions-lab-randd.jobhunter.dim_job_description`
     """
     try:
-        existing_job_urls = client.query(query).to_dataframe()["job_url"]
+        existing_job_urls = client.query(query).to_dataframe()
     except Exception as e:
         print(f"Table 'dim_job_description' not found. Creating the table...")
-        existing_job_urls = pd.Series([])
+        existing_job_urls = pd.DataFrame(columns=["linkedin_job_url_cleaned"])
 
     # Query the job_url column from raw_listings table in BigQuery
     query = """
-    SELECT DISTINCT job_url
+    SELECT DISTINCT linkedin_job_url_cleaned
     FROM `ai-solutions-lab-randd.jobhunter.raw_listings`
     """
-    all_job_urls = client.query(query).to_dataframe()["job_url"]
+    all_job_urls = client.query(query).to_dataframe()
 
-    # Get job_urls that are not already in dim_job_description table
-    job_urls_to_scrape = [url for url in all_job_urls if url not in existing_job_urls]
+    # Convert existing_job_urls Series to a set
+    existing_urls_set = set(existing_job_urls["linkedin_job_url_cleaned"])
 
-    if not job_urls_to_scrape:
+    # Find job_urls that are not already in dim_job_description table
+    job_urls_to_scrape = all_job_urls[
+        ~all_job_urls["linkedin_job_url_cleaned"].isin(existing_urls_set)
+    ]["linkedin_job_url_cleaned"]
+
+    if job_urls_to_scrape.empty:
         print(
             "All job URLs are already in the dim_job_description table. Nothing to scrape."
         )
         return
 
-    # Download job descriptions and store them in a list with tqdm
-    job_descriptions = []
-    for url in job_urls_to_scrape:
-        description = get_text_in_url(url)
-        job_descriptions.append(description)
-        time.sleep(1)
+    # Randomize the order of job_urls_to_scrape
+    job_urls_to_scrape = job_urls_to_scrape.sample(frac=1).tolist()
 
-    # Create a new DataFrame with job_url and job_description columns
-    data = {"job_url": job_urls_to_scrape, "job_description": job_descriptions}
-    df = pd.DataFrame(data)
-
-    # Upload the DataFrame to a new BigQuery table 'dim_job_description' and append the values
-    table_id = "ai-solutions-lab-randd.jobhunter.dim_job_description"
-    job_config = bigquery.LoadJobConfig(
-        write_disposition="WRITE_APPEND",  # Append data to the table
-        schema=[
-            {"name": "job_url", "type": "STRING"},
-            {"name": "job_description", "type": "STRING"},
-        ],
-    )
-    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
-    job.result()
-
-    print(
-        "Job descriptions downloaded and uploaded to BigQuery table 'dim_job_description'."
-    )
-
-
-def main():
-    download_job_descriptions_and_upload_to_bq()
+    scrape_and_save_job_descriptions(job_urls_to_scrape, bucket_name, folder_name)
 
 
 if __name__ == "__main__":

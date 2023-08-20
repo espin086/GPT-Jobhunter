@@ -1,8 +1,55 @@
 from google.cloud import bigquery
 from google.cloud.bigquery import SourceFormat
 from google.cloud import storage
-import re
-import time
+
+
+def create_dataset_if_not_exists(client, project_id, dataset_id):
+    dataset_ref = client.dataset(dataset_id, project=project_id)
+    try:
+        dataset = client.create_dataset(dataset_ref)
+        print("Created dataset:", dataset_id)
+    except:
+        print("Dataset already exists:", dataset_id)
+
+
+def create_table_if_not_exists(client, dataset_ref, table_id, schema):
+    table_ref = dataset_ref.table(table_id)
+    table = bigquery.Table(table_ref, schema=schema)
+    try:
+        table = client.create_table(table)
+        print("Created table:", table_id)
+    except:
+        print("Table already exists:", table_id)
+
+
+def get_new_files_to_load(bucket_name, gcs_directory, loaded_files):
+    storage_client = storage.Client()
+    bucket = storage_client.get_bucket(bucket_name)
+    blobs = bucket.list_blobs(prefix=gcs_directory)
+
+    new_files = [
+        f"gs://{bucket_name}/{blob.name}"
+        for blob in blobs
+        if blob.name.startswith(gcs_directory) and blob.name not in loaded_files
+    ]
+
+    return new_files
+
+
+def load_files_into_table(client, table_ref, job_config, batch_files):
+    if batch_files:
+        load_job = client.load_table_from_uri(
+            batch_files, table_ref, job_config=job_config
+        )
+
+        # Wait for the load job to complete
+        load_job.result()
+
+        # Check the load job status
+        if load_job.state == "DONE":
+            print(f"{len(batch_files)} files loaded successfully.")
+        else:
+            print(f"Error loading {len(batch_files)} files.")
 
 
 def load_raw_into_bq():
@@ -21,17 +68,9 @@ def load_raw_into_bq():
     gcs_directory = "raw-json-files-jobs"
 
     # Create the dataset if it doesn't exist
-    dataset_ref = client.dataset(dataset_id, project=project_id)
-    try:
-        dataset = client.create_dataset(dataset_ref)
-        print("Created dataset:", dataset_id)
-    except:
-        print("Dataset already exists:", dataset_id)
+    create_dataset_if_not_exists(client, project_id, dataset_id)
 
-    # Define the table reference
-    table_ref = dataset_ref.table(table_id)
-
-    # Configure the table schema
+    # Define the table schema
     schema = [
         bigquery.SchemaField(
             "filename", "STRING", mode="NULLABLE"
@@ -48,17 +87,11 @@ def load_raw_into_bq():
     ]
 
     # Create the table if it doesn't exist
-    table = bigquery.Table(table_ref, schema=schema)
-    try:
-        table = client.create_table(table)
-        print("Created table:", table_id)
-    except:
-        print("Table already exists:", table_id)
+    dataset_ref = client.dataset(dataset_id, project=project_id)
+    create_table_if_not_exists(client, dataset_ref, table_id, schema)
 
-    # Get the list of files in the Cloud Storage directory
-    storage_client = storage.Client()
-    bucket = storage_client.get_bucket(gcs_bucket_name)
-    blobs = bucket.list_blobs(prefix=gcs_directory)
+    # Get the table reference
+    table_ref = dataset_ref.table(table_id)
 
     # Check if the table is empty
     table_empty = True
@@ -67,11 +100,7 @@ def load_raw_into_bq():
         break
 
     if table_empty:
-        new_files = [
-            f"gs://{gcs_bucket_name}/{blob.name}"
-            for blob in blobs
-            if blob.name.startswith(gcs_directory)
-        ]
+        new_files = get_new_files_to_load(gcs_bucket_name, gcs_directory, set())
         print("Loading all files into the table...")
     else:
         # Filter out files that have already been loaded
@@ -86,11 +115,7 @@ def load_raw_into_bq():
         for row in loaded_files_query_job:
             loaded_files.add(row["filename"])
 
-        new_files = [
-            f"gs://{gcs_bucket_name}/{blob.name}"
-            for blob in blobs
-            if blob.name.startswith(gcs_directory) and blob.name not in loaded_files
-        ]
+        new_files = get_new_files_to_load(gcs_bucket_name, gcs_directory, loaded_files)
 
         if not new_files:
             print("No new files to load.")
@@ -104,23 +129,13 @@ def load_raw_into_bq():
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND,  # Append the data to the table
     )
 
-    if new_files:
-        print("New files to load:", new_files)
-        load_job = client.load_table_from_uri(
-            new_files, table_ref, job_config=job_config
-        )
+    # Load files into the table in batches
+    batch_size = 1000  # You can adjust the batch size as needed
+    while new_files:
+        batch_files = new_files[:batch_size]
+        new_files = new_files[batch_size:]
 
-        # Wait for the load job to complete
-        load_job.result()
-
-        # Check the load job status
-        if load_job.state == "DONE":
-            print("Data loaded successfully.")
-        else:
-            print("Error loading data.")
-
-    else:
-        print("No new files to load.")
+        load_files_into_table(client, table_ref, job_config, batch_files)
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ default_args = {
     "start_date": "2023-07-27",
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
-    "schedule_interval": "0 0 * * *",
+    "schedule_interval": "0 0 * * 5",
 }
 
 job_locations = {
@@ -36,7 +36,7 @@ job_locations = {
 }
 
 dag = DAG(
-    "extract_linked_jobs", default_args=default_args, schedule_interval="0 0 * * *"
+    "extract_linked_jobs", default_args=default_args, schedule_interval="0 0 * * 5"
 )
 
 start_task = DummyOperator(task_id="start", dag=dag)
