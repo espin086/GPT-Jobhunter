@@ -10,6 +10,7 @@ from data.data_access import (
     delete_applicant,
 )
 from logic.process_data import convert_resume
+from logic.gpt import generate_completion
 
 # initialize database
 init_db()
@@ -139,19 +140,10 @@ def recommended_job_titles_page():
             resume_text = " ".join(resume_text.split()[:max_resume_length]) + "..."
 
         if st.button("Get Recommended Job Titles"):
-            # Configure OpenAI
-            openai.api_key = st.secrets["openai"]["key"]
-
             # Make the API call
-            response = openai.Completion.create(
-                engine="davinci",
-                prompt=f"Based on the following resume give me the top 5 job titles for this person: {resume_text}",
-                max_tokens=200,  # Adjust based on your needs
-            )
-
-            recommended_jobs = response.choices[0].text.strip().split("\n")
-
-            st.write(recommended_jobs)
+            prompt = f"Based on the following resume give me the top 5 new job titles for this person (not on resume), provide a brief description for each job and rank them by highest to lowest salary, provide a salary range Low-High for reach role: {resume_text}"
+            response = generate_completion("text-davinci-003", prompt, 0.5, 2000)
+            st.write(response)
 
 
 def find_best_jobs_with_ai_page():
