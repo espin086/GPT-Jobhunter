@@ -142,7 +142,7 @@ def recommended_job_titles_page():
         if st.button("Get Recommended Job Titles"):
             # Make the API call
             prompt = f"Based on the following resume give me the top 5 new job titles for this person (not on resume), provide a brief description for each job and rank them by highest to lowest salary, provide a salary range Low-High for reach role: {resume_text}"
-            response = generate_completion("text-davinci-003", prompt, 0.5, 2000)
+            response = generate_completion("text-davinci-003", prompt, 0.5, 2400)
             st.write(response)
 
 
