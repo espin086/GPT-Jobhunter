@@ -21,7 +21,13 @@ JOB_SEARCH_X_RAPIDAPI_HOST = "linkedin-jobs-search.p.rapidapi.com"
 
 FILENAMES = "linkedinjob"
 
-POSITIONS = ["Principal Machine Learning Engineer"]
+POSITIONS = [
+    "Principal Machine Learning Engineer",
+    "Senior Machine Learning Engineer",
+    "Senior Artificial Intelligence Engineer",
+    "Senior Data Scientist",
+    "Principal Data Scientist",
+]
 
 # List of locations
 LOCATIONS = ["remote"]
