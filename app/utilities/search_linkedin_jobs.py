@@ -4,7 +4,7 @@ This module uses the LinkedIn Jobs API to search for jobs on LinkedIn by providi
 
 
 from dotenv import load_dotenv
-from jobhunter.app import config
+import config
 
 import argparse
 import logging
@@ -15,7 +15,7 @@ import os
 
 
 # Load the .env file
-load_dotenv("../../.env")
+load_dotenv("../.env")
 
 # Get the API key from the environment variable
 RAPID_API_KEY = os.environ.get("RAPID_API_KEY")

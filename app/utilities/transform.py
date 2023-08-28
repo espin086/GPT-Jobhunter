@@ -1,12 +1,13 @@
+import config
 import datetime
 import logging
 import json
 import os
 import re
 
-from jobhunter.app import config
-from jobhunter.app.utilities.extract_text_from_site import get_text_in_url
-from jobhunter.app.utilities.text_similarity import text_similarity
+
+from utilities.extract_text_from_site import get_text_in_url
+from utilities.text_similarity import text_similarity
 from tqdm import tqdm
 from typing import List
 

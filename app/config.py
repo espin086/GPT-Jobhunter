@@ -21,23 +21,13 @@ JOB_SEARCH_X_RAPIDAPI_HOST = "linkedin-jobs-search.p.rapidapi.com"
 
 FILENAMES = "linkedinjob"
 
-POSITIONS = [
-    "Principal Machine Learning",
-    "Data Scientist",
-    "Machine Learning Engineer",
-    "AI/ML Architect",
-    "AI/ML Developer",
-    "Principal Machine Learning Engineer",
-    "Senior Data Scientist",
-    "Lead Data Scientist",
-    "Machine Learning Operations Engineer",
-]
+POSITIONS = ["Principal Machine Learning Engineer"]
 
 # List of locations
 LOCATIONS = ["remote"]
 
 # Pagination for API calls
-PAGES = 10
+PAGES = 2
 
 
 # === Model Configs ===

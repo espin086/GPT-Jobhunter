@@ -4,7 +4,7 @@ import pprint
 import sqlite3
 import os
 
-from jobhunter.app import config
+import config
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(

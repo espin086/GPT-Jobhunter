@@ -1,13 +1,21 @@
+import config
 import datetime
 import json
 import logging
 import os
 import pprint
+import requests
 import time
+from dotenv import load_dotenv
 
-from jobhunter.app import config
-from jobhunter.app.utilities.search_linkedin_jobs import main as search_linkedin_jobs
+
 from tqdm import tqdm
+
+# Get the API key from the environment variable
+RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
+
+# Load the .env file
+load_dotenv("../.env")
 
 # Initialize pretty printer and logging
 pp = pprint.PrettyPrinter(indent=4)
@@ -16,18 +24,62 @@ logging.basicConfig(
 )
 
 
+# Get the API URL from the config file
+JOB_SEARCH_URL = config.JOB_SEARCH_URL
+
+
+def search_linkedin_jobs(search_term, location, page):
+    """
+    This function takes in a search term, location and an optional page number as input and uses them to make a request to the LinkedIn jobs API. The API returns a json object containing job search results that match the search term and location provided. The function also sets up logging to log the request and any errors that may occur.
+
+    Args:
+    search_term (str): The job title or position you want to search for.
+    location (str): The location you want to search for jobs in.
+    page (int, optional): The page number of the search results you want to retrieve. Default is 1.
+
+    Returns:
+    json: A json object containing the search results.
+
+    Raises:
+    Exception: If an exception is encountered during the API request, it is logged as an error.
+    """
+
+    url = JOB_SEARCH_URL
+    payload = {"search_terms": search_term, "location": location, "page": page}
+    headers = {
+        "content-type": "application/json",
+        "X-RapidAPI-Key": RAPID_API_KEY,
+        "X-RapidAPI-Host": config.JOB_SEARCH_X_RAPIDAPI_HOST,
+    }
+
+    logging.debug(
+        "Making request to LinkedIn jobs API with search term: {}, location: {}".format(
+            search_term, location
+        )
+    )
+
+    try:
+        response = requests.request("POST", url, json=payload, headers=headers)
+        json_object = json.loads(response.text)
+        return json_object
+
+    except Exception as e:
+        logging.error("Encountered exception: {}".format(e))
+
+
 def save_raw_data(data, source):
     """
-    Saves a list of dictionaries to a JSON file locally in the ../data/raw directory.
+    Saves a dictionary to a JSON file locally in the ../data/raw directory.
     """
     try:
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-        file_path = os.path.join("temp/", "data", "raw", f"{source}-{timestamp}.json")
+        # Note: You might want to add a unique identifier for each job to the file name
+        file_path = os.path.join("temp", "data", "raw", f"{source}-{timestamp}.json")
 
         with open(file_path, "w") as f:
             json.dump(data, f)
 
-        logging.info("Saved data successfully.")
+        logging.info("Saved job successfully.")
         logging.debug("Saved data to %s", file_path)
 
     except Exception as e:
@@ -43,8 +95,13 @@ def get_all_jobs(search_term, location, pages):
                 search_term=search_term, location=location, page=page
             )
             if jobs:
-                all_jobs.append(jobs)
-                logging.debug("Appended jobs for page %d", page)
+                all_jobs.extend(jobs)  # change this line to extend instead of append
+
+                logging.debug(f"Appended {len(jobs)} jobs for page {page}")
+                for job in jobs:
+                    save_raw_data(
+                        job, source="linkedinjobs"
+                    )  # save each job as it's found
             else:
                 logging.warning("No jobs found for page %d", page)
 
@@ -60,10 +117,9 @@ def save_jobs(search_term, location, pages):
     try:
         jobs = get_all_jobs(search_term=search_term, location=location, pages=pages)
         if jobs:
-            logging.info("Jobs found. Saving...")
-            for job in jobs:
-                for item in job:
-                    save_raw_data(item, source="linkedinjobs")
+            logging.info(
+                f"Found {len(jobs)} jobs. Jobs saved."
+            )  # No need to save again here, already saved in get_all_jobs
         else:
             logging.warning("No jobs found.")
 

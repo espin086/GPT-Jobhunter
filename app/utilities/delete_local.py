@@ -1,6 +1,7 @@
 import os
 import logging
-from jobhunter.app import config
+import pprint
+import config
 
 # Initialize pretty printer and logging
 pp = pprint.PrettyPrinter(indent=4)
@@ -26,7 +27,7 @@ def delete_files(dir_path):
     logging.info(f"Completed deleting files in directory: {dir_path}")
 
 
-def run():
+def delete_local():
     logging.info("Starting 'run' function.")
 
     try:
@@ -41,10 +42,10 @@ def run():
     except Exception as e:
         logging.error(f"Failed to delete files in 'temp/data/processed': {e}")
 
-    logging.info("Finished 'run' function.")
+    logging.info("Finished delete local files function.")
 
 
 if __name__ == "__main__":
     logging.info("Application started.")
-    run()
+    delete_local()
     logging.info("Application finished.")

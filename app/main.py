@@ -1,9 +1,9 @@
-from jobhunter.app import config
-from jobhunter.app.utilities.extract import extract
-from jobhunter.app.utilities.transform import transform
-from jobhunter.app.utilities.load import load
+from utilities.extract import extract
+from utilities.transform import transform
+from utilities.load import load
+from utilities.delete_local import delete_local
 
-
-# extract()
-# transform()
+extract()
+transform()
 load()
+delete_local()
