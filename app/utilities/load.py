@@ -1,6 +1,9 @@
+import json
 import sqlite3
 import os
-import json
+
+
+from jobhunter.app import config
 
 
 def load_json_files(directory):
@@ -25,14 +28,14 @@ def load_json_files(directory):
 
 def create_db_if_not_there():
     # Create a connection to the database
-    conn = sqlite3.connect(f"../../database/jobhunter.db")
+    conn = sqlite3.connect(f"../../database/{config.DATABASE}")
 
     # Create a cursor object to execute SQL commands
     c = conn.cursor()
 
     # Create a table
     c.execute(
-        """CREATE TABLE IF NOT EXISTS jobs
+        f"""CREATE TABLE IF NOT EXISTS {config.TABLE_JOBS}
                 (id INTEGER PRIMARY KEY,
                 primary_key TEXT,
                 date TEXT,
@@ -67,19 +70,21 @@ def add_primary_key(json_list):
 
 
 def check_and_upload_to_db(json_list):
-    conn = sqlite3.connect(f"../../database/jobhunter.db")
+    conn = sqlite3.connect(f"../../database/{config.DATABASE}")
     c = conn.cursor()
 
     for item in json_list:
         try:
             primary_key = item["primary_key"]
-            c.execute("SELECT * FROM jobs WHERE primary_key=?", (primary_key,))
+            c.execute(
+                f"SELECT * FROM {config.TABLE_JOBS} WHERE primary_key=?", (primary_key,)
+            )
             result = c.fetchone()
             if result:
                 print(f"{primary_key} already in database, skipping...")
             else:
                 c.execute(
-                    "INSERT INTO jobs (primary_key, date, resume_similarity, title, company, salary_low, salary_high, location, job_url, company_url, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    f"INSERT INTO {config.TABLE_JOBS} (primary_key, date, resume_similarity, title, company, salary_low, salary_high, location, job_url, company_url, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         primary_key,
                         item.get("date", ""),
@@ -105,7 +110,7 @@ def check_and_upload_to_db(json_list):
 
 
 def load():
-    data = load_json_files(directory=f"../temp/data/processed")
+    data = load_json_files(directory="../temp/data/processed")
     data = add_primary_key(json_list=data)
     create_db_if_not_there()
     check_and_upload_to_db(json_list=data)

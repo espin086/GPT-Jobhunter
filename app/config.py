@@ -2,11 +2,11 @@ import logging
 
 
 # === General Configs ===
-LOGGING_LEVEL = logging.INFO
+LOGGING_LEVEL = logging.DEBUG
 
 
 # === Database Configs ===
-DATABASE_LOCATION = "ddssdd/yhgfggg/database.db"
+DATABASE = "jobhunter.db"
 TABLE_JOBS = "jobs"
 TABLE_RESUMES = "resumes"
 TABLE_APPLICATIONS = "applications"
@@ -37,7 +37,7 @@ POSITIONS = [
 LOCATIONS = ["remote"]
 
 # Pagination for API calls
-PAGES = 20
+PAGES = 1
 
 
 # === Model Configs ===
