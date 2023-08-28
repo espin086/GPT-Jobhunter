@@ -89,7 +89,7 @@ def get_all_jobs(search_term, location, pages):
     all_jobs = []
     for page in range(0, pages):
         try:
-            time.sleep(0.1)
+            time.sleep(0.5)
             jobs = search_linkedin_jobs(
                 search_term=search_term, location=location, page=page
             )
