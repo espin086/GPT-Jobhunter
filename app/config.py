@@ -37,7 +37,7 @@ POSITIONS = [
 LOCATIONS = ["remote"]
 
 # Pagination for API calls
-PAGES = 1
+PAGES = 10
 
 
 # === Model Configs ===

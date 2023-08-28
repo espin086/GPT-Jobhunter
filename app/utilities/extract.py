@@ -22,9 +22,7 @@ def save_raw_data(data, source):
     """
     try:
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-        file_path = os.path.join(
-            "../temp/", "data", "raw", f"{source}-{timestamp}.json"
-        )
+        file_path = os.path.join("temp/", "data", "raw", f"{source}-{timestamp}.json")
 
         with open(file_path, "w") as f:
             json.dump(data, f)
@@ -40,7 +38,7 @@ def get_all_jobs(search_term, location, pages):
     all_jobs = []
     for page in range(0, pages):
         try:
-            time.sleep(0.1)
+            time.sleep(0.5)
             jobs = search_linkedin_jobs(
                 search_term=search_term, location=location, page=page
             )

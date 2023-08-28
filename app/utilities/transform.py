@@ -266,9 +266,7 @@ def save_raw_data(data, source):
     Saves dictionaries to a JSON file locally in the ../data/raw directory.
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-    file_path = os.path.join(
-        "../temp/", "data", "processed", f"{source}-{timestamp}.json"
-    )
+    file_path = os.path.join("temp/", "data", "processed", f"{source}-{timestamp}.json")
     with open(file_path, "w") as f:
         json.dump(data, f)
     logging.info("Saved data to %s", file_path)
@@ -295,7 +293,7 @@ def save_raw_data_list(data_list, source):
         # Check if the data contains all the required keys
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
         file_path = os.path.join(
-            "../temp/", "data", "processed", f"{source}-{i+1}-{timestamp}.json"
+            "temp/", "data", "processed", f"{source}-{i+1}-{timestamp}.json"
         )
         with open(file_path, "w") as f:
             json.dump(data, f)
@@ -305,8 +303,8 @@ def save_raw_data_list(data_list, source):
 
 # ----------main----------
 def transform():
-    resume = read_resume_text(resume_file_path=f"../temp/resumes/resume.txt")
-    data = import_job_data_from_dir(dirpath=f"../temp/" + "data/raw")
+    resume = read_resume_text(resume_file_path=f"temp/resumes/resume.txt")
+    data = import_job_data_from_dir(dirpath=f"temp/" + "data/raw")
     data = drop_variables(raw_data=data)
     data = remove_duplicates(raw_data=data)
     key_map = {
