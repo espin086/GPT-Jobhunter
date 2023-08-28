@@ -1,3 +1,4 @@
+import config
 import datetime
 import json
 import logging
@@ -5,6 +6,8 @@ import os
 import pprint
 import requests
 import time
+from dotenv import load_dotenv
+
 
 from dotenv import load_dotenv
 import app.config as config
@@ -94,8 +97,13 @@ def get_all_jobs(search_term, location, pages):
                 search_term=search_term, location=location, page=page
             )
             if jobs:
-                all_jobs.append(jobs)
-                logging.debug("Appended jobs for page %d", page)
+                all_jobs.extend(jobs)  # change this line to extend instead of append
+
+                logging.debug(f"Appended {len(jobs)} jobs for page {page}")
+                for job in jobs:
+                    save_raw_data(
+                        job, source="linkedinjobs"
+                    )  # save each job as it's found
             else:
                 logging.warning("No jobs found for page %d", page)
 
