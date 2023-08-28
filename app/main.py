@@ -1,7 +1,6 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
-<<<<<<< HEAD
 
 from app.utilities.extract import extract
 from app.utilities.transform import transform
@@ -9,15 +8,6 @@ from app.utilities.load import load
 from app.utilities.delete_local import delete_local
 
 from app.config import POSITIONS, LOCATIONS
-=======
-
-from utilities.extract import extract
-from utilities.transform import transform
-from utilities.load import load
-from utilities.delete_local import delete_local
-
-from config import POSITIONS, LOCATIONS
->>>>>>> db22b15 (running version of streamlit application)
 
 
 st.title("Config Manager")
