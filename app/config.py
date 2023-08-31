@@ -2,7 +2,7 @@ import logging
 
 
 # === General Configs ===
-LOGGING_LEVEL = logging.DEBUG
+LOGGING_LEVEL = logging.INFO
 
 
 # === Database Configs ===
@@ -33,7 +33,7 @@ POSITIONS = [
 LOCATIONS = ["remote"]
 
 # Pagination for API calls
-PAGES = 2
+PAGES = 20
 
 
 # === Model Configs ===
