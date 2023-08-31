@@ -6,9 +6,9 @@ import os
 import re
 
 
-from utilities.extract_text_from_site import get_text_in_url
-from utilities.text_similarity import text_similarity
-from utilities.extract_salary import extract_salary
+from app.utilities.extract_text_from_site import get_text_in_url
+from app.utilities.text_similarity import text_similarity
+from app.utilities.extract_salary import extract_salary
 from tqdm import tqdm
 from typing import List
 
@@ -149,9 +149,6 @@ def add_description_to_json_list(json_list):
     return json_list
 
 
-
-
-
 def extract_salaries(json_list):
     # Create a new list to store the modified JSON dictionaries
     new_json_list = []
@@ -228,7 +225,7 @@ def save_raw_data(data, source):
     Saves dictionaries to a JSON file locally in the ../data/raw directory.
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-    file_path = os.path.join("temp/", "data", "processed", f"{source}-{timestamp}.json")
+    file_path = os.path.join("temp", "data", "processed", f"{source}-{timestamp}.json")
     with open(file_path, "w") as f:
         json.dump(data, f)
     logging.info("Saved data to %s", file_path)
@@ -255,7 +252,7 @@ def save_raw_data_list(data_list, source):
         # Check if the data contains all the required keys
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
         file_path = os.path.join(
-            "temp/", "data", "processed", f"{source}-{i+1}-{timestamp}.json"
+            "temp", "data", "processed", f"{source}-{i+1}-{timestamp}.json"
         )
         with open(file_path, "w") as f:
             json.dump(data, f)

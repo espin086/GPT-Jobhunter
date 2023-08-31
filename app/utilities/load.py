@@ -4,7 +4,7 @@ import pprint
 import sqlite3
 import os
 
-import config
+import app.config as config
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(

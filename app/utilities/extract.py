@@ -1,4 +1,3 @@
-import config
 import datetime
 import json
 import logging
@@ -6,9 +5,9 @@ import os
 import pprint
 import requests
 import time
+
 from dotenv import load_dotenv
-
-
+import app.config as config
 from tqdm import tqdm
 
 # Get the API key from the environment variable

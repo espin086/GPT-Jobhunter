@@ -3,9 +3,6 @@ This module uses the LinkedIn Jobs API to search for jobs on LinkedIn by providi
 """
 
 
-from dotenv import load_dotenv
-import config
-
 import argparse
 import logging
 import json
@@ -13,6 +10,8 @@ import pprint
 import requests
 import os
 
+from dotenv import load_dotenv
+from app import config
 
 # Load the .env file
 load_dotenv("../.env")
