@@ -1,4 +1,3 @@
-import config
 import datetime
 import json
 import logging
@@ -6,10 +5,14 @@ import os
 import pprint
 import requests
 import time
+
 from dotenv import load_dotenv
+<<<<<<< HEAD
 
 
 from dotenv import load_dotenv
+=======
+>>>>>>> 75eaf3c (made code pip installable)
 import app.config as config
 from tqdm import tqdm
 
