@@ -1,3 +1,8 @@
+#removind data constraint
+
+database/*.db
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
