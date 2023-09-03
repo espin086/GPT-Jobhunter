@@ -1,5 +1,6 @@
 import re
 
+
 def extract_salary(text):
     # Match for salaries like "$150,000.00" or "$150,000"
     salary_pattern_1 = r"\$([\d,]+)(?:\.(\d{2}))?"
