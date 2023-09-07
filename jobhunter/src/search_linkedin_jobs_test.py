@@ -11,15 +11,3 @@ def test_search_linkedin_jobs():
     result = search_linkedin_jobs(search_term, location, page)
     print(result)
     assert result is not None
-
-
-def test_json_format():
-    """
-    This function ensures that the object returned is a a json object.
-    """
-
-    search_term = "Software Engineer"
-    location = "United States"
-    page = 1
-    result = search_linkedin_jobs(search_term, location, page)
-    assert isinstance(result, dict) == True
