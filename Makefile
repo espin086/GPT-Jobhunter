@@ -6,4 +6,6 @@ setup:
 	source jobhunter/bin/activate
 
 test:
-	cd $(SRC_DIR) && pytest
+	cd $(SRC_DIR) && coverage run -m pytest
+	cd $(SRC_DIR) && coverage report 
+	cd $(SRC_DIR) && coverage html -d coverage_html
