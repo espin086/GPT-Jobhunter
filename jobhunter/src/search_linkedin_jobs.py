@@ -9,7 +9,7 @@ object containing job search results that match the search term and location pro
 also uses the os library to access the API key as an environment variable. The main function in 
 the module is 'main()' which performs a job search on LinkedIn using the 'search_linkedin_jobs()' 
 function and returns the json object returned by the LinkedIn jobs API. 
-The module also defines a command-line interface for running the script.
+The module also defines a command-line imnterface for running the script.
 """
 
 
@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 
 
 # Load the .env file
-load_dotenv("../.env")
+load_dotenv("../../.env")
 
 # Get the API key from the environment variable
 RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
