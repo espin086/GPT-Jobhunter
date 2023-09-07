@@ -4,14 +4,14 @@ This module uses the LinkedIn Jobs API to search for jobs on LinkedIn by providi
 
 
 import argparse
-import logging
 import json
-import pprint
-import requests
+import logging
 import os
+import pprint
 
-from dotenv import load_dotenv
+import requests
 from app import config
+from dotenv import load_dotenv
 
 # Load the .env file
 load_dotenv("../.env")
@@ -50,19 +50,16 @@ def search_linkedin_jobs(search_term, location, page=1):
         "X-RapidAPI-Host": config.JOB_SEARCH_X_RAPIDAPI_HOST,
     }
 
-    logging.debug(
-        "Making request to LinkedIn jobs API with search term: {}, location: {}".format(
-            search_term, location
-        )
-    )
-
     try:
-        response = requests.request("POST", url, json=payload, headers=headers)
+        response = requests.request(
+            "POST", url, json=payload, headers=headers, timeout=5
+        )
         json_object = json.loads(response.text)
         return json_object
 
-    except Exception as e:
-        logging.error("Encountered exception: {}".format(e))
+    except Exception as e_exception:
+        logging.error("Encountered exception: {}".format(e_exception))
+        return {"error": "Encountered exception: {}".format(e_exception)}
 
 
 def main(search_term, location, page):
@@ -84,6 +81,9 @@ def main(search_term, location, page):
 
 
 def entrypoint():
+    """
+    This is the entrypoint for the script. It defines the command-line interface for running the script.
+    """
     parser = argparse.ArgumentParser(description="This searches for jobs on LinkedIn")
 
     parser.add_argument(
