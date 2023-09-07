@@ -13,6 +13,12 @@ from tqdm import tqdm
 # Load the .env file
 load_dotenv("../../.env")
 
+
+# change current director to location of this file
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(THIS_DIR)
+
+
 # Get the API key from the environment variable
 RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
 
@@ -26,6 +32,19 @@ logging.basicConfig(
 
 # Get the API URL from the config file
 JOB_SEARCH_URL = config.JOB_SEARCH_URL
+
+
+def create_data_folders_if_not_exists():
+    """
+    Creates the data folders if they don't exist.
+    """
+    try:
+        os.makedirs("temp/data/raw", exist_ok=True)
+        os.makedirs("temp/data/processed", exist_ok=True)
+        logging.info("Created data folders successfully.")
+
+    except Exception as e:
+        logging.error("An error occurred while creating data folders: %s", str(e))
 
 
 def search_linkedin_jobs(search_term, location, page):
@@ -128,6 +147,7 @@ def save_jobs(search_term, location, pages):
 
 
 def extract():
+    create_data_folders_if_not_exists()
     try:
         positions = config.POSITIONS
         locations = config.LOCATIONS
