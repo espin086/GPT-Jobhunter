@@ -27,6 +27,12 @@ from dotenv import load_dotenv
 # Load the .env file
 load_dotenv("../../.env")
 
+# Get the directory where the script is located
+script_directory = os.path.dirname(os.path.abspath(__file__))
+
+# Change the working directory to the script's directory
+os.chdir(script_directory)
+
 # Get the API key from the environment variable
 RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
 
@@ -67,7 +73,7 @@ def search_linkedin_jobs(search_term, location, page=1):
 
     try:
         response = requests.request(
-            "POST", url, json=payload, headers=headers, timeout=5
+            "POST", url, json=payload, headers=headers, timeout=60
         )
         json_object = json.loads(response.text)
         return json_object

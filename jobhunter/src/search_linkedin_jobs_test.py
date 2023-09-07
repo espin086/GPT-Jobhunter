@@ -2,8 +2,18 @@
 This tests the search_linkedin_jobs.py module.
 """
 
+import os
+
+
 from search_linkedin_jobs import search_linkedin_jobs
 from search_linkedin_jobs import RAPID_API_KEY
+
+
+# Get the directory where the script is located
+script_directory = os.path.dirname(os.path.abspath(__file__))
+
+# Change the working directory to the script's directory
+os.chdir(script_directory)
 
 
 def test_check_api_key():
