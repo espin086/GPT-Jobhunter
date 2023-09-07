@@ -1,7 +1,12 @@
 # Makefile for Python application
 
+#make virtual environment
+venv:
+	python3 -m venv jobhunter
+	source ./bin/activate
+
 # Set up Python environment
-setup:
+setup: 
 	python3 -m pip install --upgrade pip
 	pip install flake8 pytest pylint black isort
 	if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
