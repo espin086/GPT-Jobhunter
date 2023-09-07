@@ -1,3 +1,7 @@
+"""
+This tests the search_linkedin_jobs.py module.
+"""
+
 from search_linkedin_jobs import search_linkedin_jobs
 from search_linkedin_jobs import RAPID_API_KEY
 

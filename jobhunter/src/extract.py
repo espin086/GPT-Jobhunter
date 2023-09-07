@@ -7,14 +7,15 @@ import requests
 import time
 
 from dotenv import load_dotenv
-import app.config as config
+import config as config
 from tqdm import tqdm
+
+# Load the .env file
+load_dotenv("../../.env")
 
 # Get the API key from the environment variable
 RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
 
-# Load the .env file
-load_dotenv("../.env")
 
 # Initialize pretty printer and logging
 pp = pprint.PrettyPrinter(indent=4)
