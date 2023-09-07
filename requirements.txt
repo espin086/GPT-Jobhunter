@@ -1,0 +1,8 @@
+beautifulsoup4==4.11.2
+nltk==3.8.1
+pandas==1.5.3
+python-dotenv==1.0.0
+Requests==2.31.0
+scikit_learn==1.2.1
+streamlit==1.25.0
+tqdm==4.65.0
