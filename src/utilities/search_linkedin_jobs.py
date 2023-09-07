@@ -1,5 +1,15 @@
 """
-This module uses the LinkedIn Jobs API to search for jobs on LinkedIn by providing a search term, location and an optional page number. The module utilizes the requests and json libraries to make the API request and parse the response, respectively. Additionally, the module employs the logging and argparse libraries to set up logging and command-line arguments, and the pprint library to print the results in a pretty format. The main function in the module is 'search_linkedin_jobs()' which takes in a search term, location and an optional page number as input and returns a json object containing job search results that match the search term and location provided. The module also uses the os library to access the API key as an environment variable. The main function in the module is 'main()' which performs a job search on LinkedIn using the 'search_linkedin_jobs()' function and returns the json object returned by the LinkedIn jobs API. The module also defines a command-line interface for running the script.
+This module uses the LinkedIn Jobs API to search for jobs on LinkedIn by providing a search term, 
+location and an optional page number. The module utilizes the requests and json libraries to make 
+the API request and parse the response, respectively. Additionally, the module employs the logging 
+and argparse libraries to set up logging and command-line arguments, and the pprint library to 
+print the results in a pretty format. The main function in the module is 'search_linkedin_jobs()' 
+which takes in a search term, location and an optional page number as input and returns a json 
+object containing job search results that match the search term and location provided. The module 
+also uses the os library to access the API key as an environment variable. The main function in 
+the module is 'main()' which performs a job search on LinkedIn using the 'search_linkedin_jobs()' 
+function and returns the json object returned by the LinkedIn jobs API. 
+The module also defines a command-line interface for running the script.
 """
 
 
@@ -28,7 +38,11 @@ logging.basicConfig(level=config.LOGGING_LEVEL)
 
 def search_linkedin_jobs(search_term, location, page=1):
     """
-    This function takes in a search term, location and an optional page number as input and uses them to make a request to the LinkedIn jobs API. The API returns a json object containing job search results that match the search term and location provided. The function also sets up logging to log the request and any errors that may occur.
+    This function takes in a search term, location and an optional page
+    number as input and uses them to make a request to the LinkedIn jobs API.
+    The API returns a json object containing job search results that match
+    the search term and location provided. The function also sets up logging
+    to log the request and any errors that may occur.
 
     Args:
     search_term (str): The job title or position you want to search for.
@@ -56,15 +70,15 @@ def search_linkedin_jobs(search_term, location, page=1):
         )
         json_object = json.loads(response.text)
         return json_object
-
-    except Exception as e_exception:
-        logging.error("Encountered exception: {}".format(e_exception))
-        return {"error": "Encountered exception: {}".format(e_exception)}
+    except ValueError as value_err:
+        logging.error(value_err)
+        return None
 
 
 def main(search_term, location, page):
     """
-    main() is a function that performs a job search on LinkedIn using the search_linkedin_jobs() function.
+    main() is a function that performs a job search on LinkedIn
+    using the search_linkedin_jobs() function.
 
     Args:
     search_term (str): The job title or keyword to search for.
@@ -82,7 +96,8 @@ def main(search_term, location, page):
 
 def entrypoint():
     """
-    This is the entrypoint for the script. It defines the command-line interface for running the script.
+    This is the entrypoint for the script.
+    It defines the command-line interface for running the script.
     """
     parser = argparse.ArgumentParser(description="This searches for jobs on LinkedIn")
 
