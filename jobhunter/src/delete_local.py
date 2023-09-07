@@ -2,8 +2,7 @@ import os
 import logging
 import pprint
 
-
-from app import config
+import config
 
 # Initialize pretty printer and logging
 pp = pprint.PrettyPrinter(indent=4)

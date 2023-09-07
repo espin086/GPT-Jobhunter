@@ -1,0 +1,1 @@
+from extract_salary import extract_salary
