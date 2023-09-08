@@ -2,10 +2,10 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
-from utilities.extract import extract
-from utilities.transform import transform
-from utilities.load import load
-from utilities.delete_local import delete_local
+from extract import extract
+from transform import transform
+from load import load
+from delete_local import delete_local
 
 from config import POSITIONS, LOCATIONS
 
@@ -33,7 +33,7 @@ if st.button("Run Pipeline"):
 if st.button("Query SQLite Database"):
     try:
         # Connect to SQLite database
-        conn = sqlite3.connect("../database/jobhunter.db")
+        conn = sqlite3.connect("all_jobs.db")
 
         # Perform SQL query
         query = "SELECT * FROM jobs ORDER BY date DESC, resume_similarity DESC"

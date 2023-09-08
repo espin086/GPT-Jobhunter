@@ -5,7 +5,7 @@ LOGGING_LEVEL = logging.INFO
 
 
 # === Database Configs ===
-DATABASE = "jobhunter.db"
+DATABASE = "all_jobs.db"
 TABLE_JOBS = "jobs"
 TABLE_RESUMES = "resumes"
 TABLE_APPLICATIONS = "applications"
