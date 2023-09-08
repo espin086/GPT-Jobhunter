@@ -6,9 +6,9 @@ import os
 import re
 
 
-from app.utilities.extract_text_from_site import get_text_in_url
-from app.utilities.text_similarity import text_similarity
-from app.utilities.extract_salary import extract_salary
+from extract_text_from_site import get_text_in_url
+from text_similarity import text_similarity
+from extract_salary import extract_salary
 from tqdm import tqdm
 from typing import List
 

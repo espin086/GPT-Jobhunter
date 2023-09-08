@@ -4,7 +4,7 @@ import pprint
 import sqlite3
 import os
 
-import app.config as config
+import config
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(
@@ -30,7 +30,7 @@ def load_json_files(directory):
 
 def create_db_if_not_there():
     logging.info("Checking and creating database if not present.")
-    conn = sqlite3.connect(f"../database/{config.DATABASE}")
+    conn = sqlite3.connect(f"{config.DATABASE}")
     c = conn.cursor()
 
     try:
@@ -77,7 +77,7 @@ def add_primary_key(json_list):
 
 def check_and_upload_to_db(json_list):
     logging.info("Starting upload to database.")
-    conn = sqlite3.connect(f"../database/{config.DATABASE}")
+    conn = sqlite3.connect(f"{config.DATABASE}")
     c = conn.cursor()
 
     for item in json_list:
