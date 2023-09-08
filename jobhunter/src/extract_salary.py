@@ -1,16 +1,28 @@
+"""
+This module contains a function to extract salary information from text.
+
+"""
+
 import argparse
 import logging
 import re
 
 
 def extract_salary(text):
+    """
+    This function extracts salary information from text.
+    """
     # Setup logging
     logging.basicConfig(level=logging.INFO)
 
     # Regular expression patterns
     salary_pattern_1 = r"\$([\d,]+)(?:\.(\d{2}))?"
     salary_pattern_2 = r"\$([\d\.]+)(K)"
-    salary_pattern_3 = r"\$(?!401K)([\d,]+)(?:\.(\d{2}))?\s*(K)?\s*-\s*\$(?!401K)([\d,]+)(?:\.(\d{2}))?(K)?"
+    salary_pattern_3 = (
+        r"\$(?!401K)([\d,]+)(?:\.(\d{2}))?\s*(K)?\s*-"
+        r"\s*\$(?!401K)([\d,]+)(?:\.(\d{2}))?(K)?"
+    )
+
     hourly_pattern = r"\$([\d\.]+)\s*to\s*\$([\d\.]+)\/hour"
 
     # Search for patterns
@@ -52,12 +64,16 @@ def extract_salary(text):
     if salary_high is not None and salary_high < 100:
         salary_high *= 1000
 
-    logging.info(f"Extracted salary range: {salary_low} to {salary_high}")
+    logging.info("Extracted salary range: %s to %s", salary_low, salary_high)
 
     return salary_low, salary_high
 
 
 def main():
+    """
+    This function is the main function.
+
+    """
     parser = argparse.ArgumentParser(
         description="Extract salary information from text."
     )

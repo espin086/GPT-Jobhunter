@@ -1,3 +1,8 @@
+"""
+
+This module contains the test function for the extract_salary function.
+"""
+
 from extract_salary import extract_salary
 
 
@@ -18,7 +23,8 @@ def test_extract_salary():
     ) == (136038.0, 136038.0)
 
     assert extract_salary(
-        "The base salary range for this position in the selected city is $123626 - $220611 annually."
+        "The base salary range for this position in the "
+        "selected city is $123626 - $220611 annually."
     ) == (123626.0, 220611.0)
 
     assert extract_salary("Compensation is $401K") == (401000.0, 401000.0)
