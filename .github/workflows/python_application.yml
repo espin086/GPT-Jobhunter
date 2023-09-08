@@ -1,0 +1,51 @@
+# This workflow will install Python dependencies, run tests, and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest pylint black isort
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    # Check Black formatting
+    - name: Check Black formatting
+      run: |
+        black --check .
+
+    # Lint with Pylint
+    - name: Lint with Pylint
+      run: |
+        pylint *.py
+
+    # Test with pytest
+    - name: Test with pytest
+      run: |
+        pytest
+
+    # Sort imports with isort
+    - name: Sort imports with isort
+      run: |
+        isort *.py
