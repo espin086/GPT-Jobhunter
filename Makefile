@@ -2,7 +2,7 @@ SRC_DIR := $(shell pwd)/jobhunter/src
 
 setup:
 	python3 -m venv jobhunter
-	. jobhunter/bin/activate && pip install -r requirements.txt
+	pip install -r requirements.txt
 
 test: setup
 	cd $(SRC_DIR) && coverage run -m pytest
