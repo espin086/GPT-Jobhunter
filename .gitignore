@@ -1,4 +1,5 @@
 #removind data constraint
+jobhunter-venv
 
 database/*.db
 
