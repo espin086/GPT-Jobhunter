@@ -1,5 +1,5 @@
 # Use the officinal Python runtime
-FROM python:3.8.-slim
+FROM python:3.9
 
 # Set the working directory to /app
 WORKDIR /app
@@ -13,5 +13,6 @@ RUN make install
 # Expose port 8000
 EXPOSE 8000
 
-# Run Application
-RUN make run
+# Run the app when the container launches
+CMD ["make", "run"]
+

@@ -1,5 +1,4 @@
 
-SHELL := /bin/zsh
 SRC_DIR:=$(shell pwd)/src
 
 virtualenv: 
