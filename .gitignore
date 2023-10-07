@@ -1,7 +1,9 @@
 #removind data constraint
 jobhunter-venv
 
+#databases
 database/*.db
+jobhunter/src/all_jobs.db
 
 
 # Byte-compiled / optimized / DLL files
