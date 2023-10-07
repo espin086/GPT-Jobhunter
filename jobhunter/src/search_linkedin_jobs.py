@@ -27,14 +27,10 @@ from dotenv import load_dotenv
 # Load the .env file
 load_dotenv("../../.env")
 
-# # Get the directory where the script is located
-# script_directory = os.path.dirname(os.path.abspath(__file__))
-
-# # Change the working directory to the script's directory
-# os.chdir(script_directory)
 
 # Get the API key from the environment variable
 RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
+
 
 # Get the API URL from the config file
 JOB_SEARCH_URL = config.JOB_SEARCH_URL

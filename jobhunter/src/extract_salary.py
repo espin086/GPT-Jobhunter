@@ -24,12 +24,14 @@ def extract_salary(text):
     )
 
     hourly_pattern = r"\$([\d\.]+)\s*to\s*\$([\d\.]+)\/hour"
+    million_pattern = r"\b\d+M\b"
 
     # Search for patterns
     match1 = re.search(salary_pattern_1, text)
     match2 = re.search(salary_pattern_2, text)
     match3 = re.search(salary_pattern_3, text)
     match4 = re.search(hourly_pattern, text)
+    match5 = re.search(million_pattern, text)
 
     salary_low, salary_high = None, None
 
@@ -58,6 +60,9 @@ def extract_salary(text):
     elif match4:
         salary_low = float(match4.group(2)) * 40 * 52
         salary_high = float(match4.group(3)) * 40 * 52
+
+    elif match5:
+        return (None, None)
 
     if salary_low is not None and salary_low < 100:
         salary_low *= 1000

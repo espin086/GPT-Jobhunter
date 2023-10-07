@@ -1,3 +1,7 @@
+"""
+This code calculates the similarity between two documents
+"""
+
 import logging
 import argparse
 import pprint

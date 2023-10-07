@@ -33,6 +33,5 @@ def test_extract_salary():
 
     # additional tests
     assert extract_salary("Salary is around $200K-$250K") == (200000.0, 250000.0)
-
     assert extract_salary("This job does not disclose the salary.") == (None, None)
     assert extract_salary("Salary:$30000-$40000") == (30000.0, 40000.0)

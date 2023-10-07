@@ -22,4 +22,6 @@ def test_search_linkedin_jobs():
     location = "United States"
     page = 1
     result = search_linkedin_jobs(search_term, location, page)
-    assert result is not None
+    assert result is not None and result != {
+        "message": "You are not subscribed to this API."
+    }
