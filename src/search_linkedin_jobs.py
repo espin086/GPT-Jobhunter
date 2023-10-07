@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 
 
 # Load the .env file
-load_dotenv("../../.env")
+load_dotenv("../.env")
 
 
 # Get the API key from the environment variable
