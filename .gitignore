@@ -3,7 +3,7 @@ jobhunter-venv
 
 #databases
 database/*.db
-jobhunter/src/all_jobs.db
+jobhunter/src/*.db
 
 
 # Byte-compiled / optimized / DLL files
