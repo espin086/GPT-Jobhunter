@@ -5,6 +5,8 @@ jobhunter-venv
 database/*.db
 jobhunter/src/*.db
 
+#streamlit 
+.streamlit/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
