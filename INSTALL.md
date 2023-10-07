@@ -8,6 +8,10 @@ Before proceeding with the installation, please make sure you have the following
 
 - Access to a linux terminal (Mac or Ubuntu) or a WSL on Windows
 
+## Step 0: Clone the repository
+Clone the repository to your local environment.
+
+
 ## Step 1: Copy the .env-template
 
 To begin, we need to copy the `.env-template` file into `.env` so that the program can work properly. Use the following command to accomplish this:
