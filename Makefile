@@ -1,6 +1,6 @@
 
 SHELL := /bin/zsh
-SRC_DIR:=$(shell pwd)/jobhunter/src
+SRC_DIR:=$(shell pwd)/src
 
 virtualenv: 
 	python3 -m venv jobhunter-venv
@@ -17,8 +17,6 @@ test: setup
 
 run: test
 	streamlit run $(SRC_DIR)/main.py
-
-
 
 check-rapid-api-key:
 	@if [ -z "$$RAPID_API_KEY" ]; then \
