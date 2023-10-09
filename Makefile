@@ -8,7 +8,7 @@ virtualenv:
 install:
 	pip install -r requirements.txt
 
-test: setup
+test: install
     # the -k command makes it so it only looks at python files not folders
 	cd $(SRC_DIR) && coverage run -m pytest 
 	cd $(SRC_DIR) && coverage report 
