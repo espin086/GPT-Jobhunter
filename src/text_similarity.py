@@ -2,12 +2,13 @@
 This code calculates the similarity between two documents
 """
 
-import logging
 import argparse
+import logging
 import pprint
+
 import nltk
-from nltk.corpus import stopwords
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import cosine_similarity
 
 logging.basicConfig(level=logging.INFO)
