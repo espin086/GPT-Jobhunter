@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 import config as config
+from search_linkedin_jobs import search_linkedin_jobs
 
 # Load the .env file
 load_dotenv("../../.env")
@@ -48,45 +49,6 @@ def create_data_folders_if_not_exists():
         logging.error("An error occurred while creating data folders: %s", str(e))
 
 
-def search_linkedin_jobs(search_term, location, page):
-    """
-    This function takes in a search term, location and an optional page number as input and uses them to make a request to the LinkedIn jobs API. The API returns a json object containing job search results that match the search term and location provided. The function also sets up logging to log the request and any errors that may occur.
-
-    Args:
-    search_term (str): The job title or position you want to search for.
-    location (str): The location you want to search for jobs in.
-    page (int, optional): The page number of the search results you want to retrieve. Default is 1.
-
-    Returns:
-    json: A json object containing the search results.
-
-    Raises:
-    Exception: If an exception is encountered during the API request, it is logged as an error.
-    """
-
-    url = JOB_SEARCH_URL
-    payload = {"search_terms": search_term, "location": location, "page": page}
-    headers = {
-        "content-type": "application/json",
-        "X-RapidAPI-Key": RAPID_API_KEY,
-        "X-RapidAPI-Host": config.JOB_SEARCH_X_RAPIDAPI_HOST,
-    }
-
-    logging.debug(
-        "Making request to LinkedIn jobs API with search term: {}, location: {}".format(
-            search_term, location
-        )
-    )
-
-    try:
-        response = requests.request("POST", url, json=payload, headers=headers)
-        json_object = json.loads(response.text)
-        return json_object
-
-    except Exception as e:
-        logging.error("Encountered exception: {}".format(e))
-
-
 def save_raw_data(data, source):
     """
     Saves a dictionary to a JSON file locally in the ../data/raw directory.
@@ -107,6 +69,13 @@ def save_raw_data(data, source):
 
 
 def get_all_jobs(search_term, location, pages):
+    """
+    This function takes in a search term, location and an optional page and
+    uses them to make a request to the LinkedIn jobs API. The API returns a
+    json object containing job search results that match the search term and
+    location provided. The function also sets up logging to log the request
+    and any errors that may occur.
+    """
     all_jobs = []
     for page in range(0, pages):
         try:
