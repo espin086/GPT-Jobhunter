@@ -19,6 +19,7 @@ format:
 test:
 	pytest src
 
+check: format test
 
 run: 
 	streamlit run $(SRC_DIR)/main.py
