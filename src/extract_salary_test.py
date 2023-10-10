@@ -1,8 +1,14 @@
 """
-
 This module contains the test function for the extract_salary function.
 """
 
+import os
+import sys
+
+# Add the directory containing the extract_salary module to the Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Import the extract_salary module
 from extract_salary import extract_salary
 
 

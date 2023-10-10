@@ -1,8 +1,8 @@
 import json
 import logging
+import os
 import pprint
 import sqlite3
-import os
 
 import config
 

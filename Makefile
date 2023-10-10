@@ -5,14 +5,20 @@ virtualenv:
 	python3 -m venv jobhunter-venv
 	echo "RUN THIS!!!: source jobhunter-venv/bin/activate"
 
-install:
-	pip install -r requirements.txt
+.PHONY: install test lint format
 
-test: install
-    # the -k command makes it so it only looks at python files not folders
-	cd $(SRC_DIR) && coverage run -m pytest 
-	cd $(SRC_DIR) && coverage report 
-	cd $(SRC_DIR) && coverage html -d coverage_html
+install:
+	python -m pip install --upgrade pip
+	pip install flake8 pytest pylint black isort
+	if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+format:
+	black src
+	isort src/*.py
+
+test:
+	pytest src
+
 
 run: 
 	streamlit run $(SRC_DIR)/main.py
