@@ -7,6 +7,7 @@ This guide will walk you through the installation process for the program. Pleas
 Before proceeding with the installation, please make sure you have the following prerequisites:
 
 - Access to a linux terminal (Mac or Ubuntu) or a WSL on Windows
+- Subscription to Rapidapi and the Linkedin Job search service: https://rapidapi.com/jaypat87/api/linkedin-jobs-search
 
 ## Step 0: Clone the repository
 Clone the repository to your local environment.
@@ -34,23 +35,16 @@ make test
 
 If there are no errors, then everything is working properly.
 
-## Step 4: Create a Docker image
+## Step 4: Create a Docker image then create container and pass the .env file
 
 To create a Docker image, you need to run the appropriate Docker command on the Dockerfile. Make sure you have Docker installed on your system. If you don't have Docker installed, you can download it from the official website [here](https://www.docker.com/products/docker-desktop).
 
 ```shell
-docker build -t jobhunter .
+sh run_docker.sh
 ```
 
-## Step 5: Create a container and pass the .env file
-
-Finally, create a container from the Docker image and securely pass your secrets by using the local `.env` file as a variable. This will ensure that your secrets are securely passed to the container.
 
 
-
-```shell
-docker run --env-file .env -p 8501:8501 jobhunter
-```
 
 That's it! You have successfully installed the program. 
 
