@@ -25,7 +25,20 @@ cp .env-template .env
 
 Next, open the `.env` file in a text editor and add your Rapid API Key. This key is required for the program to function correctly. If you don't have a Rapid API Key, you can sign up for one [here](https://www.rapidapi.com/).
 
-## Step 3: Test the program
+
+## Step 3: Update the job titles and locations you'd like to search for by opening up the config.py file located here: 
+
+```shell
+jobhunter/src
+```
+
+Update the lists below
+
+![Alt](images/image_job_config.png)
+
+
+
+## Step 4: Test the program
 
 To ensure that everything is set up correctly, run the following command to run the tests:
 
@@ -35,7 +48,9 @@ make test
 
 If there are no errors, then everything is working properly.
 
-## Step 4: Create a Docker image then create container and pass the .env file
+
+
+## Step 5: Create a Docker image then create container and pass the .env file
 
 To create a Docker image, you need to run the appropriate Docker command on the Dockerfile. Make sure you have Docker installed on your system. If you don't have Docker installed, you can download it from the official website [here](https://www.docker.com/products/docker-desktop).
 
@@ -43,7 +58,7 @@ To create a Docker image, you need to run the appropriate Docker command on the 
 sh run_docker.sh
 ```
 
-
+## Step 6: Hit the Run Pipeline button to start your job search.
 
 
 That's it! You have successfully installed the program. 
@@ -51,5 +66,11 @@ That's it! You have successfully installed the program.
 ** You should be able to access the application in your browser by clicking **
 
 ```http://localhost:8501/```
+
+
+You should see the UI like this:
+
+![Alt](images/image_ui_pipelinemanager.png)
+
 
 If you encounter any issues during the installation process, please refer to the documentation or seek assistance from the support team.
