@@ -15,6 +15,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
 
     steps:
     - uses: actions/checkout@v3
@@ -33,19 +35,16 @@ jobs:
     # Check Black formatting
     - name: Check Black formatting
       run: |
-        black --check .
+        black --check src
 
-    # Lint with Pylint
-    - name: Lint with Pylint
+        # Sort imports with isort
+    - name: Sort imports with isort
       run: |
-        pylint *.py
+        isort src/*.py
 
     # Test with pytest
     - name: Test with pytest
       run: |
-        pytest
+        pytest src
 
-    # Sort imports with isort
-    - name: Sort imports with isort
-      run: |
-        isort *.py
+

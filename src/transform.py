@@ -1,17 +1,16 @@
-import config
 import datetime
-import logging
 import json
+import logging
 import os
 import re
-
-
-from extract_text_from_site import get_text_in_url
-from text_similarity import text_similarity
-from extract_salary import extract_salary
-from tqdm import tqdm
 from typing import List
 
+from tqdm import tqdm
+
+import config
+from extract_salary import extract_salary
+from extract_text_from_site import get_text_in_url
+from text_similarity import text_similarity
 
 logging.basicConfig(level=config.LOGGING_LEVEL)
 

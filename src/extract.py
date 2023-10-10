@@ -3,12 +3,13 @@ import json
 import logging
 import os
 import pprint
-import requests
 import time
 
+import requests
 from dotenv import load_dotenv
-import config as config
 from tqdm import tqdm
+
+import config as config
 
 # Load the .env file
 load_dotenv("../../.env")

@@ -1,14 +1,13 @@
-import streamlit as st
 import sqlite3
+
 import pandas as pd
+import streamlit as st
 
-from extract import extract
-from transform import transform
-from load import load
+from config import LOCATIONS, POSITIONS
 from delete_local import delete_local
-
-from config import POSITIONS, LOCATIONS
-
+from extract import extract
+from load import load
+from transform import transform
 
 st.title("Config Manager")
 
