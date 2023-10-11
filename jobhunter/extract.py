@@ -1,30 +1,35 @@
-import datetime
-import json
+"""
+This module contains the functions used to extract data from the LinkedIn jobs API.
+"""
+
 import logging
 import os
 import pprint
-import sys
 import time
 
-import requests
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-sys.path.append("..")
 import config
 from search_linkedin_jobs import search_linkedin_jobs
-
-# Load the .env file
-load_dotenv("../../.env")
+from FileHandler import FileHandler
 
 
 # change current director to location of this file
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 os.chdir(THIS_DIR)
 
+# Load the .env file
+load_dotenv("../../.env")
+
 
 # Get the API key from the environment variable
 RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
+
+
+file_handler = FileHandler(
+    raw_path="temp/data/raw", processed_path="temp/data/processed"
+)
 
 
 # Initialize pretty printer and logging
@@ -36,38 +41,6 @@ logging.basicConfig(
 
 # Get the API URL from the config file
 JOB_SEARCH_URL = config.JOB_SEARCH_URL
-
-
-def create_data_folders_if_not_exists():
-    """
-    Creates the data folders if they don't exist.
-    """
-    try:
-        os.makedirs("temp/data/raw", exist_ok=True)
-        os.makedirs("temp/data/processed", exist_ok=True)
-        logging.info("Created data folders successfully.")
-
-    except Exception as e:
-        logging.error("An error occurred while creating data folders: %s", str(e))
-
-
-def save_raw_data(data, source):
-    """
-    Saves a dictionary to a JSON file locally in the ../data/raw directory.
-    """
-    try:
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-        # Note: You might want to add a unique identifier for each job to the file name
-        file_path = os.path.join("temp", "data", "raw", f"{source}-{timestamp}.json")
-
-        with open(file_path, "w") as f:
-            json.dump(data, f)
-
-        logging.info("Saved job successfully.")
-        logging.debug("Saved data to %s", file_path)
-
-    except Exception as e:
-        logging.error("An error occurred while saving data: %s", str(e))
 
 
 def get_all_jobs(search_term, location, pages):
@@ -88,11 +61,14 @@ def get_all_jobs(search_term, location, pages):
             if jobs:
                 all_jobs.extend(jobs)  # change this line to extend instead of append
 
-                logging.debug(f"Appended {len(jobs)} jobs for page {page}")
+                logging.debug("Appended %d jobs for page %d", len(jobs), page)
                 for job in jobs:
-                    save_raw_data(
-                        job, source="linkedinjobs"
-                    )  # save each job as it's found
+                    file_handler.save_data(
+                        data=job,
+                        source="linkedinjobs",
+                        sink=file_handler.processed_path,
+                    )
+
             else:
                 logging.warning("No jobs found for page %d", page)
 
@@ -104,22 +80,11 @@ def get_all_jobs(search_term, location, pages):
     return all_jobs
 
 
-def save_jobs(search_term, location, pages):
-    try:
-        jobs = get_all_jobs(search_term=search_term, location=location, pages=pages)
-        if jobs:
-            logging.info(
-                f"Found {len(jobs)} jobs. Jobs saved."
-            )  # No need to save again here, already saved in get_all_jobs
-        else:
-            logging.warning("No jobs found.")
-
-    except Exception as e:
-        logging.error("An error occurred while saving jobs: %s", str(e))
-
-
 def extract():
-    create_data_folders_if_not_exists()
+    """
+    This function extracts data from the LinkedIn jobs API and saves it locally.
+    """
+    file_handler.create_data_folders_if_not_exists()
     try:
         positions = config.POSITIONS
         locations = config.LOCATIONS
@@ -132,7 +97,9 @@ def extract():
 
         for position in tqdm(positions):
             for location in locations:
-                save_jobs(search_term=position, location=location, pages=config.PAGES)
+                get_all_jobs(
+                    search_term=position, location=location, pages=config.PAGES
+                )
 
         logging.info("Extraction process completed.")
 

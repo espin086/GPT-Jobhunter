@@ -1,12 +1,14 @@
+"""
+This is the main.py file that will be used to run the pipeline and query the SQLite database.
+"""
 import sqlite3
-
 import pandas as pd
 import streamlit as st
 from config import LOCATIONS, POSITIONS
-from delete_local import delete_local
 from extract import extract
 from load import load
 from transform import transform
+from FileHandler import FileHandler
 
 st.title("Config Manager")
 
@@ -14,16 +16,27 @@ st.write(POSITIONS)
 st.write(LOCATIONS)
 
 
+file_handler = FileHandler(
+    raw_path="temp/data/raw", processed_path="temp/data/processed"
+)
+
+
 # Streamlit app
 st.title("Pipeline Manager")
 
 if st.button("Run Pipeline"):
-    steps = [extract, transform, load, delete_local]
+    steps = [
+        extract,
+        transform,
+        load,
+    ]
     progress_bar = st.progress(0)
 
     for i, step in enumerate(steps):
         step()  # Execute each function
         progress_bar.progress((i + 1) / len(steps))  # Update progress bar
+
+    file_handler.delete_local()
 
     st.success("Pipeline completed.")
 
