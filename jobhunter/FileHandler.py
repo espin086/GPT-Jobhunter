@@ -10,6 +10,8 @@ import config
 import datetime
 import json
 
+from jobhunter import config
+
 
 class FileHandler:
     """This class handles all of the local file movements for the project"""
