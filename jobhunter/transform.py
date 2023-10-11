@@ -9,9 +9,9 @@ from typing import List
 import config
 from extract_salary import extract_salary
 from extract_text_from_site import get_text_in_url
+from FileHandler import FileHandler
 from text_similarity import text_similarity
 from tqdm import tqdm
-from FileHandler import FileHandler
 
 logging.basicConfig(level=config.LOGGING_LEVEL)
 

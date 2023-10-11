@@ -2,13 +2,14 @@
 This is the main.py file that will be used to run the pipeline and query the SQLite database.
 """
 import sqlite3
+
 import pandas as pd
 import streamlit as st
 from config import LOCATIONS, POSITIONS
 from extract import extract
+from FileHandler import FileHandler
 from load import load
 from transform import transform
-from FileHandler import FileHandler
 
 st.title("Config Manager")
 

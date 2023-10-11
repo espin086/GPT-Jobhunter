@@ -1,7 +1,8 @@
-import pytest
-import os
 import json
+import os
 import sys
+
+import pytest
 
 # Add the path to the FileHandler module to the system path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

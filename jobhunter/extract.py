@@ -7,13 +7,11 @@ import os
 import pprint
 import time
 
-from dotenv import load_dotenv
-from tqdm import tqdm
-
 import config
-from search_linkedin_jobs import search_linkedin_jobs
+from dotenv import load_dotenv
 from FileHandler import FileHandler
-
+from search_linkedin_jobs import search_linkedin_jobs
+from tqdm import tqdm
 
 # change current director to location of this file
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))

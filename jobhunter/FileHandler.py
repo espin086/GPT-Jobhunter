@@ -3,12 +3,13 @@ This code handles all of the local file movements for the project
 
 """
 
+import datetime
+import json
 import logging
 import os
 import pprint
+
 import config
-import datetime
-import json
 
 from jobhunter import config
 
