@@ -41,6 +41,22 @@ class FileHandler:
         except Exception as e:
             logging.error("An error occurred while creating data folders: %s", str(e))
 
+    def load_json_files(self, directory):
+        """This function loads all JSON files from a directory and returns a list of JSON objects."""
+        logging.info("Loading JSON files from %s", directory)
+        json_list = []
+        for filename in os.listdir(directory):
+            if filename.endswith(".json"):
+                filepath = os.path.join(directory, filename)
+                try:
+                    with open(filepath, encoding="utf-8") as f:
+                        json_obj = json.load(f)
+                        json_list.append(json_obj)
+                    logging.info("Successfully loaded %s", filename)
+                except Exception as e:
+                    logging.error("Failed to load %s: %s", filename, e)
+        return json_list
+
     def read_resume_text(self, resume_file_path):
         """
         Read the text content of a resume file.

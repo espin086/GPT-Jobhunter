@@ -10,28 +10,16 @@ import pprint
 import sqlite3
 
 import config
+from FileHandler import FileHandler
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(
     level=config.LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-
-def load_json_files(directory):
-    """This function loads all JSON files from a directory and returns a list of JSON objects."""
-    logging.info("Loading JSON files from %s", directory)
-    json_list = []
-    for filename in os.listdir(directory):
-        if filename.endswith(".json"):
-            filepath = os.path.join(directory, filename)
-            try:
-                with open(filepath, encoding="utf-8") as f:
-                    json_obj = json.load(f)
-                    json_list.append(json_obj)
-                logging.info("Successfully loaded %s", filename)
-            except Exception as e:
-                logging.error("Failed to load %s: %s", filename, e)
-    return json_list
+file_handler = FileHandler(
+    raw_path="temp/data/raw", processed_path="temp/data/processed"
+)
 
 
 def create_db_if_not_there():
@@ -141,7 +129,7 @@ def load():
     This function loads the JSON files from the processed folder and uploads them to the database.
     """
     logging.info("Main loading function initiated.")
-    data = load_json_files(directory="temp/data/processed")
+    data = file_handler.load_json_files(directory="temp/data/processed")
     data = add_primary_key(json_list=data)
     create_db_if_not_there()
     check_and_upload_to_db(json_list=data)
