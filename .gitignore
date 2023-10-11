@@ -2,9 +2,9 @@
 jobhunter-venv
 
 #databases
-src/*.db
+jobhunter/*.db
 
-
+jobhunter/src/temp/
 
 
 #streamlit 
@@ -64,7 +64,7 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-src/coverage_html
+jobhunter/coverage_html
 
 # Translations
 *.mo
