@@ -1,5 +1,5 @@
 
-SRC_DIR:=$(shell pwd)/src
+SRC_DIR:=$(shell pwd)/jobhunter
 
 virtualenv: 
 	python3 -m venv jobhunter-venv
@@ -13,11 +13,11 @@ install:
 	pip install -e .
 
 format:
-	black src
-	isort src/*.py
+	black $(SRC_DIR)
+	isort $(SRC_DIR)/*.py
 
 test:
-	pytest src
+	pytest $(SRC_DIR)
 
 check: install format test
 
