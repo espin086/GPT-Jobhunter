@@ -1,5 +1,5 @@
 
-SRC_DIR:=$(shell pwd)/src
+SRC_DIR:=$(shell pwd)/jobhunter
 
 virtualenv: 
 	python3 -m venv jobhunter-venv
@@ -10,16 +10,16 @@ virtualenv:
 install:
 	python -m pip install --upgrade pip
 	pip install flake8 pytest pylint black isort
-	if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+	pip install -e .
 
 format:
-	black src
-	isort src/*.py
+	black $(SRC_DIR)
+	isort $(SRC_DIR)/*.py
 
 test:
-	pytest src
+	pytest $(SRC_DIR)
 
-check: format test
+check: install format test
 
 run: 
 	streamlit run $(SRC_DIR)/main.py
