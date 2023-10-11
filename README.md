@@ -23,3 +23,7 @@
 [Quickstart](INSTALL.md)
 
 [def]: image_ui_pipelinemanager.png
+
+## Contributing
+
+[Contributing](CONTRIBUTING.md)
