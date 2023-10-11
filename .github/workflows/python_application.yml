@@ -45,6 +45,6 @@ jobs:
     # Test with pytest
     - name: Test with pytest
       run: |
-        pytest jobhunter
+        cd jobhunter && pytest .
 
 
