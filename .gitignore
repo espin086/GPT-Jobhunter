@@ -4,7 +4,7 @@ jobhunter-venv
 #databases
 jobhunter/*.db
 
-jobhunter/src/temp/
+jobhunter/temp/
 
 
 #streamlit 
