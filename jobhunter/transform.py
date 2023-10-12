@@ -9,53 +9,20 @@ from typing import List
 import config
 from extract_salary import extract_salary
 from extract_text_from_site import get_text_in_url
+from FileHandler import FileHandler
 from text_similarity import text_similarity
 from tqdm import tqdm
 
 logging.basicConfig(level=config.LOGGING_LEVEL)
 
-
-def import_job_data_from_dir(dirpath):
-    data_list = [
-        json.load(open(os.path.join(dirpath, filename)))
-        for filename in os.listdir(dirpath)
-        if filename.startswith(config.FILENAMES) and filename.endswith(".json")
-    ]
-    data_list = [
-        data
-        for data in data_list
-        if all(
-            key in data
-            for key in [
-                "job_url",
-                "linkedin_job_url_cleaned",
-                "company_name",
-                "company_url",
-                "linkedin_company_url_cleaned",
-                "job_title",
-                "job_location",
-                "posted_date",
-                "normalized_company_name",
-            ]
-        )
-    ]
-    invalid_files = [
-        filename
-        for filename in os.listdir(dirpath)
-        if filename.startswith(config.FILENAMES)
-        and filename.endswith(".json")
-        and os.path.join(dirpath, filename)
-        not in [os.path.join(dirpath, data.get("filename", "")) for data in data_list]
-    ]
-    for filename in invalid_files:
-        logging.warning(
-            "WARNING: raw data schema does not conform in file {}".format(filename)
-        )
-    logging.info(f"INFO: here is the data_list: {data_list}")
-    return data_list
+file_handler = FileHandler(
+    raw_path="temp/data/raw", processed_path="temp/data/processed"
+)
 
 
 def delete_json_keys(json_obj, *keys):
+    """
+    Deletes the specified keys from a JSON object."""
     # Loop through the keys to delete and remove them from the JSON object
     for key in keys:
         if key in json_obj:
@@ -66,6 +33,7 @@ def delete_json_keys(json_obj, *keys):
 
 
 def drop_variables(raw_data):
+    """This function drops the variables that are not needed for the analysis."""
     clean_data = []
     for job in raw_data:
         clean_data.append(
@@ -75,6 +43,8 @@ def drop_variables(raw_data):
 
 
 def remove_duplicates(raw_data):
+    """
+    Remove duplicate dictionaries from a list of dictionaries."""
     tuples = [tuple(d.items()) for d in raw_data]
     unique_tuples = set(tuples)
     unique_dicts = [dict(t) for t in unique_tuples]
@@ -118,6 +88,7 @@ def rename_keys(json_list, key_map):
 
 
 def convert_keys_to_lowercase(json_list, *keys):
+    """Converts the values of the specified keys to lowercase."""
     for obj in json_list:
         for key in keys:
             if key in obj:
@@ -139,9 +110,9 @@ def add_description_to_json_list(json_list):
             try:
                 description = get_text_in_url(job_url)
                 item["description"] = description
-            except:
+            except Exception as e:
+                logging.warning(f"Failed to get description for job {job_url}: {e}")
                 item["description"] = ""
-
         else:
             item["description"] = ""
 
@@ -149,6 +120,9 @@ def add_description_to_json_list(json_list):
 
 
 def extract_salaries(json_list):
+    """
+    Extracts salaries from the 'description' field of each JSON in the list.
+    """
     # Create a new list to store the modified JSON dictionaries
     new_json_list = []
 
@@ -179,21 +153,6 @@ def extract_salaries(json_list):
     return new_json_list
 
 
-def read_resume_text(resume_file_path):
-    """
-    Read the text content of a resume file.
-
-    Args:
-        resume_file_path: The path to the resume file.
-
-    Returns:
-        The text content of the resume file.
-    """
-    with open(resume_file_path, "r") as f:
-        resume_text = f.read()
-    return resume_text
-
-
 def compute_resume_similarity(json_list, resume_text):
     """
     Compute the similarity between the resume text and the 'description' field of each JSON in the list.
@@ -219,50 +178,13 @@ def compute_resume_similarity(json_list, resume_text):
     return new_json_list
 
 
-def save_raw_data(data, source):
-    """
-    Saves dictionaries to a JSON file locally in the ../data/raw directory.
-    """
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-    file_path = os.path.join("temp", "data", "processed", f"{source}-{timestamp}.json")
-    with open(file_path, "w") as f:
-        json.dump(data, f)
-    logging.info("Saved data to %s", file_path)
-    return None
-
-
-def save_raw_data_list(data_list, source):
-    """
-    Saves a list of dictionaries to individual JSON files locally in the ../data/raw directory.
-    """
-    required_keys = [
-        "job_url",
-        "title",
-        "company_url",
-        "location",
-        "date",
-        "company",
-        "description",
-        "salary_low",
-        "salary_high",
-        "resume_similarity",
-    ]
-    for i, data in enumerate(data_list):
-        # Check if the data contains all the required keys
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
-        file_path = os.path.join(
-            "temp", "data", "processed", f"{source}-{i+1}-{timestamp}.json"
-        )
-        with open(file_path, "w") as f:
-            json.dump(data, f)
-        print(f"INFO: saved data to {file_path}")
-    return None
-
-
 # ----------main----------
 def transform():
-    resume = read_resume_text(resume_file_path=f"temp/resumes/resume.txt")
-    data = import_job_data_from_dir(dirpath=f"temp/" + "data/raw")
+    """
+    This function transforms the raw data into a format that is ready for analysis.
+    """
+    resume = file_handler.read_resume_text(resume_file_path="temp/resumes/resume.txt")
+    data = file_handler.import_job_data_from_dir(dirpath="temp/" + "data/raw")
     data = drop_variables(raw_data=data)
     data = remove_duplicates(raw_data=data)
     key_map = {
@@ -278,7 +200,11 @@ def transform():
     data = add_description_to_json_list(json_list=data)
     data = extract_salaries(json_list=data)
     data = compute_resume_similarity(json_list=data, resume_text=resume)
-    save_raw_data_list(data_list=data, source="linkedinjobs")
+
+    file_handler.save_data_list(
+        data_list=data, source="linkedinjobs", sink=file_handler.processed_path
+    )
+
     return None
 
 
