@@ -22,27 +22,27 @@ FILENAMES = "linkedinjob"
 
 POSITIONS = [
     "Principal Machine Learning Engineer",
-    "Senior Machine Learning Engineer",
-    "Senior Artificial Intelligence Engineer",
-    "Senior Data Scientist",
-    "Principal Data Scientist",
-    "Lead Machine Learning Engineer",
-    "Lead Artificial Intelligence Engineer",
-    "Lead Data Scientist",
-    "Machine Learning Architect",
-    "AI Research Scientist",
-    "Machine Learning Consultant",
-    "Data Science Manager",
-    "Data Science Team Lead",
-    "AI Solutions Architect",
-    "AI Product Manager",
+    # "Senior Machine Learning Engineer",
+    # "Senior Artificial Intelligence Engineer",
+    # "Senior Data Scientist",
+    # "Principal Data Scientist",
+    # "Lead Machine Learning Engineer",
+    # "Lead Artificial Intelligence Engineer",
+    # "Lead Data Scientist",
+    # "Machine Learning Architect",
+    # "AI Research Scientist",
+    # "Machine Learning Consultant",
+    # "Data Science Manager",
+    # "Data Science Team Lead",
+    # "AI Solutions Architect",
+    # "AI Product Manager",
 ]
 
 # List of locations
 LOCATIONS = ["remote"]
 
 # Pagination for API calls
-PAGES = 5
+PAGES = 2
 
 
 # === Model Configs ===

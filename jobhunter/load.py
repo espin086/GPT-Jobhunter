@@ -1,35 +1,29 @@
+"""
+This module contains the load function that loads the JSON files from the 
+processed folder and uploads them to the database.
+"""
+
 import json
 import logging
 import os
 import pprint
 import sqlite3
-import sys
 
 import config
+from FileHandler import FileHandler
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(
     level=config.LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-
-def load_json_files(directory):
-    logging.info(f"Loading JSON files from {directory}")
-    json_list = []
-    for filename in os.listdir(directory):
-        if filename.endswith(".json"):
-            filepath = os.path.join(directory, filename)
-            try:
-                with open(filepath) as f:
-                    json_obj = json.load(f)
-                    json_list.append(json_obj)
-                logging.info(f"Successfully loaded {filename}")
-            except Exception as e:
-                logging.error(f"Failed to load {filename}: {e}")
-    return json_list
+file_handler = FileHandler(
+    raw_path="temp/data/raw", processed_path="temp/data/processed"
+)
 
 
 def create_db_if_not_there():
+    """This function creates the database if it doesn't exist."""
     logging.info("Checking and creating database if not present.")
     conn = sqlite3.connect(f"{config.DATABASE}")
     c = conn.cursor()
@@ -53,15 +47,19 @@ def create_db_if_not_there():
         )
         conn.commit()
         logging.info(
-            f"Successfully created or ensured the table {config.TABLE_JOBS} exists."
+            "Successfully created or ensured the table %s exists.", config.TABLE_JOBS
         )
     except Exception as e:
-        logging.error(f"Failed to create table: {e}")
+        logging.error("Failed to create table: %s", e)
     finally:
         conn.close()
 
 
 def add_primary_key(json_list):
+    """
+    This function adds a primary key to each JSON object in the list.
+
+    """
     logging.info("Adding primary keys to JSON data.")
     for item in json_list:
         try:
@@ -71,12 +69,19 @@ def add_primary_key(json_list):
             item["primary_key"] = primary_key
         except AttributeError as e:
             logging.error(
-                f"AttributeError {e} occurred while processing {item}. Skipping item."
+                "AttributeError %s occurred while processing %s. Skipping item.",
+                e,
+                item,
             )
     return json_list
 
 
 def check_and_upload_to_db(json_list):
+    """
+    This function checks if the primary key already exists in the database and if not,
+    uploads the data to the database.
+
+    """
     logging.info("Starting upload to database.")
     conn = sqlite3.connect(f"{config.DATABASE}")
     c = conn.cursor()
@@ -89,8 +94,10 @@ def check_and_upload_to_db(json_list):
             )
             result = c.fetchone()
             if result:
-                logging.warning(f"{primary_key} already in database, skipping...")
+                logging.warning("%s already in database, skipping...", primary_key)
+
             else:
+                columns
                 c.execute(
                     f"INSERT INTO {config.TABLE_JOBS} (primary_key, date, resume_similarity, title, company, salary_low, salary_high, location, job_url, company_url, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
@@ -108,18 +115,21 @@ def check_and_upload_to_db(json_list):
                     ),
                 )
                 conn.commit()
-                logging.info(f"UPLOADED: {primary_key} uploaded to database")
+                logging.info("UPLOADED: %s uploaded to database", primary_key)
         except KeyError as e:
-            logging.error(f"Skipping item due to missing key: {e}")
+            logging.error("Skipping item due to missing key: %s", e)
         except Exception as e:
-            logging.error(f"Skipping item due to error: {e}")
+            logging.error("Skipping item due to error: %s", e)
 
     conn.close()
 
 
 def load():
+    """
+    This function loads the JSON files from the processed folder and uploads them to the database.
+    """
     logging.info("Main loading function initiated.")
-    data = load_json_files(directory="temp/data/processed")
+    data = file_handler.load_json_files(directory="temp/data/processed")
     data = add_primary_key(json_list=data)
     create_db_if_not_there()
     check_and_upload_to_db(json_list=data)
