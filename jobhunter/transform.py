@@ -6,12 +6,11 @@ import re
 import sys
 from typing import List
 
+import config
 from extract_salary import extract_salary
 from extract_text_from_site import get_text_in_url
 from text_similarity import text_similarity
 from tqdm import tqdm
-
-import config
 
 logging.basicConfig(level=config.LOGGING_LEVEL)
 
