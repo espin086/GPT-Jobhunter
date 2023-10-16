@@ -1,0 +1,123 @@
+interview.jj.espinoza@gmail.com
+schedule a call
+
+JJ Espinoza
+(424) 237-8503
+
+California, USA
+Linkedin Profile
+
+Career Progression
+
+Principal Machine Learning Architect Amazon Web Services (AWS) 2020 - 2023
+● Major achievement: Led technically rigorous AI/ML projects as a consultant at AWS for NBCUniversal, HBO, Discovery
+Channel, Oxy Chemical, and many others..
+● Designed and implemented cloud based data engineering and ML architectures to drive marketing, sales, and content decisions.
+● Hands-on AI/ML programming of innovative techs like MLOps, chatGPT, computer vision, and machine learning.
+● Skills: Airflow, MLOps, AWS SageMaker, Artificial Intelligence, AWS Lambda, DynamoDB, Data Lakes, ETL
+Lead, Data Scientist (Marketing) Facebook 2019 - 2020
+● Major achievement: Led the senior team of 5+ marketing scientists, providing thought leadership on MMM and MTA modeling
+for Toyota, General Motors, Ford Motor Company, Honda, Hyundai.
+● Represented Facebook as Marketing Scientist SME, advising on experimentation best practices, delivering 20%+ ROI for Toyota.
+● Created scalable data pipelines with Airflow, analyzing data for 10+ colleagues, driving millions in profits for automotive clients.
+● Developed and implemented innovative measurement solutions for advertising campaigns, resulting in a 15% increase in efficiency.
+● Skills: Regression Analysis, Marketing Analytics, Airflow, SQL, ROI Optimization, Experimentation
+Director of Data Science and Machine Learning 20th Century Fox 2017 - 2019
+● Major achievement: Co-founded innovative data science team, scaling to 5+ data scientists, engineers, and cloud
+architects resulting in technical publications, industry publications.
+● Led automation of data processing, reducing prep time by 80% for faster model iteration and improved marketing impact.
+● Developed an innovative ML system leading to 5 technical papers, a Google Cloud Blog post, and industry recognition.
+● Skills: Cloud Architecture, Data Science Leadership, Airflow, GCP BigQuery, Marketing Analytics
+Director, Advanced Analytics NBCUniversal 2016 - 2017
+● Major achievement: Hired data scientists and engineers, resulting in enhanced insights for senior executives.
+● Led the implementation of a new data-driven decision-making process, improving the accuracy of forecasting and strategic planning.
+● Hands-on developing of econometrics and ML model to drive innovation, motivation, and engagement.
+● Skills: Team Management, Econometrics, Data Science, Business Analysis, Machine Learning
+Manager of Marketing Analytics and Data Science Disney 2012 - 2015
+● Major achievement: Built a high-performing team by hiring top data scientists and collaborating with other hiring managers.
+● Operations research and marketing optimization for MMM and MTA models for new Television Shows and Movies.
+● Led overseas team to develop innovative and robust machine learning models for executive-facing data products.
+● Skills: SQL, MMM/MTA Modeling, Python, Cross-functional Collaboration, Machine Learning, Econometrics
+Econometrician EconOne Research 2011 - 2012
+● Major achievement: Led data engineering and economic analysis for a major antitrust lawsuit, resulting in a $400M settlement.
+● Employed econometrics to quantify the impact of pricing, costs, demand, and supply factors on airline ticket prices.
+● Skills: SQL, Econometrics, Economic Analysis, Regression Analysis, Time-Series Analysis
+
+Education
+
+● Harvard Business School, Competing on Artificial Ingelligence - This live program explores the transformative impact of AI on
+businesses, including tools like ChatGPT, enabling participants to lead their companies towards AI-driven success
+● Stanford Business School, Flagship Executive Education Program (LEAD) - Stanford LEAD offers an 8-course curriculum
+that helps leaders develop an innovation mindset to implement change: design thinking, decision analysis,, finance, strategy.
+● CSUF - M.S. Econometrics: time series, mathematical economics, game theory, econometrics
+● UCLA - B.S. Mathematics: programming, probability, statistics, calculus, optimization, physics
+● UCLA - B.A. Economics: operations research, microeconomics, mathematical economics
+● Cerritos College - A.S. Mathematics, A.A. Economics, A.A. Business Administration
+Certifications
+
+● Artificial Intelligence Certifications: Generative AI Specialist, Image Generation, Image Captioning, Large Language Models
+● MLOps Certifications: Build, Train, and Deploy MLOps Pipelines using BERT, Optimize ML with Human-in-the-Loop Pipelines
+● Machine Learning Certifications: Machine Learning, Train ML Models, Train AutoML Models
+● Data Engineering Certifications: Serverless Data Analysis on GCP, Unstructured Datapipelines, Resilient Streaming Systems
+● AWS Certifications: Solutions Architect - Associate, Cloud Practitioner, Machine Learning Specialist, Data Science on AWS
+● Google Cloud Certifications: Data Engineering, and Machine Learning, Serverless Machine Learning
+● Data Science Certifications: Data Science Tools, Statistical Inference, Regression Models, Developing Data Products
+● Programming Certifications: R Programming, Python for Data Science, Python Programming
+
+Projects
+Cutting-Edge AI-Enhanced Weekly Report Generator - Link to Live Website, Github Link
+● Situation: Tranforms casual notes into sophisticated executive summaries.
+● Task: Pioneering an intuitive web interface for inputting weekly accomplishments, hurdles, and upcoming steps.
+● Action: Skillfully orchestrated a robust Streamlit application, seamlessly integrating the prowess of the gpt-3.5-turbo model from OpenAI
+for content synthesis. Docker containerization ensures easy deployment.
+● Result: Achieved an alchemical transformation of unstructured notes into eloquent executive summaries through AI magic, supported by
+Docker, Python, Streamlit, and OpenAI's advanced NLP technology.
+Enhancing Movie Recommendations through Collaborative Metric Learning at 20th Century Fox - Link to Publication
+● Situation: Enhancing Movie Recommendation Systems
+● Task: Addressing limitations of Collaborative Filtering (CF) models in scenarios like new product launches.
+● Action: Combining generative language models with CF to improve recommendations, especially in 'cold start' situations. Utilizing
+purchase data and product descriptions to create meaningful representations using deep neural networks.
+● Result: Developed a Collaborative (Deep) Metric Learning (CML) system to predict purchase probabilities for new theatrical releases.
+Evaluated using extensive customer data, achieving gains over non-training models.
+Real-time AI Based Computer Vision Based Facial Emotion Detection System - Github Link
+● Situation: Aimed to provide a real-time solution for emotion tracking using webcam feeds.
+● Task: Develop an application that captures and analyses facial expressions to identify emotional states, which can be used for real-time
+tracking and historical data analysis.
+● Action: Used Python and Streamlit for frontend development and SQLite for backend storage. Leveraged AWS Rekognition for facial
+emotion detection and used OpenCV for frame sampling from live video.
+● Result: An application capable of identifying emotions in real-time, storing data for historical analysis, and presenting the information in a
+graphical format for trend analysis.
+Temporal-aware Video Recommendation Modeling for Enhanced Movie Trailers - Link to Publication
+● Situation: Addressing the potential of object temporal sequencing in movie trailers to enhance customer behavior predictions.
+● Task: Developing a video convolutional network to capture predictive actions and scenes from various object sequences.
+● Action: Implementing a temporal-aware model that outperforms conventional feature pooling methods, demonstrating improved
+predictability and model explainability.
+● Result: Successful creation of a video-based recommendation system using a novel convolutional collaborative filter network, enriching
+movie trailers' impact on customer preferences and behavior predictions.
+GPT LLM Based Resume & Job Matching System - GitHub Link
+● Situation: With the increasing number of job postings, I aimed to streamline the job search process by leveraging Word Embeddings/NLP
+to match my resume against potential roles.
+● Task: Implement an automated system to extract job postings, analyze them, and align them with my resume to pinpoint the most fitting
+opportunities.
+● Action: Utilized Apache Airflow for workflow automation, Google BigQuery for data storage and retrieval, and Python for ML operations,
+including ETL processes, API integrations, GPT for NLP tasks, and a user-friendly UI.
+● Result: You are likely reading my resume because my AI system found that your job posting is a great match for me.
+Fully Scalable Serverless Cloud APIs for Text Analysis Using Infrastructure as Code - Link to Website
+● Situation: Identified the growing demand for scalable NLP analysis, along with a subscription model for easier access by developers.
+● Task: Design and implement a fully scalable and serverless cloud architecture that allows for text analysis capabilities.
+● Action: Identified the growing demand for scalable NLP analysis in the cloud, along with a subscription model for access by developers.
+● Result: Created a robust, scalable solution for text analysis in the cloud, making it easier for developers to integrate advanced NLP
+capabilities into their projects through a subscription model.
+Utilities: Boosting Data Processing and Analysis Efficiency - Github Link
+● Situation: Recognized the need for versatile tools to streamline data work across multiple projects.
+● Task: Develop a repository of Python and R scripts offering invaluable functions for data processing, visualization, and analysis.
+● Action: Curated a rich collection of utilities to simplify workflows, enhancing productivity and efficiency.
+● Result: Crafted a powerful resource that empowers users with time-saving data processing and analysis tools, fostering productivity
+across diverse projects.
+Enhancing Movie Recommendations through Collaborative Metric Learning at 20th Century Fox - Link to Publication
+● Situation: Enhancing Movie Recommendation Systems
+● Task: Addressing limitations of Collaborative Filtering (CF) models in scenarios like new product launches.
+● Action: Combining generative language models with CF to improve recommendations, especially in 'cold start' situations. Utilizing
+purchase data and product descriptions to create meaningful representations using deep neural networks.
+● Result: Developed a Collaborative (Deep) Metric Learning (CML) system to predict purchase probabilities for new theatrical releases.
+Evaluated using extensive customer data, achieving gains over non-training models.
