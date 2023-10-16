@@ -1,5 +1,6 @@
-import click
 import os
+
+import click
 from streamlit.web import cli as stcli
 
 
