@@ -9,8 +9,8 @@ import os
 import pprint
 import sqlite3
 
-import config
-from FileHandler import FileHandler
+from jobhunter import config
+from jobhunter.FileHandler import FileHandler
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(
@@ -97,7 +97,6 @@ def check_and_upload_to_db(json_list):
                 logging.warning("%s already in database, skipping...", primary_key)
 
             else:
-                columns
                 c.execute(
                     f"INSERT INTO {config.TABLE_JOBS} (primary_key, date, resume_similarity, title, company, salary_low, salary_high, location, job_url, company_url, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (

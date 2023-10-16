@@ -1,17 +1,13 @@
-import datetime
-import json
 import logging
-import os
-import re
-import sys
 from typing import List
-
-import config
-from extract_salary import extract_salary
-from extract_text_from_site import get_text_in_url
-from FileHandler import FileHandler
-from text_similarity import text_similarity
 from tqdm import tqdm
+
+from jobhunter import config
+from jobhunter.extract_salary import extract_salary
+from jobhunter.extract_text_from_site import get_text_in_url
+from jobhunter.FileHandler import FileHandler
+from jobhunter.text_similarity import text_similarity
+
 
 logging.basicConfig(level=config.LOGGING_LEVEL)
 
