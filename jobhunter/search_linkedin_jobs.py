@@ -21,6 +21,7 @@ import pprint
 
 import requests
 from dotenv import load_dotenv
+
 from jobhunter import config
 
 # Add the path to the .env file

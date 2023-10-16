@@ -7,11 +7,12 @@ import os
 import pprint
 import time
 
-from jobhunter import config
 from dotenv import load_dotenv
+from tqdm import tqdm
+
+from jobhunter import config
 from jobhunter.FileHandler import FileHandler
 from jobhunter.search_linkedin_jobs import search_linkedin_jobs
-from tqdm import tqdm
 
 # change current director to location of this file
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
