@@ -45,7 +45,7 @@ jobs:
     # Test with pytest
     - name: Test with pytest
       run: |
-        export PYTHONPATH=. && cd jobhunter && pytest .
+        export PYTHONPATH=. && cd tests && pytest .
 
 
 
