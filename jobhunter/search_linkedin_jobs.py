@@ -18,11 +18,10 @@ import json
 import logging
 import os
 import pprint
-import sys
 
-import config
 import requests
 from dotenv import load_dotenv
+from jobhunter import config
 
 # Add the path to the .env file
 dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")

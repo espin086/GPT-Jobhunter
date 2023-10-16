@@ -17,7 +17,7 @@ format:
 	isort $(SRC_DIR)/*.py
 
 test:
-	cd $(SRC_DIR)/tests && pytest .
+	cd tests && pytest .
 
 check: install format test
 
