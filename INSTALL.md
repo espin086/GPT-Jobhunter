@@ -37,20 +37,29 @@ Update the lists below
 ![Alt](images/image_job_config.png)
 
 
+## Step 4: Upload your resume in .txt format
 
-## Step 4: Test the program
+You will need to add your resume as ```resume.txt```
+
+to the following location:
+
+```
+jobhunter/temp/resumes/resume.txt
+```
+
+## Step 5: Test the program
 
 To ensure that everything is set up correctly, run the following command to run the tests:
 
 ```shell
-make test
+make check
 ```
 
 If there are no errors, then everything is working properly.
 
 
 
-## Step 5: Create a Docker image then create container and pass the .env file
+## Step 6: Create a Docker image then create container and pass the .env file
 
 To create a Docker image, you need to run the appropriate Docker command on the Dockerfile. Make sure you have Docker installed on your system. If you don't have Docker installed, you can download it from the official website [here](https://www.docker.com/products/docker-desktop).
 
@@ -58,7 +67,7 @@ To create a Docker image, you need to run the appropriate Docker command on the 
 sh run_docker.sh
 ```
 
-## Step 6: Hit the Run Pipeline button to start your job search.
+## Step 7: Hit the Run Pipeline button to start your job search.
 
 
 That's it! You have successfully installed the program. 
