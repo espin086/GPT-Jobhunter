@@ -22,7 +22,7 @@ FILENAMES = "linkedinjob"
 
 POSITIONS = [
     "Principal Machine Learning Engineer",
-    # "Senior Machine Learning Engineer",
+    "Senior Machine Learning Engineer",
     # "Senior Artificial Intelligence Engineer",
     # "Senior Data Scientist",
     # "Principal Data Scientist",

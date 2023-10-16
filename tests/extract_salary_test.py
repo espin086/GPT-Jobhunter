@@ -9,7 +9,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import the extract_salary module
-from extract_salary import extract_salary
+from jobhunter.extract_salary import extract_salary
 
 
 def test_extract_salary():

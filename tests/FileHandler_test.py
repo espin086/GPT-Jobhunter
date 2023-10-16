@@ -8,7 +8,7 @@ import pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Import the FileHandler module
-import FileHandler
+from jobhunter import FileHandler
 
 
 @pytest.fixture

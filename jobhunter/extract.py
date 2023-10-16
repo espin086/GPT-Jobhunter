@@ -7,10 +7,10 @@ import os
 import pprint
 import time
 
-import config
+from jobhunter import config
 from dotenv import load_dotenv
-from FileHandler import FileHandler
-from search_linkedin_jobs import search_linkedin_jobs
+from jobhunter.FileHandler import FileHandler
+from jobhunter.search_linkedin_jobs import search_linkedin_jobs
 from tqdm import tqdm
 
 # change current director to location of this file
@@ -64,7 +64,7 @@ def get_all_jobs(search_term, location, pages):
                     file_handler.save_data(
                         data=job,
                         source="linkedinjobs",
-                        sink=file_handler.processed_path,
+                        sink=file_handler.raw_path,
                     )
 
             else:

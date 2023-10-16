@@ -9,8 +9,6 @@ import logging
 import os
 import pprint
 
-import config
-
 from jobhunter import config
 
 
