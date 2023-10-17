@@ -92,7 +92,7 @@ To create a Docker image, you need to run the appropriate Docker command on the 
 sh run_docker.sh
 ```
 
-# Final Step: Hit the Run Pipeline button to start your job search you should see the progress part start up.
+# Final Step: Hit the Run Button
 
 NOTE: you can check the terminal to see the logs of the application when running.
 
