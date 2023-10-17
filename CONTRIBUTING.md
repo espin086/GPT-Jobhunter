@@ -31,6 +31,13 @@ Welcome! We appreciate your interest in contributing to the `jobhunter` project.
     make install
     ```
 
+4. **Add Your API Credentials**: Copy the .env-template into a new file named and add your RapidAPI key.
+```bash
+cp .env-template .env
+```
+- Open .env and add your Rapid API Key
+- Subscribe to the Linkedin Job Search API:  https://rapidapi.com/jaypat87/api/linkedin-jobs-search
+
 4. **Test Code Before Starting**: run a series of automated tests before starting to contribute. 
 
     ```bash
