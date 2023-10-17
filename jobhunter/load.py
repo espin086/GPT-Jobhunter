@@ -10,8 +10,9 @@ import pprint
 
 from jobhunter import config
 from jobhunter.FileHandler import FileHandler
-from jobhunter.SQLiteHandler import (check_and_upload_to_db,
-                                     create_db_if_not_there)
+from jobhunter.SQLiteHandler import check_and_upload_to_db
+from jobhunter.SQLiteHandler import create_db_if_not_there
+
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(
