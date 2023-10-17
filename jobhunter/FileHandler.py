@@ -72,11 +72,14 @@ class FileHandler:
             with open(resume_file_path, "r", encoding="utf-8") as f:
                 resume_text = f.read()
             return resume_text
-        except FileNotFoundError:
-            logging.error(f"Resume file not found at path: {resume_file_path}")
+        except FileNotFoundError as exc:
+            logging.error("Resume file not found at path: %s", resume_file_path)
+            raise FileNotFoundError(
+                "Resume file not found at path: {}".format(resume_file_path)
+            ) from exc
         except Exception as e:
             logging.error(
-                f"Error reading resume file at path {resume_file_path}: {str(e)}"
+                "Error reading resume file at path %s: %s", resume_file_path, e
             )
         return None
 
