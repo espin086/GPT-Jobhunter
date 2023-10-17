@@ -15,7 +15,8 @@ from jobhunter import FileHandler
 def file_handler_instance():
     """Provides a FileHandler instance for testing"""
     return FileHandler.FileHandler(
-        raw_path="temp/test/data/raw", processed_path="temp/test/data/processed"
+        raw_path="jobhunter/temp/test/data/raw",
+        processed_path="jobhunter/temp/test/data/processed",
     )
 
 
