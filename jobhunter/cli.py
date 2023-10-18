@@ -6,6 +6,7 @@ from streamlit.web import cli as stcli
 
 @click.command()
 def main():
+    """"""
     # Get the directory where cli.py is located
     cli_dir = os.path.dirname(os.path.abspath(__file__))
 
