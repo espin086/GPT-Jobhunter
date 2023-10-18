@@ -1,4 +1,3 @@
-
 from setuptools import setup, find_packages
 
 with open("requirements.txt") as f:
@@ -10,8 +9,8 @@ setup(
     packages=find_packages(),
     install_requires=requirements,
     entry_points={
-        'console_scripts': [
-            'jobhunter = jobhunter.cli:main',
+        "console_scripts": [
+            "jobhunter = jobhunter.cli:main",
         ],
     },
 )
