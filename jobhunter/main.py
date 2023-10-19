@@ -9,7 +9,8 @@ from config import LOCATIONS, POSITIONS
 from extract import extract
 from FileHandler import FileHandler
 from load import load
-from transform import transform
+
+from jobhunter.dataTransformer import DataTransformer
 
 st.title("Config Manager")
 
@@ -20,6 +21,10 @@ st.write(LOCATIONS)
 file_handler = FileHandler(
     raw_path="temp/data/raw", processed_path="temp/data/processed"
 )
+
+transform = DataTransformer(
+    file_handler.import_job_data_from_dir(dirpath="temp/data/raw")
+).transform
 
 
 # Streamlit app
@@ -57,6 +62,3 @@ if st.button("Run Pipeline and Query SQLite Database"):
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
-
-# Button to Query SQLite Database
-# if st.button("Query SQLite Database"):
