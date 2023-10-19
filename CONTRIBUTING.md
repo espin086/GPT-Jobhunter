@@ -24,19 +24,9 @@ Welcome! We appreciate your interest in contributing to the `jobhunter` project.
    cd jobhunter
     ```
 
-3. **Setting Up Your Local Environment**: create a virtual environment, install depdencies, and add your RAPIDAPI KEY by copying .env-template
-    ```bash
-    make virtualenv
-    source jobhunter-venv/bin/activate
-    make install
-    ```
+3. **Setting Up Your Local Environment**: 
 
-4. **Add Your API Credentials**: Copy the .env-template into a new file named and add your RapidAPI key.
-```bash
-cp .env-template .env
-```
-- Open .env and add your Rapid API Key
-- Subscribe to the Linkedin Job Search API:  https://rapidapi.com/jaypat87/api/linkedin-jobs-search
+Please see [Quickstart Quide](INSTALL.md)
 
 4. **Test Code Before Starting**: run a series of automated tests before starting to contribute. 
 

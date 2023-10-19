@@ -1,29 +1,29 @@
-# 🤖 GPT-Jobhunter
+### GPT-Jobhunter 📋
 
 🤖 AI-powered job analysis tool using GPT. Analyzes job postings and provides personalized recommendations to job seekers based on their resume. 📝
 
-## Features
+## Features 🌟
 
 ### Highly Configurable Job Searching 🧐
-![Alt Text](images/image_ui_config_manager.png)
+![Job Search](images/image_ui_job_search.png)
 
 ### Automated Job Search Pipeline 🚀
-![Alt Text](images/image_ui_pipelinemanager.png)
+![Job Search Results](images/image_ui_job_search_results.png)
 
 ### AI Based Job-to-Resume Similarity Scores 📊
-
-![Alt Text](images/image_ui_job_similarity.png)
+![Job Similarity](images/image_ui_job_similarity.png)
 
 ### Automated Salary Extraction from Job Description 💰
-
-![Alt Text](images/image_ui_salary.png)
+![Salary Extraction](images/image_ui_salary.png)
 
 ## Quick Start Guide 🚀
 
 [Quickstart](INSTALL.md)
 
-[def]: image_ui_pipelinemanager.png
-
-## Contributing
+## Contributing 🤝
 
 [Contributing](CONTRIBUTING.md)
+
+## License
+
+[License](LISENSE.md)
