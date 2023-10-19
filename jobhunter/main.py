@@ -25,7 +25,7 @@ file_handler = FileHandler(
 # Streamlit app
 st.title("Pipeline Manager")
 
-if st.button("Run Pipeline"):
+if st.button("Run Pipeline and Query SQLite Database"):
     steps = [
         extract,
         transform,
@@ -40,9 +40,6 @@ if st.button("Run Pipeline"):
     file_handler.delete_local()
 
     st.success("Pipeline completed.")
-
-# Button to Query SQLite Database
-if st.button("Query SQLite Database"):
     try:
         # Connect to SQLite database
         conn = sqlite3.connect("all_jobs.db")
@@ -60,3 +57,6 @@ if st.button("Query SQLite Database"):
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
+
+# Button to Query SQLite Database
+# if st.button("Query SQLite Database"):
