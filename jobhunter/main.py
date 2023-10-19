@@ -9,7 +9,8 @@ from config import LOCATIONS, POSITIONS
 from extract import extract
 from FileHandler import FileHandler
 from load import load
-from transform import transform
+
+from jobhunter.dataTransformer import DataTransformer
 
 st.title("Config Manager")
 
@@ -21,11 +22,15 @@ file_handler = FileHandler(
     raw_path="temp/data/raw", processed_path="temp/data/processed"
 )
 
+transform = DataTransformer(
+    file_handler.import_job_data_from_dir(dirpath="temp/data/raw")
+).transform
+
 
 # Streamlit app
 st.title("Pipeline Manager")
 
-if st.button("Run Pipeline"):
+if st.button("Run Pipeline and Query SQLite Database"):
     steps = [
         extract,
         transform,
@@ -40,9 +45,6 @@ if st.button("Run Pipeline"):
     file_handler.delete_local()
 
     st.success("Pipeline completed.")
-
-# Button to Query SQLite Database
-if st.button("Query SQLite Database"):
     try:
         # Connect to SQLite database
         conn = sqlite3.connect("all_jobs.db")
