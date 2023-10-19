@@ -12,7 +12,7 @@ from load import load
 
 from jobhunter.dataTransformer import DataTransformer
 
-st.title("Config Manager")
+st.title("Positions & Locations")
 
 st.write(POSITIONS)
 st.write(LOCATIONS)
@@ -28,9 +28,9 @@ transform = DataTransformer(
 
 
 # Streamlit app
-st.title("Pipeline Manager")
+st.title("Start Searching for Jobs")
 
-if st.button("Run Pipeline and Query SQLite Database"):
+if st.button("Run Search"):
     steps = [
         extract,
         transform,
@@ -44,7 +44,7 @@ if st.button("Run Pipeline and Query SQLite Database"):
 
     file_handler.delete_local()
 
-    st.success("Pipeline completed.")
+    st.success("Search complete!")
     try:
         # Connect to SQLite database
         conn = sqlite3.connect("all_jobs.db")
@@ -58,7 +58,7 @@ if st.button("Run Pipeline and Query SQLite Database"):
 
         # Display data as a dataframe in Streamlit
         st.write(df)
-        st.success("Successfully queried the SQLite database.")
+        st.success("Results returned successfully!")
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
