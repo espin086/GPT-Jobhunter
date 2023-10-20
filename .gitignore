@@ -1,4 +1,5 @@
 #removind data constraint
+venv
 jobhunter-venv
 
 #databases
@@ -8,7 +9,7 @@ jobhunter/all_jobs.db
 jobhunter/temp/
 
 
-#streamlit 
+#streamlit
 .streamlit/*
 
 # Byte-compiled / optimized / DLL files
