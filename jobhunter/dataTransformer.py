@@ -2,6 +2,7 @@ import logging
 from typing import List
 
 from tqdm import tqdm
+from pathlib import Path
 
 from jobhunter import config
 from jobhunter.extract_salary import extract_salary
@@ -13,10 +14,11 @@ logging.basicConfig(level=config.LOGGING_LEVEL)
 
 
 class DataTransformer:
-    def __init__(self, data: List[dict]):
+    def __init__(self, raw_path: str, processed_path: str, resume_path: str, data: List[dict]):
+        self.resume_path = resume_path
         self.data = data
         self.file_handler = FileHandler(
-            raw_path="temp/data/raw", processed_path="temp/data/processed"
+            raw_path=raw_path, processed_path=processed_path
         )
 
     def delete_json_keys(self, *keys):
@@ -63,7 +65,9 @@ class DataTransformer:
         for item in self.data:
             description = item.get("description")
             salary_low, salary_high = extract_salary(description)
-            item["salary_low"] = float(salary_low) if salary_low is not None else None
+            item["salary_low"] = (
+                float(salary_low) if salary_low is not None else None
+            )
             item["salary_high"] = (
                 float(salary_high) if salary_high is not None else None
             )
@@ -77,11 +81,6 @@ class DataTransformer:
             )
 
     def transform(self):
-        resume = self.file_handler.read_resume_text(
-            resume_file_path="temp/resumes/resume.txt"
-        )
-        self.drop_variables()
-        self.remove_duplicates()
         key_map = {
             "linkedin_job_url_cleaned": "job_url",
             "job_title": "title",
@@ -90,11 +89,19 @@ class DataTransformer:
             "normalized_company_name": "company",
             "linkedin_company_url_cleaned": "company_url",
         }
+
+        self.drop_variables()
+        self.remove_duplicates()
         self.rename_keys(key_map)
         self.convert_keys_to_lowercase("title", "location", "company")
         self.add_description_to_json_list()
         self.extract_salaries()
-        self.compute_resume_similarity(resume_text=resume)
+
+        if Path(self.resume_path).exists():
+            resume = self.file_handler.read_resume_text(
+                resume_file_path=self.resume_path
+            )
+            self.compute_resume_similarity(resume_text=resume)
 
         self.file_handler.save_data_list(
             data_list=self.data,
@@ -104,6 +111,18 @@ class DataTransformer:
 
 
 if __name__ == "__main__":
+    CWD_PATH = Path(os.getcwd())
+    RAW_DATA_PATH = Path(f"{CWD_PATH}/temp/data/raw").resolve()
+    PROCESSED_DATA_PATH = Path(f"{CWD_PATH}/temp/data/processed").resolve()
+    RESUME_PATH = Path(f"{CWD_PATH}/temp/resumes/resume.txt").resolve()
+
     data = FileHandler.import_job_data_from_dir(dirpath="temp/data/raw")
-    transformer = DataTransformer(data)
+
+    transformer = DataTransformer(
+        raw_path=RAW_DATA_PATH,
+        processed_path=PROCESSED_DATA_PATH,
+        resume_path=RESUME_PATH,
+        data=data,
+    )
+
     transformer.transform()
