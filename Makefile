@@ -14,7 +14,7 @@ install:
 
 format:
 	python3 -m black $(SRC_DIR)
-	python3 -m isort $(SRC_DIR)/*.py
+	python3 -m isort --profile black $(SRC_DIR)
 
 test:
 	pytest $(ROOT_DIR)/tests/
