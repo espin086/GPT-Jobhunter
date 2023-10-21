@@ -1,5 +1,5 @@
 """
-This module contains the load function that loads the JSON files from the 
+This module contains the load function that loads the JSON files from the
 processed folder and uploads them to the database.
 """
 
@@ -10,8 +10,7 @@ import pprint
 
 from jobhunter import config
 from jobhunter.FileHandler import FileHandler
-from jobhunter.SQLiteHandler import (check_and_upload_to_db,
-                                     create_db_if_not_there)
+from jobhunter.SQLiteHandler import check_and_upload_to_db, create_db_if_not_there
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(
@@ -19,7 +18,7 @@ logging.basicConfig(
 )
 
 file_handler = FileHandler(
-    raw_path="temp/data/raw", processed_path="temp/data/processed"
+    raw_path=config.RAW_DATA_PATH, processed_path=config.PROCESSED_DATA_PATH
 )
 
 
@@ -49,7 +48,7 @@ def load():
     This function loads the JSON files from the processed folder and uploads them to the database.
     """
     logging.info("Main loading function initiated.")
-    data = file_handler.load_json_files(directory="temp/data/processed")
+    data = file_handler.load_json_files(directory=config.PROCESSED_DATA_PATH)
     data = add_primary_key(json_list=data)
     create_db_if_not_there()
     check_and_upload_to_db(json_list=data)

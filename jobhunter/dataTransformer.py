@@ -1,8 +1,8 @@
 import logging
+from pathlib import Path
 from typing import List
 
 from tqdm import tqdm
-from pathlib import Path
 
 from jobhunter import config
 from jobhunter.extract_salary import extract_salary
@@ -14,7 +14,9 @@ logging.basicConfig(level=config.LOGGING_LEVEL)
 
 
 class DataTransformer:
-    def __init__(self, raw_path: str, processed_path: str, resume_path: str, data: List[dict]):
+    def __init__(
+        self, raw_path: str, processed_path: str, resume_path: str, data: List[dict]
+    ):
         self.resume_path = resume_path
         self.data = data
         self.file_handler = FileHandler(
@@ -65,9 +67,7 @@ class DataTransformer:
         for item in self.data:
             description = item.get("description")
             salary_low, salary_high = extract_salary(description)
-            item["salary_low"] = (
-                float(salary_low) if salary_low is not None else None
-            )
+            item["salary_low"] = float(salary_low) if salary_low is not None else None
             item["salary_high"] = (
                 float(salary_high) if salary_high is not None else None
             )
@@ -111,17 +111,12 @@ class DataTransformer:
 
 
 if __name__ == "__main__":
-    CWD_PATH = Path(os.getcwd())
-    RAW_DATA_PATH = Path(f"{CWD_PATH}/temp/data/raw").resolve()
-    PROCESSED_DATA_PATH = Path(f"{CWD_PATH}/temp/data/processed").resolve()
-    RESUME_PATH = Path(f"{CWD_PATH}/temp/resumes/resume.txt").resolve()
-
-    data = FileHandler.import_job_data_from_dir(dirpath="temp/data/raw")
+    data = FileHandler.import_job_data_from_dir(dirpath=config.RAW_DATA_PATH)
 
     transformer = DataTransformer(
-        raw_path=RAW_DATA_PATH,
-        processed_path=PROCESSED_DATA_PATH,
-        resume_path=RESUME_PATH,
+        raw_path=config.RAW_DATA_PATH,
+        processed_path=config.PROCESSED_DATA_PATH,
+        resume_path=config.RESUME_PATH,
         data=data,
     )
 

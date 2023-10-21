@@ -16,10 +16,10 @@ from jobhunter import config
 class FileHandler:
     """This class handles all of the local file movements for the project"""
 
-    def __init__(self, raw_path="temp/data/raw", processed_path="temp/data/processed"):
+    def __init__(self, raw_path, processed_path):
         """Initialize the class with the raw and processed paths"""
-        self.raw_path = Path(raw_path).resolve()
-        self.processed_path = Path(processed_path).resolve()
+        self.raw_path = raw_path
+        self.processed_path = processed_path
         self.pp = pprint.PrettyPrinter(indent=4)
 
         self.setup_logging()
