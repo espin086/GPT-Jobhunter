@@ -18,5 +18,5 @@ def test_resume_file_exists():
     Checks to see if the example resume exist, code should not run if this
     text does not exist
     """
-    file_path = "../jobhunter/temp/resumes/resume.txt"
+    file_path = "../temp/resumes/resume.txt"
     assert os.path.isfile(file_path), f"File {file_path} not found"
