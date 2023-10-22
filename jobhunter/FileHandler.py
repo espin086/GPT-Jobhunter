@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import pprint
+from pathlib import Path
 
 from jobhunter import config
 
@@ -15,12 +16,14 @@ from jobhunter import config
 class FileHandler:
     """This class handles all of the local file movements for the project"""
 
-    def __init__(self, raw_path="temp/data/raw", processed_path="temp/data/processed"):
+    def __init__(self, raw_path, processed_path):
         """Initialize the class with the raw and processed paths"""
         self.raw_path = raw_path
         self.processed_path = processed_path
         self.pp = pprint.PrettyPrinter(indent=4)
+
         self.setup_logging()
+        self.create_data_folders_if_not_exists()
 
     @staticmethod
     def setup_logging():
@@ -79,7 +82,7 @@ class FileHandler:
             ) from exc
         except Exception as e:
             logging.error(
-                "Error reading resume file at path %s: %s", resume_file_path, e
+                f"Error reading resume file at path %s: %s", resume_file_path, e
             )
         return None
 

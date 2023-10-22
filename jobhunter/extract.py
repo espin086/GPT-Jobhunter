@@ -27,7 +27,7 @@ RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
 
 
 file_handler = FileHandler(
-    raw_path="temp/data/raw", processed_path="temp/data/processed"
+    raw_path=config.RAW_DATA_PATH, processed_path=config.PROCESSED_DATA_PATH
 )
 
 

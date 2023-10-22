@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import List
 
 from tqdm import tqdm
@@ -13,10 +14,13 @@ logging.basicConfig(level=config.LOGGING_LEVEL)
 
 
 class DataTransformer:
-    def __init__(self, data: List[dict]):
+    def __init__(
+        self, raw_path: str, processed_path: str, resume_path: str, data: List[dict]
+    ):
+        self.resume_path = resume_path
         self.data = data
         self.file_handler = FileHandler(
-            raw_path="temp/data/raw", processed_path="temp/data/processed"
+            raw_path=raw_path, processed_path=processed_path
         )
 
     def delete_json_keys(self, *keys):
@@ -77,11 +81,6 @@ class DataTransformer:
             )
 
     def transform(self):
-        resume = self.file_handler.read_resume_text(
-            resume_file_path="temp/resumes/resume.txt"
-        )
-        self.drop_variables()
-        self.remove_duplicates()
         key_map = {
             "linkedin_job_url_cleaned": "job_url",
             "job_title": "title",
@@ -90,11 +89,19 @@ class DataTransformer:
             "normalized_company_name": "company",
             "linkedin_company_url_cleaned": "company_url",
         }
+
+        self.drop_variables()
+        self.remove_duplicates()
         self.rename_keys(key_map)
         self.convert_keys_to_lowercase("title", "location", "company")
         self.add_description_to_json_list()
         self.extract_salaries()
-        self.compute_resume_similarity(resume_text=resume)
+
+        if Path(self.resume_path).exists():
+            resume = self.file_handler.read_resume_text(
+                resume_file_path=self.resume_path
+            )
+            self.compute_resume_similarity(resume_text=resume)
 
         self.file_handler.save_data_list(
             data_list=self.data,
@@ -104,6 +111,13 @@ class DataTransformer:
 
 
 if __name__ == "__main__":
-    data = FileHandler.import_job_data_from_dir(dirpath="temp/data/raw")
-    transformer = DataTransformer(data)
+    data = FileHandler.import_job_data_from_dir(dirpath=config.RAW_DATA_PATH)
+
+    transformer = DataTransformer(
+        raw_path=config.RAW_DATA_PATH,
+        processed_path=config.PROCESSED_DATA_PATH,
+        resume_path=config.RESUME_PATH,
+        data=data,
+    )
+
     transformer.transform()

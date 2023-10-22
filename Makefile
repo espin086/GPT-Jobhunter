@@ -1,7 +1,8 @@
+ROOT_DIR:=$(shell pwd)
+SRC_DIR:=$(ROOT_DIR)/jobhunter
 
-SRC_DIR:=$(shell pwd)/jobhunter
-
-virtualenv: 
+virtualenv:
+	cp .env-template .env
 	python3 -m venv jobhunter-venv
 	echo "RUN THIS!!!: source jobhunter-venv/bin/activate"
 
@@ -9,18 +10,19 @@ virtualenv:
 
 install:
 	python -m pip install --upgrade pip
-	pip install flake8 pytest pylint black isort
-	pip install -e .
+	python3 -m pip install -e .
 
 format:
-	black $(SRC_DIR)
-	isort $(SRC_DIR)/*.py
+	python3 -m black $(SRC_DIR)
+	python3 -m isort --profile black $(SRC_DIR)
 
 test:
-	cd tests && pytest .
+	pytest $(ROOT_DIR)/tests/
+
+coverage:
+	python3 -m pytest --cov=$(SRC_DIR) --cov-report term --cov-report html
 
 check: install format test
 
-run: 
+run:
 	streamlit run $(SRC_DIR)/main.py
-

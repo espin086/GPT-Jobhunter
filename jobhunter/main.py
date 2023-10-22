@@ -1,33 +1,41 @@
 """
 This is the main.py file that will be used to run the pipeline and query the SQLite database.
 """
+import os
 import sqlite3
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from config import LOCATIONS, POSITIONS
-from extract import extract
-from FileHandler import FileHandler
-from load import load
 
+from jobhunter.config import (
+    LOCATIONS,
+    POSITIONS,
+    PROCESSED_DATA_PATH,
+    RAW_DATA_PATH,
+    RESUME_PATH,
+)
 from jobhunter.dataTransformer import DataTransformer
+from jobhunter.extract import extract
+from jobhunter.FileHandler import FileHandler
+from jobhunter.load import load
 
+file_handler = FileHandler(raw_path=RAW_DATA_PATH, processed_path=PROCESSED_DATA_PATH)
+
+transform = DataTransformer(
+    raw_path=RAW_DATA_PATH,
+    processed_path=PROCESSED_DATA_PATH,
+    resume_path=RESUME_PATH,
+    data=file_handler.import_job_data_from_dir(dirpath=RAW_DATA_PATH),
+).transform
+
+
+# Streamlit app
 st.title("Positions & Locations")
 
 st.write(POSITIONS)
 st.write(LOCATIONS)
 
-
-file_handler = FileHandler(
-    raw_path="temp/data/raw", processed_path="temp/data/processed"
-)
-
-transform = DataTransformer(
-    file_handler.import_job_data_from_dir(dirpath="temp/data/raw")
-).transform
-
-
-# Streamlit app
 st.title("Start Searching for Jobs")
 
 if st.button("Run Search"):

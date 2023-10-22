@@ -1,7 +1,16 @@
 import logging
+import os
+from pathlib import Path
 
 # === General Configs ===
 LOGGING_LEVEL = logging.INFO
+
+
+# === Data Configs ===
+CWD_PATH = Path(os.getcwd())
+RAW_DATA_PATH = Path(f"{CWD_PATH}/temp/data/raw").resolve()
+PROCESSED_DATA_PATH = Path(f"{CWD_PATH}/temp/data/processed").resolve()
+RESUME_PATH = Path(f"{CWD_PATH}/temp/resumes/resume.txt").resolve()
 
 
 # === Database Configs ===
@@ -17,7 +26,6 @@ JOB_SEARCH_X_RAPIDAPI_HOST = "linkedin-jobs-search.p.rapidapi.com"
 
 
 # == Job Search Configs ===
-
 FILENAMES = "linkedinjob"
 
 POSITIONS = [
