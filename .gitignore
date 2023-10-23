@@ -6,6 +6,8 @@ jobhunter-venv
 jobhunter/*.db
 jobhunter/all_jobs.db
 
+jobhunter/all_jobs.db
+
 jobhunter/temp/
 
 
