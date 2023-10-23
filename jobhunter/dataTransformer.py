@@ -1,3 +1,6 @@
+"""Transforms the raw data into a format that is ready for analysis.""" ""
+
+
 import logging
 from pathlib import Path
 from typing import List
