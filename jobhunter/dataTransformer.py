@@ -14,6 +14,8 @@ logging.basicConfig(level=config.LOGGING_LEVEL)
 
 
 class DataTransformer:
+    """Transforms the raw data into a format that is ready for analysis."""
+
     def __init__(
         self, raw_path: str, processed_path: str, resume_path: str, data: List[dict]
     ):
@@ -24,32 +26,38 @@ class DataTransformer:
         )
 
     def delete_json_keys(self, *keys):
+        """Deletes the specified keys from the json data."""
         for item in self.data:
             for key in keys:
                 if key in item:
                     del item[key]
 
     def drop_variables(self):
+        """Drops the variables that are not needed for analysis."""
         self.delete_json_keys("job_url", "company_name", "company_url")
 
     def remove_duplicates(self):
+        """Removes duplicate entries from the json data."""
         tuples = [tuple(d.items()) for d in self.data]
         unique_tuples = set(tuples)
         self.data = [dict(t) for t in unique_tuples]
 
     def rename_keys(self, key_map):
+        """Renames the keys in the json data."""
         for item in self.data:
             for old_key, new_key in key_map.items():
                 if old_key in item:
                     item[new_key] = item.pop(old_key)
 
     def convert_keys_to_lowercase(self, *keys):
+        """Converts the specified keys to lowercase."""
         for item in self.data:
             for key in keys:
                 if key in item:
                     item[key] = item[key].lower()
 
     def add_description_to_json_list(self):
+        """Adds the job description to the json data."""
         logging.info("gathering jobs from the web")
         for item in tqdm(self.data):
             job_url = item.get("job_url")
@@ -64,6 +72,7 @@ class DataTransformer:
                 item["description"] = ""
 
     def extract_salaries(self):
+        """Extracts the salary from the job description."""
         for item in self.data:
             description = item.get("description")
             salary_low, salary_high = extract_salary(description)
@@ -73,6 +82,7 @@ class DataTransformer:
             )
 
     def compute_resume_similarity(self, resume_text):
+        """Computes the similarity between the job description and the resume."""
         for item in tqdm(self.data):
             description = item.get("description")
             similarity = text_similarity(description, resume_text)
@@ -81,6 +91,7 @@ class DataTransformer:
             )
 
     def transform(self):
+        """Transforms the raw data into a format that is ready for analysis."""
         key_map = {
             "linkedin_job_url_cleaned": "job_url",
             "job_title": "title",
