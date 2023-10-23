@@ -10,6 +10,10 @@ import nltk
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import cosine_similarity
+import random  # Import random module for setting a seed
+
+# Set a seed for reproducibility
+random.seed(42)
 
 logging.basicConfig(level=logging.INFO)
 pp = pprint.PrettyPrinter(indent=4)
@@ -49,7 +53,15 @@ def generate_doc2vec(sentences):
     list: A list of doc2vec vectors for each sentence.
     """
     documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(sentences)]
-    model = Doc2Vec(documents, vector_size=100, window=5, min_count=1, workers=4)
+    model = Doc2Vec(
+        documents,
+        vector_size=100,
+        min_alpha=0.025,
+        window=5,
+        min_count=1,
+        workers=4,
+        dm=0,
+    )
     return [model.infer_vector(doc) for doc in documents]
 
 
