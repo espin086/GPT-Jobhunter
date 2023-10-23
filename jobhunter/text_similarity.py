@@ -6,12 +6,12 @@ import argparse
 import logging
 import pprint
 import random  # Import random module for setting a seed
+from typing import Dict
 
 import nltk
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import cosine_similarity
-from typing import Dict
 
 # Set a seed for reproducibility
 random.seed(42)

@@ -90,7 +90,7 @@ class DataTransformer:
             description = item.get("description")
             similarity = text_similarity(description, resume_text)
             item["resume_similarity"] = (
-                float(similarity) if similarity is not None else None
+                float(similarity) if isinstance(similarity, (float, int)) else None
             )
 
     def transform(self):
@@ -124,14 +124,25 @@ class DataTransformer:
         )
 
 
+class Main:
+    def __init__(self):
+        self.file_handler = FileHandler()
+        self.data = self.file_handler.import_job_data_from_dir(
+            dirpath=config.RAW_DATA_PATH
+        )
+
+        self.transformer = DataTransformer(
+            raw_path=str(config.RAW_DATA_PATH),
+            processed_path=str(config.PROCESSED_DATA_PATH),
+            resume_path=str(config.RESUME_PATH),
+            data=self.data,
+            file_handler=self.file_handler,
+        )
+
+    def run(self):
+        self.transformer.transform()
+
+
 if __name__ == "__main__":
-    data = FileHandler.import_job_data_from_dir(dirpath=config.RAW_DATA_PATH)
-
-    transformer = DataTransformer(
-        raw_path=config.RAW_DATA_PATH,
-        processed_path=config.PROCESSED_DATA_PATH,
-        resume_path=config.RESUME_PATH,
-        data=data,
-    )
-
-    transformer.transform()
+    main = Main()
+    main.run()
