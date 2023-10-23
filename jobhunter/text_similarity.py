@@ -11,6 +11,7 @@ import nltk
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import cosine_similarity
+from typing import Dict
 
 # Set a seed for reproducibility
 random.seed(42)
@@ -23,7 +24,7 @@ nltk.download("punkt")
 stop_words = set(stopwords.words("english"))
 
 
-def preprocess_text(text):
+def preprocess_text(text: str):
     """
     This function preprocesses the input text by converting to lower case, removing stop words and punctuation, and
     tokenizing the text into sentences.
@@ -65,7 +66,7 @@ def generate_doc2vec(sentences):
     return [model.infer_vector(doc) for doc in documents]
 
 
-def text_similarity(text1, text2):
+def text_similarity(text1: str, text2: str) -> Dict:
     """
     This function calculates the similarity between two pieces of text using the cosine similarity between their
     doc2vec representations. It takes in two strings, text1 and text2, as input and returns a dictionary
@@ -104,6 +105,9 @@ def text_similarity(text1, text2):
         return similarity_score
     except Exception as e:
         logging.error(f"An error occurred while calculating the text similarity: {e}")
+        return {
+            "error": f"An error occurred while calculating the text similarity: {e}"
+        }
 
 
 if __name__ == "__main__":
