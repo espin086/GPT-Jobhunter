@@ -18,6 +18,7 @@ import json
 import logging
 import os
 import pprint
+from typing import Dict, List, Mapping, Union
 
 import requests
 from dotenv import load_dotenv
@@ -41,7 +42,7 @@ pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=config.LOGGING_LEVEL)
 
 
-def search_linkedin_jobs(search_term, location, page=1):
+def search_linkedin_jobs(search_term: str, location: str, page: int = 1) -> List[Dict]:
     """
     This function takes in a search term, location and an optional page
     number as input and uses them to make a request to the LinkedIn jobs API.
@@ -63,9 +64,9 @@ def search_linkedin_jobs(search_term, location, page=1):
 
     url = JOB_SEARCH_URL
     payload = {"search_terms": search_term, "location": location, "page": page}
-    headers = {
+    headers: Union[Mapping[str, Union[str, bytes]], None] = {
         "content-type": "application/json",
-        "X-RapidAPI-Key": RAPID_API_KEY,
+        "X-RapidAPI-Key": str(RAPID_API_KEY),
         "X-RapidAPI-Host": config.JOB_SEARCH_X_RAPIDAPI_HOST,
     }
 
@@ -77,7 +78,7 @@ def search_linkedin_jobs(search_term, location, page=1):
         return json_object
     except ValueError as value_err:
         logging.error(value_err)
-        return None
+        return [{"error": value_err}]
 
 
 def main(search_term, location, page):

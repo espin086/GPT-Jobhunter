@@ -5,12 +5,12 @@ This code calculates the similarity between two documents
 import argparse
 import logging
 import pprint
+import random  # Import random module for setting a seed
 
 import nltk
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from nltk.corpus import stopwords
 from sklearn.metrics.pairwise import cosine_similarity
-import random  # Import random module for setting a seed
 
 # Set a seed for reproducibility
 random.seed(42)
