@@ -22,12 +22,14 @@ from jobhunter.load import load
 
 file_handler = FileHandler(raw_path=RAW_DATA_PATH, processed_path=PROCESSED_DATA_PATH)
 
-transform = DataTransformer(
-    raw_path=RAW_DATA_PATH,
-    processed_path=PROCESSED_DATA_PATH,
-    resume_path=RESUME_PATH,
-    data=file_handler.import_job_data_from_dir(dirpath=RAW_DATA_PATH),
-).transform
+
+def run_transform():
+    DataTransformer(
+        raw_path=RAW_DATA_PATH,
+        processed_path=PROCESSED_DATA_PATH,
+        resume_path=RESUME_PATH,
+        data=file_handler.import_job_data_from_dir(dirpath=RAW_DATA_PATH),
+    ).transform()
 
 
 # Streamlit app
@@ -41,7 +43,7 @@ st.title("Start Searching for Jobs")
 if st.button("Run Search"):
     steps = [
         extract,
-        transform,
+        run_transform,
         load,
     ]
     progress_bar = st.progress(0)
