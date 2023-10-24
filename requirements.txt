@@ -10,6 +10,16 @@ streamlit==1.25.0
 tqdm==4.65.0
 gensim==4.3.2
 
+
+Sphinx                       
+sphinxcontrib-applehelp       
+sphinxcontrib-devhelp         
+sphinxcontrib-htmlhelp        
+sphinxcontrib-jsmath         
+sphinxcontrib-qthelp          
+sphinxcontrib-serializinghtml 
+
+
 pytest
 pytest-cov
 
