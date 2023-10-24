@@ -1,4 +1,4 @@
-"""Transforms the raw data into a format that is ready for analysis.""" ""
+"""Transforms the raw data into a format that is ready for analysis."""
 
 
 import logging
