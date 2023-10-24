@@ -8,6 +8,7 @@ import pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Import the FileHandler module
+from jobhunter import config
 from jobhunter import FileHandler
 
 
@@ -15,8 +16,8 @@ from jobhunter import FileHandler
 def file_handler_instance():
     """Provides a FileHandler instance for testing"""
     return FileHandler.FileHandler(
-        raw_path="jobhunter/temp/test/data/raw",
-        processed_path="jobhunter/temp/test/data/processed",
+        raw_path=config.RAW_DATA_PATH,
+        processed_path=config.PROCESSED_DATA_PATH,
     )
 
 
