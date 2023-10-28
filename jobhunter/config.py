@@ -15,6 +15,7 @@ RESUME_PATH = Path(f"{CWD_PATH}/temp/resumes/resume.txt").resolve()
 
 # === Database Configs ===
 DATABASE = "all_jobs.db"
+TABLE_EMBEDDINGS = "embeddings"
 TABLE_JOBS = "jobs"
 TABLE_RESUMES = "resumes"
 TABLE_APPLICATIONS = "applications"
@@ -29,28 +30,28 @@ JOB_SEARCH_X_RAPIDAPI_HOST = "linkedin-jobs-search.p.rapidapi.com"
 FILENAMES = "linkedinjob"
 
 POSITIONS = [
-    "Principal Machine Learning Engineer",
-    "Senior Machine Learning Engineer",
-    "Senior Artificial Intelligence Engineer",
-    "Senior Data Scientist",
-    "Principal Data Scientist",
-    "Lead Machine Learning Engineer",
-    "Lead Artificial Intelligence Engineer",
-    "Lead Data Scientist",
-    "Machine Learning Architect",
-    "AI Research Scientist",
-    "Machine Learning Consultant",
-    "Data Science Manager",
-    "Data Science Team Lead",
-    "AI Solutions Architect",
-    "AI Product Manager",
+    "Applied Science Intern",
+    # "Senior Machine Learning Engineer",
+    # "Senior Artificial Intelligence Engineer",
+    # "Senior Data Scientist",
+    # "Principal Data Scientist",
+    # "Lead Machine Learning Engineer",
+    # "Lead Artificial Intelligence Engineer",
+    # "Lead Data Scientist",
+    # "Machine Learning Architect",
+    # "AI Research Scientist",
+    # "Machine Learning Consultant",
+    # "Data Science Manager",
+    # "Data Science Team Lead",
+    # "AI Solutions Architect",
+    # "AI Product Manager",
 ]
 
 # List of locations
-LOCATIONS = ["remote"]
+LOCATIONS = ["India"]
 
 # Pagination for API calls
-PAGES = 5
+PAGES = 2
 
 
 # === Model Configs ===
