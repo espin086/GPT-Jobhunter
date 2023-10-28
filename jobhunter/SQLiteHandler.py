@@ -159,7 +159,7 @@ def get_resume_text(filename):
         f"SELECT content FROM {config.TABLE_RESUMES} WHERE filename = ?", (filename,)
     )
     record = cursor.fetchone()
-
+    logging.info("Resume text fetched from database")
     conn.close()
 
     return record[0] if record else None
