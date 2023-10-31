@@ -32,9 +32,12 @@ To begin, we need to copy the `.env-template` file into `.env` so that the progr
 cp .env-template .env
 ```
 
-## Step 2: Add your Rapid API Key
-
+## Step 2: Add required API Key
+### Add Rapid API KEY
 Next, open the `.env` file in a text editor and add your Rapid API Key. This key is required for the program to function correctly. If you don't have a Rapid API Key, you can sign up for one [here](https://www.rapidapi.com/).
+
+### Add OpenAI API KEY (Optional)
+You can also add OpenAI API key to the `.env` file to get GPT based resume similarity score. This is optional feature, and currently in development, and will be available in full version soon. You can sign up for OpenAI API [here](https://platform.openai.com/apps)
 
 ## Step 3: Update the job titles and locations
 
