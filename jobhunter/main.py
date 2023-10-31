@@ -1,11 +1,13 @@
 """
 This is the main.py file that will be used to run the pipeline and query the SQLite database.
 """
+import logging
 import os
 import sqlite3
 from pathlib import Path
 
 import pandas as pd
+import PyPDF2
 import streamlit as st
 
 from jobhunter.config import (
@@ -19,6 +21,14 @@ from jobhunter.dataTransformer import DataTransformer
 from jobhunter.extract import extract
 from jobhunter.FileHandler import FileHandler
 from jobhunter.load import load
+from jobhunter.SQLiteHandler import (
+    fetch_resumes_from_db,
+    get_resume_text,
+    save_text_to_db,
+    update_similarity_in_db,
+)
+
+logging.basicConfig(level=logging.INFO)
 
 file_handler = FileHandler(raw_path=RAW_DATA_PATH, processed_path=PROCESSED_DATA_PATH)
 
@@ -55,6 +65,51 @@ if st.button("Run Search"):
     file_handler.delete_local()
 
     st.success("Search complete!")
+
+
+if "button_clicked" not in st.session_state:
+    st.session_state.button_clicked = False
+
+if st.button("Upload Resume") or st.session_state.button_clicked:
+    st.session_state.button_clicked = True
+    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "txt"])
+    text = ""
+    logging.info("File uploader initialized")
+    if uploaded_file is not None:
+        try:
+            if uploaded_file.type == "application/pdf":
+                logging.info("File uploaded is a pdf")
+                pdf_reader = PyPDF2.PdfReader(uploaded_file)
+                for page_num in range(len(pdf_reader.pages)):
+                    text += pdf_reader.pages[page_num].extract_text()
+                logging.info("Resume text extracted successfully!")
+            else:  # For txt files
+                text = uploaded_file.read().decode("utf-8")
+            logging.info("Resume text extracted successfully!")
+            st.text_area("Extracted Text:", value=text, height=300)
+
+            save_text_to_db(uploaded_file.name, text)
+            logging.info("Resume text saved to database!")
+            st.success("Saved to database!")
+        except Exception as e:
+            logging.error(f"An error occurred: {e}")
+            st.error(f"An error occurred: {e}")
+
+if "select_resume_button_clicked" not in st.session_state:
+    st.session_state.select_resume_button_clicked = False
+
+if st.button("Select Resume") or st.session_state.select_resume_button_clicked:
+    st.session_state.select_resume_button_clicked = True
+
+    available_resumes = fetch_resumes_from_db()
+    selected_resume = st.selectbox("Choose a resume:", available_resumes)
+
+    if st.button("Use Selected Resume"):
+        # Here you can add the code to process the selected resume
+        update_similarity_in_db(selected_resume)
+
+
+if st.button("Query DB"):
     try:
         # Connect to SQLite database
         conn = sqlite3.connect("all_jobs.db")
