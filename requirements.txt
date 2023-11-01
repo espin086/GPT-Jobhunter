@@ -19,6 +19,7 @@ sphinxcontrib-jsmath
 sphinxcontrib-qthelp          
 sphinxcontrib-serializinghtml 
 
+openai
 
 pytest
 pytest-cov
