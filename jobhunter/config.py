@@ -29,28 +29,45 @@ JOB_SEARCH_X_RAPIDAPI_HOST = "linkedin-jobs-search.p.rapidapi.com"
 FILENAMES = "linkedinjob"
 
 POSITIONS = [
+    "Vice President of Data Science",
+    "Vice President of Machine Learning",
+    "Vice President of Data Engineering",
+    "Vice President of Artificial Intelligence",
+    "Head of Data Science",
+    "Head of Machine Learning",
+    "Head of Data Engineering",
+    "Head of Artificial Intelligence",
+    "Senior Director of Data Science",
+    "Senior Director of Machine Learning",
+    "Senior Director of Data Engineering",
+    "Senior Director of Artificial Intelligence",
+    "Director of Data Science",
+    "Director of Machine Learning",
+    "Director of Data Engineering",
+    "Director of Artificial Intelligence",
+    "Principal Data Scientist",
     "Principal Machine Learning Engineer",
+    "Principal Artificial Intelligence Engineer",
+    "Principal Data Engineer",
+    "Manager Machine Learning Engineering",
+    "Manager Artificial Intelligence ",
+    "Manager Data Science",
+    "Manager Data Engineering",
     "Senior Machine Learning Engineer",
     "Senior Artificial Intelligence Engineer",
     "Senior Data Scientist",
-    "Principal Data Scientist",
+    "Senior Data Engineer",
     "Lead Machine Learning Engineer",
     "Lead Artificial Intelligence Engineer",
     "Lead Data Scientist",
-    "Machine Learning Architect",
-    "AI Research Scientist",
-    "Machine Learning Consultant",
-    "Data Science Manager",
-    "Data Science Team Lead",
-    "AI Solutions Architect",
-    "AI Product Manager",
+    "Lead Data Engineer",
 ]
 
 # List of locations
 LOCATIONS = ["remote"]
 
 # Pagination for API calls
-PAGES = 5
+PAGES = 10
 
 
 # === Model Configs ===
