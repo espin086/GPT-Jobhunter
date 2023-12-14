@@ -143,6 +143,23 @@ def fetch_resumes_from_db():
     conn = sqlite3.connect(f"{config.DATABASE}")
     cursor = conn.cursor()
 
+    conn = sqlite3.connect(f"{config.DATABASE}")
+    cursor = conn.cursor()
+
+    # Create the table with a primary key and filename
+    try:
+        cursor.execute(
+            f"""
+        CREATE TABLE IF NOT EXISTS {config.TABLE_RESUMES} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT UNIQUE,
+            content TEXT
+        )
+        """
+        )
+    except Exception as e:
+        logging.error("Failed to create table: %s", e)
+
     cursor.execute(f"SELECT filename FROM {config.TABLE_RESUMES}")
     records = cursor.fetchall()
 
@@ -152,6 +169,7 @@ def fetch_resumes_from_db():
 
 
 def get_resume_text(filename):
+    """Fetches the text content of a resume from the database."""
     conn = sqlite3.connect(f"{config.DATABASE}")
     cursor = conn.cursor()
 

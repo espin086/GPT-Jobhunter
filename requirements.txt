@@ -9,7 +9,7 @@ scikit_learn==1.2.1
 streamlit==1.25.0
 tqdm==4.65.0
 gensim==4.3.2
-PyPDF2==1.26.0
+PyPDF2==1.27.0
 
 
 Sphinx                       

@@ -79,9 +79,9 @@ if st.button("Upload Resume") or st.session_state.button_clicked:
         try:
             if uploaded_file.type == "application/pdf":
                 logging.info("File uploaded is a pdf")
-                pdf_reader = PyPDF2.PdfReader(uploaded_file)
+                pdf_reader = PyPDF2.PdfFileReader(uploaded_file)
                 for page_num in range(len(pdf_reader.pages)):
-                    text += pdf_reader.pages[page_num].extract_text()
+                    text += pdf_reader.pages[page_num].extractText()
                 logging.info("Resume text extracted successfully!")
             else:  # For txt files
                 text = uploaded_file.read().decode("utf-8")
