@@ -1,7 +1,7 @@
 """
 This module contains the functions used to extract data from the LinkedIn jobs API.
 """
-
+import concurrent.futures
 import logging
 import os
 import pprint
@@ -51,31 +51,37 @@ def get_all_jobs(search_term, location, pages):
     and any errors that may occur.
     """
     all_jobs = []
-    for page in range(0, pages):
-        try:
-            time.sleep(0.5)
-            jobs = search_linkedin_jobs(
-                search_term=search_term, location=location, page=page
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        for page in range(0, pages):
+            futures.append(
+                executor.submit(
+                    search_linkedin_jobs,
+                    search_term=search_term,
+                    location=location,
+                    page=page,
+                )
             )
-            if jobs:
-                all_jobs.extend(jobs)  # change this line to extend instead of append
-
-                logging.debug("Appended %d jobs for page %d", len(jobs), page)
-                for job in jobs:
-                    file_handler.save_data(
-                        data=job,
-                        source="linkedinjobs",
-                        sink=file_handler.raw_path,
-                    )
-
-            else:
-                logging.warning("No jobs found for page %d", page)
-
-        except Exception as e:
-            logging.error(
-                "An error occurred while fetching jobs for page %d: %s", page, str(e)
-            )
-
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                jobs = future.result()
+                if jobs:
+                    all_jobs.extend(jobs)
+                    logging.debug("Appended %d jobs for page %d", len(jobs), page)
+                    for job in jobs:
+                        file_handler.save_data(
+                            data=job,
+                            source="linkedinjobs",
+                            sink=file_handler.raw_path,
+                        )
+                else:
+                    logging.warning("No jobs found for page %d", page)
+            except Exception as e:
+                logging.error(
+                    "An error occurred while fetching jobs for page %d: %s",
+                    page,
+                    str(e),
+                )
     return all_jobs
 
 
