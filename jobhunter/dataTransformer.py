@@ -1,6 +1,7 @@
 """Transforms the raw data into a format that is ready for analysis."""
 
 
+import concurrent.futures
 import logging
 from pathlib import Path
 from typing import List
@@ -76,22 +77,36 @@ class DataTransformer:
 
     def extract_salaries(self):
         """Extracts the salary from the job description."""
-        for item in self.data:
-            description = item.get("description")
-            salary_low, salary_high = extract_salary(description)
-            item["salary_low"] = float(salary_low) if salary_low is not None else None
-            item["salary_high"] = (
-                float(salary_high) if salary_high is not None else None
-            )
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            for item in self.data:
+                description = item.get("description")
+                future = executor.submit(extract_salary, description)
+                futures.append((item, future))
+
+            for item, future in futures:
+                salary_low, salary_high = future.result()
+                item["salary_low"] = (
+                    float(salary_low) if salary_low is not None else None
+                )
+                item["salary_high"] = (
+                    float(salary_high) if salary_high is not None else None
+                )
 
     def compute_resume_similarity(self, resume_text):
         """Computes the similarity between the job description and the resume."""
-        for item in tqdm(self.data):
-            description = item.get("description")
-            similarity = text_similarity(description, resume_text)
-            item["resume_similarity"] = (
-                float(similarity) if isinstance(similarity, (float, int)) else None
-            )
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            for item in self.data:
+                description = item.get("description")
+                future = executor.submit(text_similarity, description, resume_text)
+                futures.append((item, future))
+
+            for item, future in futures:
+                similarity = future.result()
+                item["resume_similarity"] = (
+                    float(similarity) if isinstance(similarity, (float, int)) else None
+                )
 
     def transform(self):
         """Transforms the raw data into a format that is ready for analysis."""
