@@ -34,4 +34,6 @@ def test_text_similarity():
     Finally, it asserts that the similarity score returned by the text_similarity function is equal to the expected value.
     """
     similarity_score = text_similarity.text_similarity(text1, text2)
-    assert similarity_score == pytest.approx(0.324, rel=1)  # Expected similarity score
+    assert similarity_score == pytest.approx(
+        0.26849132776260376, rel=1
+    )  # Expected similarity score
