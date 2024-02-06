@@ -15,18 +15,18 @@ RESUME_PATH = Path(f"{CWD_PATH}/temp/resumes/resume.txt").resolve()
 
 # === Database Configs ===
 DATABASE = "all_jobs.db"
-TABLE_JOBS = "jobs"
+TABLE_JOBS_NEW = "jobs_new"
 TABLE_RESUMES = "resumes"
 TABLE_APPLICATIONS = "applications"
 
 
 # === API Configs ===
-JOB_SEARCH_URL = "https://linkedin-jobs-search.p.rapidapi.com/"
-JOB_SEARCH_X_RAPIDAPI_HOST = "linkedin-jobs-search.p.rapidapi.com"
+JOB_SEARCH_URL = "https://jsearch.p.rapidapi.com/search"
+JOB_SEARCH_X_RAPIDAPI_HOST = "jsearch.p.rapidapi.com"
 
 
 # == Job Search Configs ===
-FILENAMES = "linkedinjob"
+FILENAMES = "jobs"
 
 POSITIONS = [
     "Vice President of Data Science",
@@ -63,12 +63,37 @@ POSITIONS = [
     "Lead Data Engineer",
 ]
 
-# List of locations
-LOCATIONS = ["remote"]
+# Enabling the remote jobs research
+REMOTE_JOBS_ONLY = ["true"]
 
+# Selecting the metrics fro the API
+SELECTED_KEYS = [
+    'job_posted_at_datetime_utc', 
+    'job_title',
+    'employer_name',
+    'employer_logo', 
+    'employer_website', 
+    'employer_company_type', 
+    'job_employment_type', 
+    'job_is_remote', 
+    'job_offer_expiration_datetime_utc', 
+    'job_min_salary', 
+    'job_max_salary',
+    'job_salary_currency', 
+    'job_salary_period', 
+    'job_benfits',  
+    'job_city', 
+    'job_state', 
+    'job_country', 
+    'apply_options',
+    'job_required_skills', 
+    'job_required_experience', 
+    'job_required_education' ,
+    'job_description', 
+    'job_highlights'
+]
 # Pagination for API calls
 PAGES = 10
-
 
 # === Model Configs ===
 VECTOR_SIZE = 50
