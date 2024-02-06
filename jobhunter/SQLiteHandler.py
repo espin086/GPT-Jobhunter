@@ -22,13 +22,24 @@ def create_db_if_not_there():
                     date TEXT,
                     resume_similarity REAL,
                     title TEXT, 
-                    company TEXT, 
+                    company TEXT,
+                    company_url TEXT,
+                    company_type TEXT,
+                    job_type TEXT,
+                    job_is_remote TEXT,
+                    job_offer_expiration_date TEXT,
                     salary_low REAL,
                     salary_high REAL,
+                    salary_currency TEXT,
+                    salary_period TEXT,
+                    job_benfits TEXT,
                     location TEXT,
-                    job_url TEXT,
-                    company_url TEXT,
+                    apply_options TEXT,
+                    required_skills TEXT,
+                    required_experience TEXT,
+                    required_eduaction TEXT,                    
                     description TEXT,
+                    highlights TEXT,
                     embeddings TEXT
                     )"""
         )
@@ -40,6 +51,7 @@ def create_db_if_not_there():
         logging.error("Failed to create table: %s", e)
     finally:
         conn.close()
+
 
 
 def check_and_upload_to_db(json_list):
