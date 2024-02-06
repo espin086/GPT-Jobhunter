@@ -22,13 +22,24 @@ def create_db_if_not_there():
                     date TEXT,
                     resume_similarity REAL,
                     title TEXT, 
-                    company TEXT, 
+                    company TEXT,
+                    company_url TEXT,
+                    company_type TEXT,
+                    job_type TEXT,
+                    job_is_remote TEXT,
+                    job_offer_expiration_date TEXT,
                     salary_low REAL,
                     salary_high REAL,
+                    salary_currency TEXT,
+                    salary_period TEXT,
+                    job_benfits TEXT,
                     location TEXT,
-                    job_url TEXT,
-                    company_url TEXT,
+                    apply_options TEXT,
+                    required_skills TEXT,
+                    required_experience TEXT,
+                    required_eduaction TEXT,                    
                     description TEXT,
+                    highlights TEXT,
                     embeddings TEXT
                     )"""
         )
@@ -40,6 +51,7 @@ def create_db_if_not_there():
         logging.error("Failed to create table: %s", e)
     finally:
         conn.close()
+
 
 
 def check_and_upload_to_db(json_list):
@@ -76,12 +88,23 @@ def check_and_upload_to_db(json_list):
                         item.get("resume_similarity", ""),
                         item.get("title", ""),
                         item.get("company", ""),
+                        item.get("company_url", ""),
+                        item.get("company_type", ""),
+                        item.get("job_type", ""),
+                        item.get("job_is_remote", ""),
+                        item.get("job_offer_expiration_date", ""),
                         item.get("salary_low", ""),
                         item.get("salary_high", ""),
+                        item.get("salary_currency", ""),
+                        item.get("salary_period", ""),
+                        item.get("job_benefits", ""),
                         item.get("location", ""),
-                        item.get("job_url", ""),
-                        item.get("company_url", ""),
+                        item.get("apply_options", ""),
+                        item.get("required_skills", ""),
+                        item.get("required_experience", ""),
+                        item.get("required_eduaction", ""),
                         item.get("description", ""),
+                        item.get("highlights", ""),
                         str(embeddings),
                     ),
                 )
