@@ -15,18 +15,18 @@ RESUME_PATH = Path(f"{CWD_PATH}/temp/resumes/resume.txt").resolve()
 
 # === Database Configs ===
 DATABASE = "all_jobs.db"
-TABLE_JOBS = "jobs"
+TABLE_JOBS_NEW = "jobs_new"
 TABLE_RESUMES = "resumes"
 TABLE_APPLICATIONS = "applications"
 
 
 # === API Configs ===
-JOB_SEARCH_URL = "https://linkedin-jobs-search.p.rapidapi.com/"
-JOB_SEARCH_X_RAPIDAPI_HOST = "linkedin-jobs-search.p.rapidapi.com"
+JOB_SEARCH_URL = "https://jsearch.p.rapidapi.com/search"
+JOB_SEARCH_X_RAPIDAPI_HOST = "jsearch.p.rapidapi.com"
 
 
 # == Job Search Configs ===
-FILENAMES = "linkedinjob"
+FILENAMES = "jobs"
 
 POSITIONS = [
     "Vice President of Data Science",
@@ -63,12 +63,11 @@ POSITIONS = [
     "Lead Data Engineer",
 ]
 
-# List of locations
-LOCATIONS = ["remote"]
+# Enabling the remote jobs research
+remote_jobs_only = ["true"]
 
 # Pagination for API calls
 PAGES = 10
-
 
 # === Model Configs ===
 VECTOR_SIZE = 50

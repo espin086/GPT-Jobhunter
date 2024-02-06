@@ -14,6 +14,7 @@ from jobhunter import config
 from jobhunter.FileHandler import FileHandler
 from jobhunter.search_linkedin_jobs import search_linkedin_jobs
 
+
 # change current director to location of this file
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 os.chdir(THIS_DIR)
@@ -42,7 +43,7 @@ logging.basicConfig(
 JOB_SEARCH_URL = config.JOB_SEARCH_URL
 
 
-def get_all_jobs(search_term, location, pages):
+def get_all_jobs(search_term, remote_jobs_only, pages):
     """
     This function takes in a search term, location and an optional page and
     uses them to make a request to the LinkedIn jobs API. The API returns a
@@ -58,7 +59,6 @@ def get_all_jobs(search_term, location, pages):
                 executor.submit(
                     search_linkedin_jobs,
                     search_term=search_term,
-                    location=location,
                     page=page,
                 )
             )
@@ -71,7 +71,7 @@ def get_all_jobs(search_term, location, pages):
                     for job in jobs:
                         file_handler.save_data(
                             data=job,
-                            source="linkedinjobs",
+                            source="jobs",
                             sink=file_handler.raw_path,
                         )
                 else:
@@ -95,16 +95,14 @@ def extract():
         locations = config.LOCATIONS
 
         logging.info(
-            "Starting extraction process for positions: %s, locations: %s",
+            "Starting extraction process for positions: %s",
             positions,
-            locations,
         )
 
         for position in tqdm(positions):
-            for location in locations:
-                get_all_jobs(
-                    search_term=position, location=location, pages=config.PAGES
-                )
+            get_all_jobs(
+                search_term=position, pages=config.PAGES
+            )
 
         logging.info("Extraction process completed.")
 
