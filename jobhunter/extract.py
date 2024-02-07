@@ -53,12 +53,13 @@ def get_all_jobs(search_term, remote_jobs_only, pages):
                 if jobs:
                     all_jobs.extend(jobs)
                     logging.debug("Appended %d jobs for page %d", len(jobs), page)
-                    for job in jobs:
+                    for job in all_jobs:
                         file_handler.save_data(
                             data=job,
                             source="jobs",
                             sink=file_handler.raw_path,
                         )
+                        print(job)
                 else:
                     logging.warning("No jobs found for page %d", page)
             except Exception as e:
@@ -66,8 +67,8 @@ def get_all_jobs(search_term, remote_jobs_only, pages):
                     "An error occurred while fetching jobs for page %d: %s",
                     page,
                     str(e),
-                )   
-    print(all_jobs)
+                )
+    print(len(all_jobs))
     return all_jobs   
 
 
