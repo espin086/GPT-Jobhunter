@@ -23,7 +23,7 @@ from typing import Dict, List, Mapping, Union
 import requests
 from dotenv import load_dotenv
 
-from jobhunter import config
+import config
 
 # Add the path to the .env file
 dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
@@ -42,9 +42,9 @@ pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=config.LOGGING_LEVEL)
 
 
-def search_linkedin_jobs(search_term: str, location: str, page: int = 1) -> List[Dict]:
+def search_jobs(search_term: str, remote_jobs_only: str, page: int = 1) -> List[Dict]:
     """
-    This function takes in a search term, location and an optional page
+    This function takes in a search term, remote_jobs_only(true/false) and an optional page
     number as input and uses them to make a request to the LinkedIn jobs API.
     The API returns a json object containing job search results that match
     the search term and location provided. The function also sets up logging
@@ -52,7 +52,7 @@ def search_linkedin_jobs(search_term: str, location: str, page: int = 1) -> List
 
     Args:
     search_term (str): The job title or position you want to search for.
-    location (str): The location you want to search for jobs in.
+    remote_jobs_only (str):  Search for only remote jobs if set it true else search for all the jobs in any location.
     page (int, optional): The page number of the search results you want to retrieve. Default is 1.
 
     Returns:
@@ -63,39 +63,39 @@ def search_linkedin_jobs(search_term: str, location: str, page: int = 1) -> List
     """
 
     url = JOB_SEARCH_URL
-    payload = {"search_terms": search_term, "location": location, "page": page}
-    headers: Union[Mapping[str, Union[str, bytes]], None] = {
-        "content-type": "application/json",
+    querystring = {"query": search_term, "page": page, "remote_jobs_only": remote_jobs_only}
+    headers = {
         "X-RapidAPI-Key": str(RAPID_API_KEY),
         "X-RapidAPI-Host": config.JOB_SEARCH_X_RAPIDAPI_HOST,
     }
 
     try:
-        response = requests.request(
-            "POST", url, json=payload, headers=headers, timeout=60
+        response = requests.get(
+            url, headers=headers, params= querystring
         )
         json_object = json.loads(response.text)
-        return json_object
+        json_response_data = json_object.get('data')
+        return json_response_data
     except ValueError as value_err:
         logging.error(value_err)
         return [{"error": value_err}]
 
 
-def main(search_term, location, page):
+def main(search_term, remote_jobs_only, page):
     """
-    main() is a function that performs a job search on LinkedIn
-    using the search_linkedin_jobs() function.
+    main() is a function that performs a job search on
+    using the search_jobs() function.
 
     Args:
     search_term (str): The job title or keyword to search for.
-    location (str): The location to search for the job.
+    remote_jobs_only (str):  Search for only remote jobs if set it true else search for all the jobs in any location.
     page (int, optional): The page number of the search results. Default is 1.
 
     Returns:
-    json: The json object returned by the LinkedIn jobs API.
+    json: The json object returned by the  jobs API.
     """
-    results = search_linkedin_jobs(
-        search_term=search_term, location=location, page=page
+    results = search_jobs(
+        search_term=search_term, remote_jobs_only=remote_jobs_only, page=page
     )
     return results
 
@@ -105,7 +105,7 @@ def entrypoint():
     This is the entrypoint for the script.
     It defines the command-line interface for running the script.
     """
-    parser = argparse.ArgumentParser(description="This searches for jobs on LinkedIn")
+    parser = argparse.ArgumentParser(description="This searches for jobs")
 
     parser.add_argument(
         "search",
@@ -115,7 +115,7 @@ def entrypoint():
     )
 
     parser.add_argument(
-        "location", type=str, metavar="location", help="the location of the job"
+        "remote_jobs_only", type=str, metavar="remote_jobs_only", help="Search for only remote jobs"
     )
 
     parser.add_argument(
@@ -128,7 +128,7 @@ def entrypoint():
 
     args = parser.parse_args()
 
-    result = main(search_term=args.search, location=args.location, page=args.page)
+    result = main(search_term=args.search, remote_jobs_only=args.remote_jobs_only, page=args.page)
 
     pp.pprint(result)
 
