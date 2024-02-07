@@ -67,6 +67,7 @@ def get_all_jobs(search_term, remote_jobs_only, pages):
                     page,
                     str(e),
                 )   
+    print(all_jobs)
     return all_jobs   
 
 

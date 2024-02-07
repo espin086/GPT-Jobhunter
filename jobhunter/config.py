@@ -29,8 +29,8 @@ JOB_SEARCH_X_RAPIDAPI_HOST = "jsearch.p.rapidapi.com"
 FILENAMES = "jobs"
 
 POSITIONS = [
-    "Vice President of Data Science",
-    "Vice President of Machine Learning",
+    "Vice President of Data Science"
+    # "Vice President of Machine Learning",
     # "Vice President of Data Engineering",
     # "Vice President of Artificial Intelligence",
     # "Head of Data Science",
@@ -93,7 +93,7 @@ SELECTED_KEYS = [
     'job_highlights'
 ]
 # Pagination for API calls
-PAGES = 10
+PAGES = 2
 
 # === Model Configs ===
 VECTOR_SIZE = 50
