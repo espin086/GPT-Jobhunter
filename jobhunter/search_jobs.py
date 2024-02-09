@@ -1,17 +1,16 @@
 """
-This module uses the LinkedIn Jobs API to search for jobs on LinkedIn by providing a search term, 
-location and an optional page number. The module utilizes the requests and json libraries to make 
-the API request and parse the response, respectively. Additionally, the module employs the logging 
-and argparse libraries to set up logging and command-line arguments, and the pprint library to 
-print the results in a pretty format. The main function in the module is 'search_linkedin_jobs()' 
-which takes in a search term, location and an optional page number as input and returns a json 
-object containing job search results that match the search term and location provided. The module 
-also uses the os library to access the API key as an environment variable. The main function in 
-the module is 'main()' which performs a job search on LinkedIn using the 'search_linkedin_jobs()' 
-function and returns the json object returned by the LinkedIn jobs API. 
+This module uses the L Jobs API to search for jobs by providing a search term,
+location and an optional page number. The module utilizes the requests and json libraries to make
+the API request and parse the response, respectively. Additionally, the module employs the logging
+and argparse libraries to set up logging and command-line arguments, and the pprint library to
+print the results in a pretty format. The main function in the module is 'search_linkedin_jobs()'
+which takes in a search term, location and an optional page number as input and returns a json
+object containing job search results that match the search term and location provided. The module
+also uses the os library to access the API key as an environment variable. The main function in
+the module is 'main()' which performs a job search using the 'search__jobs()'
+function and returns the json object returned by the  jobs API.
 The module also defines a command-line imnterface for running the script.
 """
-
 
 import argparse
 import json
@@ -33,7 +32,6 @@ load_dotenv(dotenv_path)
 
 # Get the API key from the environment variable
 RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
-
 
 # Get the API URL from the config file
 JOB_SEARCH_URL = config.JOB_SEARCH_URL
@@ -63,7 +61,11 @@ def search_jobs(search_term: str, remote_jobs_only: str, page: int = 1) -> List[
     """
 
     url = JOB_SEARCH_URL
-    querystring = {"query": search_term, "page": page, "remote_jobs_only": remote_jobs_only}
+    querystring = {
+        "query": search_term,
+        "page": page,
+        "remote_jobs_only": remote_jobs_only,
+    }
     headers = {
         "X-RapidAPI-Key": str(RAPID_API_KEY),
         "X-RapidAPI-Host": config.JOB_SEARCH_X_RAPIDAPI_HOST,
@@ -71,7 +73,7 @@ def search_jobs(search_term: str, remote_jobs_only: str, page: int = 1) -> List[
 
     try:
         response = requests.get(
-            url, headers=headers, params= querystring
+            url, headers=headers, params=querystring
         )
         json_object = json.loads(response.text)
         json_response_data = json_object.get('data')

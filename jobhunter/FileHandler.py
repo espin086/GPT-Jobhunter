@@ -1,8 +1,3 @@
-"""
-This code handles all of the local file movements for the project
-
-"""
-
 import datetime
 import json
 import logging
@@ -87,36 +82,38 @@ class FileHandler:
         return None
 
     def import_job_data_from_dir(self, dirpath):
-            """
-            This function imports the job data from the directory specified in the argument.
-            """
-            filename_starts_with = "jobs"
-            selected_keys = config.SELECTED_KEYS
+        """
+        This function imports the job data from the directory specified in the argument.
+        """
+        filename_starts_with = "jobs"
+        selected_keys = config.SELECTED_KEYS
 
-            data_list = []
-            for filename in os.listdir(dirpath):
-                if filename.startswith(filename_starts_with) and filename.endswith(".json"):
-                    with open(os.path.join(dirpath, filename), encoding="utf-8") as file:
-                        data = json.load(file)
+        data_list = []
+        for filename in os.listdir(dirpath):
+            if filename.startswith(filename_starts_with) and filename.endswith(".json"):
+                with open(os.path.join(dirpath, filename), encoding="utf-8") as file:
+                    data = json.load(file)
 
-                        # If selected_keys is provided, filter and add missing keys
-                        if selected_keys:
-                            filtered_data = {key: data.get(key, None) for key in selected_keys}
-                            data_list.append(filtered_data)
-                        else:
-                            data_list.append(data)
+                    # If selected_keys is provided, filter and add missing keys
+                    if selected_keys:
+                        filtered_data = {
+                            key: data.get(key, None) for key in selected_keys
+                        }
+                        data_list.append(filtered_data)
+                    else:
+                        data_list.append(data)
 
-            invalid_files = set(os.listdir(dirpath)) - set(
-                os.path.join(dirpath, data.get("filename", "")) for data in data_list
+        invalid_files = set(os.listdir(dirpath)) - set(
+            os.path.join(dirpath, data.get("filename", "")) for data in data_list
+        )
+
+        for filename in invalid_files:
+            logging.warning(
+                "WARNING: raw data schema does not conform in file %s", filename
             )
 
-            for filename in invalid_files:
-                logging.warning(
-                    "WARNING: raw data schema does not conform in file %s", filename
-                )
-
-            logging.info("INFO: Imported data list: %s", data_list)
-            return data_list
+        logging.info("INFO: Imported data list: %s", data_list)
+        return data_list
 
     def delete_files(self, dir_path):
         """Delete files in a directory."""

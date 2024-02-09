@@ -1,6 +1,3 @@
-"""
-This module contains the functions used to extract data from the jobs API.
-"""
 import concurrent.futures
 import logging
 import os
@@ -33,6 +30,7 @@ JOB_SEARCH_URL = config.JOB_SEARCH_URL
 
 # Get the API URL from the config file
 SELECTED_KEYS = config.SELECTED_KEYS
+
 
 def get_all_jobs(search_term, remote_jobs_only, pages):
     all_jobs = []
@@ -69,9 +67,7 @@ def get_all_jobs(search_term, remote_jobs_only, pages):
                     str(e),
                 )
     print(len(all_jobs))
-    return all_jobs   
-
-
+    return all_jobs
 
 
 def extract():
@@ -89,7 +85,9 @@ def extract():
         )
         for position in tqdm(positions):
             get_all_jobs(
-                search_term=position, remote_jobs_only=remote_jobs_only, pages=config.PAGES
+                search_term=position,
+                remote_jobs_only=remote_jobs_only,
+                pages=config.PAGES,
             )
 
         logging.info("Extraction process completed.")
@@ -97,8 +95,8 @@ def extract():
     except Exception as e:
         logging.error("An error occurred in the extract function: %s", str(e))
 
+
 if __name__ == "__main__":
     logging.info("Application started.")
     extract()
     logging.info("Application finished.")
-
