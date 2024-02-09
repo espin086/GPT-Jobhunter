@@ -43,7 +43,7 @@ def run_transform():
 
 
 # Streamlit app
-st.title("Positions & REMOTE_JOBS_ONLY")
+st.title("Positions & Remote Jobs")
 
 st.write(POSITIONS)
 st.write(REMOTE_JOBS_ONLY)
