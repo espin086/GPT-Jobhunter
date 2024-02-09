@@ -32,7 +32,7 @@ def create_db_if_not_there():
                     salary_high REAL,
                     salary_currency TEXT,
                     salary_period TEXT,
-                    job_benfits TEXT,
+                    job_benefits TEXT,
                     city TEXT,
                     state TEXT,
                     country TEXT,
@@ -83,11 +83,11 @@ def check_and_upload_to_db(json_list):
                 )
                 logging.info("Embeddings generated for %s", "primary_key")
                 c.execute(
-                    f"INSERT INTO {config.TABLE_JOBS_NEW} (primary_key, date, title, company, company_url, company_type, job_type, job_is_remote, job_offer_expiration_date, salary_low,  salary_high, salary_currency, salary_period,  job_benfits, city, state, country, apply_options, required_skills, required_experience, required_eduaction, description, highlights, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    f"INSERT INTO {config.TABLE_JOBS_NEW} (primary_key, date, resume_similarity, title, company, company_url, company_type, job_type, job_is_remote, job_offer_expiration_date, salary_low,  salary_high, salary_currency, salary_period,  job_benefits, city, state, country, apply_options, required_skills, required_experience, required_eduaction, description, highlights, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         primary_key,
                         item.get("date", ""),
-                        # item.get("resume_similarity", ""),
+                        item.get("resume_similarity", ""),
                         item.get("title", ""),
                         item.get("company", ""),
                         item.get("company_url", ""),

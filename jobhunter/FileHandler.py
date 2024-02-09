@@ -86,63 +86,6 @@ class FileHandler:
             )
         return None
 
-    # def import_job_data_from_dir(
-    #     self, dirpath, required_keys=None, filename_starts_with=None
-    # ):
-    #     """
-    #     This function imports the job data from the directory specified in the argument.
-    #     """
-    #     if required_keys is None:
-    #         required_keys = [
-    #             'job_posted_at_datetime_utc', 
-    #             'job_title',
-    #             'employer_name',
-    #             'employer_website', 
-    #             'employer_company_type', 
-    #             'job_employment_type', 
-    #             'job_is_remote', 
-    #             'job_offer_expiration_datetime_utc', 
-    #             'job_min_salary', 
-    #             'job_max_salary',
-    #             'job_salary_currency', 
-    #             'job_salary_period', 
-    #             'job_benfits',  
-    #             'job_city', 
-    #             'job_state', 
-    #             'job_country', 
-    #             'apply_options',
-    #             'job_required_skills', 
-    #             'job_required_experience', 
-    #             'job_required_education' ,
-    #             'job_description', 
-    #             'job_highlights',
-    #         ]
-
-        
-    #     filename_starts_with = "jobs"
-
-    #     data_list = [
-    #         json.load(open(os.path.join(dirpath, filename), encoding="utf-8"))
-    #         for filename in os.listdir(dirpath)
-    #         if filename.startswith(filename_starts_with) and filename.endswith(".json")
-    #     ]
-
-    #     valid_data_list = [
-    #         data for data in data_list if all(key in data for key in required_keys)
-    #     ]
-
-    #     invalid_files = set(os.listdir(dirpath)) - set(
-    #         os.path.join(dirpath, data.get("filename", "")) for data in valid_data_list
-    #     )
-
-    #     for filename in invalid_files:
-    #         logging.warning(
-    #             "WARNING: raw data schema does not conform in file %s", filename
-    #         )
-
-    #     logging.info("INFO: Imported data list: %s", valid_data_list)
-    #     return valid_data_list
-
     def import_job_data_from_dir(self, dirpath):
             """
             This function imports the job data from the directory specified in the argument.
@@ -238,7 +181,7 @@ class FileHandler:
             "salary_high",
             "salary_currency",
             "salary_period",
-            "job_benfits",
+            "job_benefits",
             "city",
             "state",
             "apply_options",

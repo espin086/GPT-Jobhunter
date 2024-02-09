@@ -90,8 +90,33 @@ class DataTransformer:
         """
         for entry in self.data:
             if 'job_is_remote' in entry:
-                entry['job_is_remote'] = 'yes' if entry['job_is_remote'] == 1 else 'no'
+                entry['job_is_remote'] = 'yes' if entry['job_is_remote'] == True else 'no'
         
+    def transform_single_skills(self):
+        """
+        Transform 'required_skills' field from a list to a single string if it has only one item.
+        """
+        for entry in self.data:
+            if 'required_skills' in entry and isinstance(entry['required_skills'], list):
+                skills_list = entry['required_skills']
+                if len(skills_list) == 1:
+                    entry['required_skills'] = skills_list[0]
+                elif len(skills_list) > 1:
+                    entry['required_skills'] = ', \n'.join(skills_list)
+
+
+    def transform_job_benefits(self):
+        """
+        Transform 'job_benefits' field from a list to a single string if it has only one item.
+        """
+        for entry in self.data:
+            if 'job_benefits' in entry and isinstance(entry['job_benefits'], list):
+                skills_list = entry['job_benefits']
+                if len(skills_list) == 1:
+                    entry['job_benefits'] = skills_list[0]
+                elif len(skills_list) > 1:
+                    entry['job_benefits'] = ', \n'.join(skills_list)
+
     def compute_resume_similarity(self, resume_text):
         """Computes the similarity between the job description and the resume."""
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -125,7 +150,7 @@ class DataTransformer:
             'job_max_salary': 'salary_high',
             'job_salary_currency': 'salary_currency',
             'job_salary_period': 'salary_period',
-            'job_benfits': 'job_benfits',
+            'job_benefits': 'job_benefits',
             'job_city': 'city',
             'job_state': 'state',
             'job_country': 'country',
@@ -144,6 +169,8 @@ class DataTransformer:
         self.transform_required_eduation()
         self.transform_highlights()
         self.transform_job_is_remote()
+        self.transform_single_skills()
+        self.transform_job_benefits()
         # if Path(self.resume_path).exists():
         #     resume = self.file_handler.read_resume_text(
         #         resume_file_path=self.resume_path

@@ -30,7 +30,7 @@ FILENAMES = "jobs"
 
 POSITIONS = [
     "Vice President of Data Science",
-    #"Vice President of Machine Learning",
+    # "Vice President of Machine Learning",
     # "Vice President of Data Engineering",
     # "Vice President of Artificial Intelligence",
     # "Head of Data Science",
@@ -80,7 +80,7 @@ SELECTED_KEYS = [
     'job_max_salary',
     'job_salary_currency', 
     'job_salary_period', 
-    'job_benfits',  
+    'job_benefits',  
     'job_city', 
     'job_state', 
     'job_country', 
