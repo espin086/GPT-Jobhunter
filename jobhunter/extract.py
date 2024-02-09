@@ -57,7 +57,6 @@ def get_all_jobs(search_term, remote_jobs_only, pages):
                             source="jobs",
                             sink=file_handler.raw_path,
                         )
-                        print(job)
                 else:
                     logging.warning("No jobs found for page %d", page)
             except Exception as e:
