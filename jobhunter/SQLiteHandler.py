@@ -83,7 +83,7 @@ def check_and_upload_to_db(json_list):
                 )
                 logging.info("Embeddings generated for %s", "primary_key")
                 c.execute(
-                    f"INSERT INTO {config.TABLE_JOBS_NEW} (primary_key, date, resume_similarity, title, company, company_url, company_type, job_type, job_is_remote, job_offer_expiration_date, salary_low,  salary_high, salary_currency, salary_period,  job_benefits, city, state, country, apply_options, required_skills, required_experience, required_eduaction, description, highlights, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    f"INSERT INTO {config.TABLE_JOBS_NEW} (primary_key, date, resume_similarity, title, company, company_url, company_type, job_type, job_is_remote, job_offer_expiration_date, salary_low,  salary_high, salary_currency, salary_period,  job_benefits, city, state, country, apply_options, required_skills, required_experience, required_eduaction, description, highlights, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         primary_key,
                         item.get("date", ""),
