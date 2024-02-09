@@ -1,7 +1,7 @@
 import concurrent.futures
 import logging
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 from tqdm import tqdm
 
@@ -85,7 +85,7 @@ class DataTransformer:
             )
             item["required_experience"] = formatted_experience
 
-    def transform_required_eduation(self):
+    def transform_required_education(self):
         """Transforms the required_education dictionary into the desired format."""
         for item in self.data:
             required_education = item.get("required_education", {})
@@ -101,7 +101,10 @@ class DataTransformer:
         for item in self.data:
             highlights = item.get("highlights", {})
             formatted_highlights = ", ".join(
-                [f"\n{key}:\n {', '.join(values)}" for key, values in highlights.items()]
+                [
+                    f"\n{key}:\n {', '.join(values)}"
+                    for key, values in highlights.items()
+                ]
             )
             item["highlights"] = formatted_highlights
 
@@ -191,12 +194,12 @@ class DataTransformer:
         self.rename_keys(key_map)
         self.concatenate_apply_links()
         self.transform_required_experience()
-        self.transform_required_eduation()
+        self.transform_required_education()
         self.transform_highlights()
         self.transform_job_is_remote()
         self.transform_single_skills()
         self.transform_job_benefits()
-        
+
         if Path(self.resume_path).exists():
             resume = self.file_handler.read_resume_text(
                 resume_file_path=self.resume_path

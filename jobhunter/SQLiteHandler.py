@@ -2,8 +2,10 @@ import json
 import logging
 import sqlite3
 from sklearn.metrics.pairwise import cosine_similarity
+
 import config
 from textAnalysis import generate_gpt_embedding
+
 
 def create_db_if_not_there():
     """Create the database if it doesn't exist."""
@@ -18,7 +20,7 @@ def create_db_if_not_there():
                     primary_key TEXT,
                     date TEXT,
                     resume_similarity REAL,
-                    title TEXT, 
+                    title TEXT,
                     company TEXT,
                     company_url TEXT,
                     company_type TEXT,
@@ -44,12 +46,14 @@ def create_db_if_not_there():
         )
         conn.commit()
         logging.info(
-            "Successfully created or ensured the table %s exists.", config.TABLE_JOBS_NEW
+            "Successfully created or ensured the table %s exists.",
+            config.TABLE_JOBS_NEW,
         )
     except Exception as e:
         logging.error("Failed to create table: %s", e)
     finally:
         conn.close()
+
 
 def check_and_upload_to_db(json_list):
     """Check if the primary key exists in the database and upload data if not."""
@@ -61,11 +65,14 @@ def check_and_upload_to_db(json_list):
         try:
             primary_key = item["primary_key"]
             c.execute(
-                f"SELECT * FROM {config.TABLE_JOBS_NEW} WHERE primary_key=?", (primary_key,)
+                f"SELECT * FROM {config.TABLE_JOBS_NEW} WHERE primary_key=?",
+                (primary_key,),
             )
             result = c.fetchone()
             if result:
-                logging.warning("%s already in the database, skipping...", primary_key)
+                logging.warning(
+                    "%s already in the database, skipping...", primary_key
+                )
             else:
                 logging.info("Generating embeddings for %s", primary_key)
                 embeddings = generate_gpt_embedding(
@@ -103,13 +110,16 @@ def check_and_upload_to_db(json_list):
                     ),
                 )
                 conn.commit()
-                logging.info("UPLOADED: %s uploaded to the database", primary_key)
+                logging.info(
+                    "UPLOADED: %s uploaded to the database", primary_key
+                )
         except KeyError as e:
             logging.error("Skipping item due to missing key: %s", e)
         except Exception as e:
             logging.error("Skipping item due to error: %s", e)
 
     conn.close()
+
 
 def save_text_to_db(filename, text):
     """Save resume text to the database."""
@@ -133,7 +143,8 @@ def save_text_to_db(filename, text):
     try:
         # Check if a record with the given filename already exists
         cursor.execute(
-            f"SELECT id FROM {config.TABLE_RESUMES} WHERE filename = ?", (filename,)
+            f"SELECT id FROM {config.TABLE_RESUMES} WHERE filename = ?",
+            (filename,),
         )
         record = cursor.fetchone()
 
@@ -154,6 +165,7 @@ def save_text_to_db(filename, text):
 
     conn.commit()
     conn.close()
+
 
 def fetch_resumes_from_db():
     """Fetch resumes from the database."""
@@ -181,19 +193,22 @@ def fetch_resumes_from_db():
 
     return [record[0] for record in records]
 
+
 def get_resume_text(filename):
     """Fetch the text content of a resume from the database."""
     conn = sqlite3.connect(config.DATABASE)
     cursor = conn.cursor()
 
     cursor.execute(
-        f"SELECT content FROM {config.TABLE_RESUMES} WHERE filename = ?", (filename,)
+        f"SELECT content FROM {config.TABLE_RESUMES} WHERE filename = ?",
+        (filename,),
     )
     record = cursor.fetchone()
     logging.info("Resume text fetched from the database")
     conn.close()
 
     return record[0] if record else None
+
 
 def fetch_primary_keys_from_db() -> list:
     """Fetch primary keys from the database."""
@@ -206,6 +221,7 @@ def fetch_primary_keys_from_db() -> list:
 
     conn.close()
     return primary_keys
+
 
 def update_similarity_in_db(filename):
     """Update similarity in the database."""
@@ -223,16 +239,21 @@ def update_similarity_in_db(filename):
             res = c.fetchone()
             if res:
                 embeddings = json.loads(res[0])
-                similarity = cosine_similarity([embeddings], [resume_embedding])[0][0]
+                similarity = cosine_similarity(
+                    [embeddings], [resume_embedding]
+                )[0][0]
                 c.execute(
                     f"UPDATE {config.TABLE_JOBS_NEW} SET resume_similarity = ? WHERE primary_key = ?",
                     (similarity, primary_key),
                 )
                 conn.commit()
                 logging.info(
-                    "UPDATED: Similarity updated for %s in the database", primary_key
+                    "UPDATED: Similarity updated for %s in the database",
+                    primary_key,
                 )
         except Exception as e:
-            logging.error("Error fetching embeddings from the database: %s", e)
+            logging.error(
+                "Error fetching embeddings from the database: %s", e
+            )
 
     conn.close()
