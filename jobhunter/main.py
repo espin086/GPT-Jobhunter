@@ -11,7 +11,7 @@ import PyPDF2
 import streamlit as st
 
 from jobhunter.config import (
-    LOCATIONS,
+    REMOTE_JOBS_ONLY,
     POSITIONS,
     PROCESSED_DATA_PATH,
     RAW_DATA_PATH,
@@ -43,10 +43,10 @@ def run_transform():
 
 
 # Streamlit app
-st.title("Positions & Locations")
+st.title("Positions & REMOTE_JOBS_ONLY")
 
 st.write(POSITIONS)
-st.write(LOCATIONS)
+st.write(REMOTE_JOBS_ONLY)
 
 st.title("Start Searching for Jobs")
 

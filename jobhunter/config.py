@@ -71,7 +71,6 @@ SELECTED_KEYS = [
     'job_posted_at_datetime_utc', 
     'job_title',
     'employer_name',
-    'employer_logo', 
     'employer_website', 
     'employer_company_type', 
     'job_employment_type', 

@@ -86,51 +86,94 @@ class FileHandler:
             )
         return None
 
-    def import_job_data_from_dir(
-        self, dirpath, required_keys=None, filename_starts_with=None
-    ):
-        """
-        This function imports the job data from the directory specified in the argument.
-        """
-        if required_keys is None:
-            required_keys = [
-                "job_url",
-                "linkedin_job_url_cleaned",
-                "company_name",
-                "company_url",
-                "linkedin_company_url_cleaned",
-                "job_title",
-                "job_location",
-                "posted_date",
-                "normalized_company_name",
-            ]
+    # def import_job_data_from_dir(
+    #     self, dirpath, required_keys=None, filename_starts_with=None
+    # ):
+    #     """
+    #     This function imports the job data from the directory specified in the argument.
+    #     """
+    #     if required_keys is None:
+    #         required_keys = [
+    #             'job_posted_at_datetime_utc', 
+    #             'job_title',
+    #             'employer_name',
+    #             'employer_website', 
+    #             'employer_company_type', 
+    #             'job_employment_type', 
+    #             'job_is_remote', 
+    #             'job_offer_expiration_datetime_utc', 
+    #             'job_min_salary', 
+    #             'job_max_salary',
+    #             'job_salary_currency', 
+    #             'job_salary_period', 
+    #             'job_benfits',  
+    #             'job_city', 
+    #             'job_state', 
+    #             'job_country', 
+    #             'apply_options',
+    #             'job_required_skills', 
+    #             'job_required_experience', 
+    #             'job_required_education' ,
+    #             'job_description', 
+    #             'job_highlights',
+    #         ]
 
-        if filename_starts_with is None:
-            filename_starts_with = (
-                config.FILENAMES
-            )  # Adjust to class property if needed
+        
+    #     filename_starts_with = "jobs"
 
-        data_list = [
-            json.load(open(os.path.join(dirpath, filename), encoding="utf-8"))
-            for filename in os.listdir(dirpath)
-            if filename.startswith(filename_starts_with) and filename.endswith(".json")
-        ]
+    #     data_list = [
+    #         json.load(open(os.path.join(dirpath, filename), encoding="utf-8"))
+    #         for filename in os.listdir(dirpath)
+    #         if filename.startswith(filename_starts_with) and filename.endswith(".json")
+    #     ]
 
-        valid_data_list = [
-            data for data in data_list if all(key in data for key in required_keys)
-        ]
+    #     valid_data_list = [
+    #         data for data in data_list if all(key in data for key in required_keys)
+    #     ]
 
-        invalid_files = set(os.listdir(dirpath)) - set(
-            os.path.join(dirpath, data.get("filename", "")) for data in valid_data_list
-        )
+    #     invalid_files = set(os.listdir(dirpath)) - set(
+    #         os.path.join(dirpath, data.get("filename", "")) for data in valid_data_list
+    #     )
 
-        for filename in invalid_files:
-            logging.warning(
-                "WARNING: raw data schema does not conform in file %s", filename
+    #     for filename in invalid_files:
+    #         logging.warning(
+    #             "WARNING: raw data schema does not conform in file %s", filename
+    #         )
+
+    #     logging.info("INFO: Imported data list: %s", valid_data_list)
+    #     return valid_data_list
+
+    def import_job_data_from_dir(self, dirpath):
+            """
+            This function imports the job data from the directory specified in the argument.
+            """
+            filename_starts_with = "jobs"
+            selected_keys = config.SELECTED_KEYS
+
+            data_list = []
+            for filename in os.listdir(dirpath):
+                if filename.startswith(filename_starts_with) and filename.endswith(".json"):
+                    with open(os.path.join(dirpath, filename), encoding="utf-8") as file:
+                        data = json.load(file)
+
+                        # If selected_keys is provided, filter and add missing keys
+                        if selected_keys:
+                            filtered_data = {key: data.get(key, None) for key in selected_keys}
+                            data_list.append(filtered_data)
+                        else:
+                            data_list.append(data)
+
+            invalid_files = set(os.listdir(dirpath)) - set(
+                os.path.join(dirpath, data.get("filename", "")) for data in data_list
             )
 
-        logging.info("INFO: Imported data list: %s", valid_data_list)
-        return valid_data_list
+            for filename in invalid_files:
+                logging.warning(
+                    "WARNING: raw data schema does not conform in file %s", filename
+                )
+
+            logging.info("INFO: Imported data list: %s", data_list)
+            return data_list
 
     def delete_files(self, dir_path):
         """Delete files in a directory."""
@@ -184,16 +227,25 @@ class FileHandler:
         Saves a list of dictionaries to individual JSON files locally in the specified sink directory.
         """
         required_keys = [
-            "job_url",
-            "title",
-            "company_url",
-            "location",
             "date",
             "company",
-            "description",
+            "company_url",
+            "company_type",
+            "job_type",
+            "job_is_remote",
+            "job_offer_expiration_date",
             "salary_low",
             "salary_high",
-            "resume_similarity",
+            "salary_currency",
+            "salary_period",
+            "job_benfits",
+            "city",
+            "state",
+            "apply_options",
+            "required_skills",
+            "required_experience",
+            "description",
+            "highlights",
         ]
 
         for i, data in enumerate(data_list):

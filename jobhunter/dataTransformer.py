@@ -7,13 +7,13 @@ from typing import List
 
 from tqdm import tqdm
 
-from jobhunter import config
-from jobhunter.extract_salary import extract_salary
-from jobhunter.extract_text_from_site import get_text_in_url
-from jobhunter.FileHandler import FileHandler
-from jobhunter.text_similarity import text_similarity
+import config
+from FileHandler import FileHandler
+from text_similarity import text_similarity
 
 logging.basicConfig(level=config.LOGGING_LEVEL)
+
+
 
 class DataTransformer:
     """Transforms the raw data into a format that is ready for analysis."""
@@ -36,13 +36,8 @@ class DataTransformer:
 
     def drop_variables(self):
         """Drops the variables that are not needed for analysis."""
-        self.delete_json_keys("job_url", "company_name", "company_url")
+        self.delete_json_keys("employer_logo", "job_publisher", "job_id", "job_apply_link", "job_apply_is_direct", "job_apply_quality_score", "job_posted_at_timestamp", "job_latitude", "job_longitude", "job_google_link", "job_offer_expiration_timestamp", "job_experience_in_place_of_education", "job_job_title", "job_posting_language", "job_onet_soc", "job_onet_job_zone", "job_naics_code", "job_naics_name")
 
-    def remove_duplicates(self):
-        """Removes duplicate entries from the json data."""
-        tuples = [tuple(d.items()) for d in self.data]
-        unique_tuples = set(tuples)
-        self.data = [dict(t) for t in unique_tuples]
 
     def rename_keys(self, key_map):
         """Renames the keys in the json data."""
@@ -57,6 +52,35 @@ class DataTransformer:
             for key in keys:
                 if key in item:
                     item[key] = item[key].lower()
+    
+    def concatenate_apply_links(self):
+        """Concatenates all apply links from apply_options."""
+        for item in self.data:
+            apply_options = item.get("apply_options", [])
+            apply_links = [option.get("apply_link", "") for option in apply_options]
+            concatenated_links = '\n'.join(apply_links)
+            item["apply_options"] = concatenated_links
+    
+    def transform_required_experience(self):
+        """Transforms the required_experience dictionary into the desired format."""
+        for item in self.data:
+            required_experience = item.get("required_experience", {})
+            formatted_experience = ', \n'.join(f"{key}: {value}" for key, value in required_experience.items())
+            item["required_experience"] = formatted_experience
+    
+    def transform_required_skills(self):
+        """Transforms the required_skills dictionary into the desired format."""
+        for item in self.data:
+            required_skills = item.get("required_skills", {})
+            formatted_skills = ', '.join(f"{key}: {value}" for key, value in required_skills.items())
+            item["required_skills"] = formatted_skills
+
+    def transform_required_eduation(self):
+        """Transforms the required_education dictionary into the desired format."""
+        for item in self.data:
+            required_education = item.get("required_education", {})
+            formatted_education = ', \n'.join(f"{key}: {value}" for key, value in required_education.items())
+            item["required_education"] = formatted_education
 
     def compute_resume_similarity(self, resume_text):
         """Computes the similarity between the job description and the resume."""
@@ -77,6 +101,7 @@ class DataTransformer:
         """Transforms the raw data into a format that is ready for analysis."""
 
         key_map = {
+            'job_id' : 'id',
             'job_posted_at_datetime_utc': 'date',
             'job_title': 'title',
             'employer_name': 'company',
@@ -103,26 +128,28 @@ class DataTransformer:
         }
 
         self.drop_variables()
-        self.remove_duplicates()
         self.rename_keys(key_map)
-        self.convert_keys_to_lowercase("title", "location", "company")
+        self.concatenate_apply_links()
+        self.transform_required_experience()
+        self.transform_required_skills()
+        self.transform_required_eduation()
 
-        if Path(self.resume_path).exists():
-            resume = self.file_handler.read_resume_text(
-                resume_file_path=self.resume_path
-            )
-            self.compute_resume_similarity(resume_text=resume)
+        # if Path(self.resume_path).exists():
+        #     resume = self.file_handler.read_resume_text(
+        #         resume_file_path=self.resume_path
+        #     )
+        #     self.compute_resume_similarity(resume_text=resume)
 
         self.file_handler.save_data_list(
             data_list=self.data,
-            source="linkedinjobs",
+            source="jobs",
             sink=self.file_handler.processed_path,
         )
 
 
 class Main:
     def __init__(self):
-        self.file_handler = FileHandler()
+        self.file_handler = FileHandler(raw_path=config.RAW_DATA_PATH, processed_path=config.PROCESSED_DATA_PATH)
         self.data = self.file_handler.import_job_data_from_dir(
             dirpath=config.RAW_DATA_PATH
         )
@@ -131,13 +158,11 @@ class Main:
             raw_path=str(config.RAW_DATA_PATH),
             processed_path=str(config.PROCESSED_DATA_PATH),
             resume_path=str(config.RESUME_PATH),
-            data=self.data,
-            file_handler=self.file_handler,
+            data=self.data
         )
 
     def run(self):
         self.transformer.transform()
-
 
 if __name__ == "__main__":
     main = Main()

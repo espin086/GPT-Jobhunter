@@ -41,8 +41,7 @@ def create_db_if_not_there():
                     required_experience TEXT,
                     required_eduaction TEXT,                    
                     description TEXT,
-                    highlights TEXT,
-                    embeddings TEXT
+                    highlights TEXT
                     )"""
         )
         conn.commit()
