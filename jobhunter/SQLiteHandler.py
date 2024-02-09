@@ -41,7 +41,8 @@ def create_db_if_not_there():
                     required_experience TEXT,
                     required_eduaction TEXT,                    
                     description TEXT,
-                    highlights TEXT
+                    highlights TEXT,
+                    embeddings TEXT
                     )"""
         )
         conn.commit()
@@ -82,7 +83,7 @@ def check_and_upload_to_db(json_list):
                 )
                 logging.info("Embeddings generated for %s", "primary_key")
                 c.execute(
-                    f"INSERT INTO {config.TABLE_JOBS_NEW} (primary_key, date, title, company, salary_low, salary_high, location, job_url, company_url, description, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    f"INSERT INTO {config.TABLE_JOBS_NEW} (primary_key, date, title, company, company_url, company_type, job_type, job_is_remote, job_offer_expiration_date, salary_low,  salary_high, salary_currency, salary_period,  job_benfits, city, state, country, apply_options, required_skills, required_experience, required_eduaction, description, highlights, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         primary_key,
                         item.get("date", ""),
@@ -105,9 +106,10 @@ def check_and_upload_to_db(json_list):
                         item.get("apply_options", ""),
                         item.get("required_skills", ""),
                         item.get("required_experience", ""),
-                        item.get("required_eduaction", ""),
+                        item.get("required_education", ""),
                         item.get("description", ""),
                         item.get("highlights", ""),
+                        str(embeddings),
                     ),
                 )
                 conn.commit()

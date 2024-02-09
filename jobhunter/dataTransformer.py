@@ -76,11 +76,21 @@ class DataTransformer:
             item["required_education"] = formatted_education
 
     def transform_highlights(self):
-        """Transforms the highlights dictionary into the desired format."""
+        """
+        Transforms the highlights dictionary into the desired format.
+        """
         for item in self.data:
             highlights = item.get("highlights", {})
             formatted_highlights = ', '.join([f"\n{key}: \n {', '.join(values)}" for key, values in highlights.items()])
             item["highlights"] = formatted_highlights
+    
+    def transform_job_is_remote(self):
+        """
+        Transform the 'job_is_remote' field by replacing 1 with 'yes' and 0 with 'no'.
+        """
+        for entry in self.data:
+            if 'job_is_remote' in entry:
+                entry['job_is_remote'] = 'yes' if entry['job_is_remote'] == 1 else 'no'
         
     def compute_resume_similarity(self, resume_text):
         """Computes the similarity between the job description and the resume."""
@@ -133,6 +143,7 @@ class DataTransformer:
         self.transform_required_experience()
         self.transform_required_eduation()
         self.transform_highlights()
+        self.transform_job_is_remote()
         # if Path(self.resume_path).exists():
         #     resume = self.file_handler.read_resume_text(
         #         resume_file_path=self.resume_path
