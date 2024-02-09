@@ -4,8 +4,8 @@ import sqlite3
 
 from sklearn.metrics.pairwise import cosine_similarity
 
-from jobhunter import config
-from jobhunter.textAnalysis import generate_gpt_embedding
+import config
+from textAnalysis import generate_gpt_embedding
 
 
 def create_db_if_not_there():
@@ -16,7 +16,7 @@ def create_db_if_not_there():
 
     try:
         c.execute(
-            f"""CREATE TABLE IF NOT EXISTS {config.TABLE_JOBS}
+            f"""CREATE TABLE IF NOT EXISTS {config.TABLE_JOBS_NEW}
                     (id INTEGER PRIMARY KEY,
                     primary_key TEXT,
                     date TEXT,
@@ -46,7 +46,7 @@ def create_db_if_not_there():
         )
         conn.commit()
         logging.info(
-            "Successfully created or ensured the table %s exists.", config.TABLE_JOBS
+            "Successfully created or ensured the table %s exists.", config.TABLE_JOBS_NEW
         )
     except Exception as e:
         logging.error("Failed to create table: %s", e)
@@ -69,7 +69,7 @@ def check_and_upload_to_db(json_list):
         try:
             primary_key = item["primary_key"]
             c.execute(
-                f"SELECT * FROM {config.TABLE_JOBS} WHERE primary_key=?", (primary_key,)
+                f"SELECT * FROM {config.TABLE_JOBS_NEW} WHERE primary_key=?", (primary_key,)
             )
             result = c.fetchone()
             if result:
@@ -82,11 +82,11 @@ def check_and_upload_to_db(json_list):
                 )
                 logging.info("Embeddings generated for %s", "primary_key")
                 c.execute(
-                    f"INSERT INTO {config.TABLE_JOBS} (primary_key, date, resume_similarity, title, company, salary_low, salary_high, location, job_url, company_url, description, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    f"INSERT INTO {config.TABLE_JOBS_NEW} (primary_key, date, title, company, salary_low, salary_high, location, job_url, company_url, description, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         primary_key,
                         item.get("date", ""),
-                        item.get("resume_similarity", ""),
+                        # item.get("resume_similarity", ""),
                         item.get("title", ""),
                         item.get("company", ""),
                         item.get("company_url", ""),
@@ -108,7 +108,6 @@ def check_and_upload_to_db(json_list):
                         item.get("required_eduaction", ""),
                         item.get("description", ""),
                         item.get("highlights", ""),
-                        str(embeddings),
                     ),
                 )
                 conn.commit()
@@ -216,7 +215,7 @@ def fetch_primary_keys_from_db() -> list:
     c = conn.cursor()
 
     # Fetch the primary keys from the table
-    c.execute(f"SELECT primary_key FROM {config.TABLE_JOBS}")
+    c.execute(f"SELECT primary_key FROM {config.TABLE_JOBS_NEW}")
     primary_keys = [row[0] for row in c.fetchall()]
 
     conn.close()
@@ -232,7 +231,7 @@ def update_similarity_in_db(filename):
     for primary_key in primary_keys:
         try:
             c.execute(
-                f"SELECT embeddings FROM {config.TABLE_JOBS} WHERE primary_key=?",
+                f"SELECT embeddings FROM {config.TABLE_JOBS_NEW} WHERE primary_key=?",
                 (primary_key,),
             )
             res = c.fetchone()
@@ -240,7 +239,7 @@ def update_similarity_in_db(filename):
                 embeddings = json.loads(res[0])
                 similarity = cosine_similarity([embeddings], [resume_embedding])[0][0]
                 c.execute(
-                    f"UPDATE {config.TABLE_JOBS} SET resume_similarity = ? WHERE primary_key = ?",
+                    f"UPDATE {config.TABLE_JOBS_NEW} SET resume_similarity = ? WHERE primary_key = ?",
                     (similarity, primary_key),
                 )
                 conn.commit()
