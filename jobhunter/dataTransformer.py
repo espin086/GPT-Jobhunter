@@ -68,13 +68,6 @@ class DataTransformer:
             formatted_experience = ', \n'.join(f"{key}: {value}" for key, value in required_experience.items())
             item["required_experience"] = formatted_experience
     
-    def transform_required_skills(self):
-        """Transforms the required_skills dictionary into the desired format."""
-        for item in self.data:
-            required_skills = item.get("required_skills", {})
-            formatted_skills = ', '.join(f"{key}: {value}" for key, value in required_skills.items())
-            item["required_skills"] = formatted_skills
-
     def transform_required_eduation(self):
         """Transforms the required_education dictionary into the desired format."""
         for item in self.data:
@@ -82,6 +75,13 @@ class DataTransformer:
             formatted_education = ', \n'.join(f"{key}: {value}" for key, value in required_education.items())
             item["required_education"] = formatted_education
 
+    def transform_highlights(self):
+        """Transforms the highlights dictionary into the desired format."""
+        for item in self.data:
+            highlights = item.get("highlights", {})
+            formatted_highlights = ', '.join([f"\n{key}: \n {', '.join(values)}" for key, values in highlights.items()])
+            item["highlights"] = formatted_highlights
+        
     def compute_resume_similarity(self, resume_text):
         """Computes the similarity between the job description and the resume."""
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -131,9 +131,8 @@ class DataTransformer:
         self.rename_keys(key_map)
         self.concatenate_apply_links()
         self.transform_required_experience()
-        self.transform_required_skills()
         self.transform_required_eduation()
-
+        self.transform_highlights()
         # if Path(self.resume_path).exists():
         #     resume = self.file_handler.read_resume_text(
         #         resume_file_path=self.resume_path
