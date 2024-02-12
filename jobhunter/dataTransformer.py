@@ -5,9 +5,9 @@ from typing import Dict, List
 
 from tqdm import tqdm
 
-import config
-from FileHandler import FileHandler
-from text_similarity import text_similarity
+from jobhunter import config
+from jobhunter.FileHandler import FileHandler
+from jobhunter.text_similarity import text_similarity
 
 logging.basicConfig(level=config.LOGGING_LEVEL)
 
@@ -72,7 +72,7 @@ class DataTransformer:
         """Concatenates all apply links from apply_options."""
         for item in self.data:
             apply_options = item.get("apply_options", [])
-            apply_links = [option.get("apply_link", "") for option in apply_options]
+            apply_links = [option.get("apply_link", "") if isinstance(option, dict) else "" for option in apply_options]
             concatenated_links = "\n".join(apply_links)
             item["apply_options"] = concatenated_links
 

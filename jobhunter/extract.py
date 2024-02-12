@@ -7,7 +7,7 @@ import time
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-import config
+from jobhunter import config
 from FileHandler import FileHandler
 from search_jobs import search_jobs
 

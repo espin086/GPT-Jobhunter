@@ -8,7 +8,7 @@ from typing import Dict, List, Mapping
 import requests
 from dotenv import load_dotenv
 
-import config
+from jobhunter import config
 
 # Add the path to the .env file
 dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")

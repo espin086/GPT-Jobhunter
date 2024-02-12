@@ -44,9 +44,9 @@ jobs:
         isort jobhunter/*.py
 
     # # Test with pytest
-    # - name: Test with pytest
-    #   run: |
-    #     export PYTHONPATH=. && cd tests && pytest .
+    - name: Test with pytest
+      run: |
+        export PYTHONPATH=. && cd tests && pytest .
 
 
 
