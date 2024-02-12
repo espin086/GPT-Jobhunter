@@ -10,18 +10,18 @@ import pandas as pd
 import PyPDF2
 import streamlit as st
 
-from jobhunter.config import (
-    LOCATIONS,
+from config import (
+    REMOTE_JOBS_ONLY,
     POSITIONS,
     PROCESSED_DATA_PATH,
     RAW_DATA_PATH,
     RESUME_PATH,
 )
-from jobhunter.dataTransformer import DataTransformer
-from jobhunter.extract import extract
-from jobhunter.FileHandler import FileHandler
-from jobhunter.load import load
-from jobhunter.SQLiteHandler import (
+from dataTransformer import DataTransformer
+from extract import extract
+from FileHandler import FileHandler
+from load import load
+from SQLiteHandler import (
     fetch_resumes_from_db,
     get_resume_text,
     save_text_to_db,
@@ -43,10 +43,10 @@ def run_transform():
 
 
 # Streamlit app
-st.title("Positions & Locations")
+st.title("Positions & Remote Jobs")
 
 st.write(POSITIONS)
-st.write(LOCATIONS)
+st.write(REMOTE_JOBS_ONLY)
 
 st.title("Start Searching for Jobs")
 
@@ -117,7 +117,7 @@ if st.button("Query DB"):
         conn = sqlite3.connect("all_jobs.db")
 
         # Perform SQL query
-        query = "SELECT * FROM jobs ORDER BY date DESC, resume_similarity DESC"
+        query = "SELECT * FROM jobs_new ORDER BY date DESC, resume_similarity DESC"
         df = pd.read_sql(query, conn)
 
         # Close database connection
