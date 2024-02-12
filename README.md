@@ -13,11 +13,16 @@
 ### Automated Job Search Pipeline 🚀
 ![Job Search Results](images/image_ui_job_search_results.png)
 
+![Salary Extraction](images/image_ui_salary.png)
+
+![Job location](images/image_ui_job_location_apply_options.png)
+
+![Job description](images/image_ui_description_highlights.png) 
+
+
 ### AI Based Job-to-Resume Similarity Scores 📊
 ![Job Similarity](images/image_ui_job_similarity.png)
 
-### Automated Salary Extraction from Job Description 💰
-![Salary Extraction](images/image_ui_salary.png)
 
 ## Quick Start Guide 🚀
 

@@ -2,6 +2,9 @@
 venv
 jobhunter-venv
 
+
+images/.DS_Store
+
 #databases
 jobhunter/*.db
 jobhunter/all_jobs.db

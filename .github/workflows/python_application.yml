@@ -32,20 +32,21 @@ jobs:
         pip install flake8 pytest pylint black isort
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-    # # Check Black formatting
-    # - name: Check Black formatting
-    #   run: |
-    #     black --check .
+    # Check Black formatting
+    - name: Check Black formatting
+      run: |
+        black .
+        black --check .
 
-    # # Sort imports with isort
-    # - name: Sort imports with isort
-    #   run: |
-    #     isort jobhunter/*.py
+    # Sort imports with isort
+    - name: Sort imports with isort
+      run: |
+        isort jobhunter/*.py
 
     # # Test with pytest
-    # - name: Test with pytest
-    #   run: |
-    #     export PYTHONPATH=. && cd tests && pytest .
+    - name: Test with pytest
+      run: |
+        export PYTHONPATH=. && cd tests && pytest .
 
 
 
