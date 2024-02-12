@@ -3,7 +3,7 @@ import os
 
 # Import the `shutil` module
 import shutil
-from jobhunter.config import PROCESSED_DATA_PATH
+# from jobhunter.config import PROCESSED_DATA_PATH
 from jobhunter.dataTransformer import DataTransformer
 from jobhunter import FileHandler
 

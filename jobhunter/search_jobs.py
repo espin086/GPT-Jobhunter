@@ -9,6 +9,7 @@ import requests
 from dotenv import load_dotenv
 
 from jobhunter import config
+# import config
 
 # Add the path to the .env file
 dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")

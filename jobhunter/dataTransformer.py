@@ -5,11 +5,16 @@ from typing import Dict, List
 
 from tqdm import tqdm
 
-from jobhunter import config
+# from config import LOGGING_LEVEL
+# from FileHandler import FileHandler
+# from text_similarity import text_similarity
+
+# For running the test cases
+from jobhunter.config import LOGGING_LEVEL
 from jobhunter.FileHandler import FileHandler
 from jobhunter.text_similarity import text_similarity
 
-logging.basicConfig(level=config.LOGGING_LEVEL)
+logging.basicConfig(level=LOGGING_LEVEL)
 
 
 class DataTransformer:

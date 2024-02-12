@@ -11,6 +11,8 @@ from jobhunter import config
 from FileHandler import FileHandler
 from search_jobs import search_jobs
 
+# import config
+
 # change current director to location of this file
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 os.chdir(THIS_DIR)
