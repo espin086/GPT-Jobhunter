@@ -3,8 +3,6 @@ import logging
 from pathlib import Path
 from typing import Dict, List
 
-from tqdm import tqdm
-
 # from config import LOGGING_LEVEL
 # from FileHandler import FileHandler
 # from text_similarity import text_similarity
@@ -119,7 +117,7 @@ class DataTransformer:
         """
         for entry in self.data:
             if "job_is_remote" in entry:
-                entry["job_is_remote"] = "yes" if entry["job_is_remote"] == True else "no"
+                entry["job_is_remote"] = "Remote" if entry["job_is_remote"] == True else "Not Remote"
 
     def transform_single_skills(self):
         """

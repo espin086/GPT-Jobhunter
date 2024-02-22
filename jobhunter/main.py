@@ -9,9 +9,15 @@ from pathlib import Path
 import pandas as pd
 import PyPDF2
 import streamlit as st
+import streamlit.components.v1 as components
+from pandas.api.types import (
+    is_categorical_dtype,
+    is_datetime64_any_dtype,
+    is_numeric_dtype,
+    is_object_dtype,
+)
 
 from config import (
-    REMOTE_JOBS_ONLY,
     POSITIONS,
     PROCESSED_DATA_PATH,
     RAW_DATA_PATH,
@@ -28,6 +34,76 @@ from SQLiteHandler import (
     update_similarity_in_db,
 )
 
+def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+
+    modify = st.checkbox("Add filters")
+
+    if not modify:
+        return df
+
+    df = df.copy()
+
+    # Try to convert datetimes into a standard format (datetime, no timezone)
+    for col in df.columns:
+        if is_object_dtype(df[col]):
+            try:
+                df[col] = pd.to_datetime(df[col])
+            except Exception:
+                pass
+
+        if is_datetime64_any_dtype(df[col]):
+            df[col] = df[col].dt.date
+
+
+    to_filter_columns = st.multiselect("Filter dataframe on", df.columns)
+
+    for column in to_filter_columns:
+        print(f"Selected column: {column}")
+        print(f"Unique values: {df[column].unique()}")
+
+
+        left, right = st.columns((1, 20))
+        left.write("↳")
+        # Treat columns with < 10 unique values as categorical
+        if is_categorical_dtype(df[column]) or df[column].nunique() < 20:
+            user_cat_input = right.multiselect(
+                f"Values for {column}",
+                df[column].unique(),
+                default=list(df[column].unique()),
+            )
+            df = df[df[column].isin(user_cat_input)]
+        elif is_numeric_dtype(df[column]):
+            _min = float(df[column].min())
+            _max = float(df[column].max())
+            step = (_max - _min) / 100
+            user_num_input = right.slider(
+                f"Values for {column}",
+                _min,
+                _max,
+                (_min, _max),
+                step=step,
+            )
+            df = df[df[column].between(*user_num_input)]
+        elif is_datetime64_any_dtype(df[column]):
+            user_date_input = right.date_input(
+                f"Values for {column}",
+                value=(
+                    df[column].min(),
+                    df[column].max(),
+                ),
+            )
+            if len(user_date_input) == 2:
+                user_date_input = tuple(map(pd.to_datetime, user_date_input))
+                start_date, end_date = user_date_input
+                df = df.loc[df[column].between(start_date, end_date)]
+        else:
+            user_text_input = right.text_input(
+                f"Substring or regex in {column}",
+            )
+            if user_text_input:
+                df = df[df[column].str.contains(user_text_input)]
+    return df
+
 logging.basicConfig(level=logging.INFO)
 
 file_handler = FileHandler(raw_path=RAW_DATA_PATH, processed_path=PROCESSED_DATA_PATH)
@@ -43,10 +119,9 @@ def run_transform():
 
 
 # Streamlit app
-st.title("Positions & Remote Jobs")
+st.title("Positions")
 
 st.write(POSITIONS)
-st.write(REMOTE_JOBS_ONLY)
 
 st.title("Start Searching for Jobs")
 
@@ -108,22 +183,55 @@ if st.button("Select Resume") or st.session_state.select_resume_button_clicked:
         # Here you can add the code to process the selected resume
         update_similarity_in_db(selected_resume)
 
+if 'data_queried' not in st.session_state:
+    st.session_state['data_queried'] = False
+if 'query_result' not in st.session_state:
+    st.session_state['query_result'] = pd.DataFrame()
 
 if st.button("Query DB"):
+    st.session_state['data_queried'] = True
     try:
         # Connect to SQLite database
         conn = sqlite3.connect("all_jobs.db")
 
         # Perform SQL query
-        query = "SELECT * FROM jobs_new ORDER BY date DESC, resume_similarity DESC"
-        df = pd.read_sql(query, conn)
+        query = """
+            SELECT 
+                id, 
+                primary_key, 
+                date, 
+                CAST(resume_similarity AS REAL) AS resume_similarity,
+                title,
+                company,
+                company_url,
+                company_type,
+                job_type,
+                job_is_remote,
+                job_offer_expiration_date,
+                salary_low,
+                salary_high,
+                salary_currency,
+                salary_period,
+                job_benefits,
+                city,
+                state,
+                country,
+                apply_options,
+                required_skills,
+                required_experience,
+                required_education,
+                description,
+                highlights
+            FROM jobs_new 
+            ORDER BY date DESC, resume_similarity DESC
 
-        # Close database connection
+        """
+        st.session_state['query_result'] = pd.read_sql(query, conn)
         conn.close()
-
-        # Display data as a dataframe in Streamlit
-        st.write(df)
         st.success("Results returned successfully!")
-
     except Exception as e:
         st.error(f"An error occurred: {e}")
+
+if st.session_state['data_queried']:
+    filtered_df = filter_dataframe(st.session_state['query_result'])
+    st.dataframe(filtered_df)

@@ -63,8 +63,6 @@ POSITIONS = [
     "Lead Data Engineer",
 ]
 
-# Enabling the remote jobs research
-REMOTE_JOBS_ONLY = ["true"]
 
 # Selecting the metrics fro the API
 SELECTED_KEYS = [

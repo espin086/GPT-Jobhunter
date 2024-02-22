@@ -34,7 +34,7 @@ JOB_SEARCH_URL = config.JOB_SEARCH_URL
 SELECTED_KEYS = config.SELECTED_KEYS
 
 
-def get_all_jobs(search_term, remote_jobs_only, pages):
+def get_all_jobs(search_term, pages):
     all_jobs = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
@@ -43,7 +43,6 @@ def get_all_jobs(search_term, remote_jobs_only, pages):
                 executor.submit(
                     search_jobs,
                     search_term=search_term,
-                    remote_jobs_only=remote_jobs_only,
                     page=page,
                 )
             )
@@ -78,7 +77,6 @@ def extract():
     file_handler.create_data_folders_if_not_exists()
     try:
         positions = config.POSITIONS
-        remote_jobs_only = config.REMOTE_JOBS_ONLY
 
         logging.info(
             "Starting extraction process for positions: %s",
@@ -87,7 +85,6 @@ def extract():
         for position in tqdm(positions):
             get_all_jobs(
                 search_term=position,
-                remote_jobs_only=remote_jobs_only,
                 pages=config.PAGES,
             )
 
