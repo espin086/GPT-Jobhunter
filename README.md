@@ -11,6 +11,9 @@
 ![Job Search](images/image_ui_job_search.png)
 
 ### Automated Job Search Pipeline 🚀
+
+![Job Search Results Filtering](images/image_ui_job_filters.png)
+
 ![Job Search Results](images/image_ui_job_search_results.png)
 
 ![Salary Extraction](images/image_ui_salary.png)
