@@ -29,3 +29,5 @@ flake8
 pylint
 black
 isort
+
+pip install -e .
