@@ -139,20 +139,22 @@ if "button_clicked" not in st.session_state:
 if st.button("Upload Resume") or st.session_state.button_clicked:
     st.session_state.button_clicked = True
     uploaded_file = st.file_uploader("Choose a file", type=["pdf", "txt"])
-    text = ""
+    text = " "
     logging.info("File uploader initialized")
     if uploaded_file is not None:
         try:
             if uploaded_file.type == "application/pdf":
                 logging.info("File uploaded is a pdf")
-                pdf_reader = PyPDF2.PdfFileReader(uploaded_file)
-                for page_num in range(len(pdf_reader.pages)):
-                    text += pdf_reader.pages[page_num].extractText()
+                pdf = PyPDF2.PdfFileReader(uploaded_file)
+                number_of_pages = pdf.getNumPages()
+                for page_num in range(0, number_of_pages):
+                    page = pdf.getPage(page_num)
+                    text += page.extractText()
+                    print(text)
                 logging.info("Resume text extracted successfully!")
             else:  # For txt files
                 text = uploaded_file.read().decode("utf-8")
             logging.info("Resume text extracted successfully!")
-            st.text_area("Extracted Text:", value=text, height=300)
 
             save_text_to_db(uploaded_file.name, text)
             logging.info("Resume text saved to database!")

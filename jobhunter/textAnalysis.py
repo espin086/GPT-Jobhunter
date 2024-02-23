@@ -27,3 +27,7 @@ def generate_gpt_embedding(text):
     model = "text-embedding-ada-002"
     text = text.replace("\n", " ")
     return openai.Embedding.create(input=[text], model=model)["data"][0]["embedding"]
+
+
+if __name__ == "__main__":
+    print(generate_gpt_embedding("I like to eat pizza"))

@@ -28,4 +28,3 @@ pytest-cov
 flake8
 pylint
 black
-isort
