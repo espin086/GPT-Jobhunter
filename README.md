@@ -14,8 +14,6 @@
 
 ![Job Search Results Filtering](images/image_ui_job_filters.png)
 
-![Job Search Results](images/image_ui_job_search_results.png)
-
 ![Salary Extraction](images/image_ui_salary.png)
 
 ![Job location](images/image_ui_job_location_apply_options.png)
