@@ -62,7 +62,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         left, right = st.columns((1, 20))
         left.write("↳")
         # Update the rest of your filtering logic here
-        if is_categorical_dtype(df[column]) or df[column].nunique() < 10:
+        if is_categorical_dtype(df[column]) or df[column].nunique() < 15:
             # Ensure that the default list does not contain NaN
             user_cat_input = right.multiselect(
                 f"Values for {column}",
