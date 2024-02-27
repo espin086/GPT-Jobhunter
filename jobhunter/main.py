@@ -108,123 +108,136 @@ def run_transform():
         data=file_handler.import_job_data_from_dir(dirpath=RAW_DATA_PATH),
     ).transform()
 
-
-# Streamlit app
-st.title("Positions")
-
-st.write(POSITIONS)
-
-st.title("Start Searching for Jobs")
-
-if st.button("Run Search"):
-    steps = [
-        extract,
-        run_transform,
-        load,
-    ]
-    progress_bar = st.progress(0)
-
-    for i, step in enumerate(steps):
-        step()  # Execute each function
-        progress_bar.progress((i + 1) / len(steps))  # Update progress bar
-
-    file_handler.delete_local()
-
-    st.success("Search complete!")
-
-
 if "button_clicked" not in st.session_state:
     st.session_state.button_clicked = False
-
-if st.button("Upload Resume") or st.session_state.button_clicked:
-    st.session_state.button_clicked = True
-    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "txt"])
-    text = " "
-    logging.info("File uploader initialized")
-    if uploaded_file is not None:
-        try:
-            if uploaded_file.type == "application/pdf":
-                logging.info("File uploaded is a pdf")
-                pdf = PyPDF2.PdfFileReader(uploaded_file)
-                number_of_pages = pdf.getNumPages()
-                for page_num in range(0, number_of_pages):
-                    page = pdf.getPage(page_num)
-                    text += page.extractText()
-                    print(text)
-                logging.info("Resume text extracted successfully!")
-            else:  # For txt files
-                text = uploaded_file.read().decode("utf-8")
-            logging.info("Resume text extracted successfully!")
-
-            save_text_to_db(uploaded_file.name, text)
-            logging.info("Resume text saved to database!")
-            st.success("Saved to database!")
-        except Exception as e:
-            logging.error(f"An error occurred: {e}")
-            st.error(f"An error occurred: {e}")
 
 if "select_resume_button_clicked" not in st.session_state:
     st.session_state.select_resume_button_clicked = False
 
-if st.button("Select Resume") or st.session_state.select_resume_button_clicked:
-    st.session_state.select_resume_button_clicked = True
-
-    available_resumes = fetch_resumes_from_db()
-    selected_resume = st.selectbox("Choose a resume:", available_resumes)
-
-    if st.button("Use Selected Resume"):
-        # Here you can add the code to process the selected resume
-        update_similarity_in_db(selected_resume)
-
 if 'data_queried' not in st.session_state:
     st.session_state['data_queried'] = False
+
 if 'query_result' not in st.session_state:
     st.session_state['query_result'] = pd.DataFrame()
 
-if st.button("Query DB"):
-    st.session_state['data_queried'] = True
-    try:
-        # Connect to SQLite database
-        conn = sqlite3.connect("all_jobs.db")
+with st.sidebar:
+    st.image(
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_xdPASjFQb1WY8M3-9yeilpa_46ECb_mTjg&usqp=CAU"
+    )
+    st.title("GPT - Job Hunter")
+    choice = st.radio("Navigation", ["Search", "Resumes", "Jobs"])
+    st.info(
+        "Revolutionize your job search with our AI-powered tool! Analyzing job postings using GPT, it offers personalized resume recommendations, empowering job seekers with tailored insights for success."
+    )
 
-        # Perform SQL query
-        query = """
-            SELECT 
-                id, 
-                primary_key, 
-                date, 
-                CAST(resume_similarity AS REAL) AS resume_similarity,
-                title,
-                company,
-                company_url,
-                company_type,
-                job_type,
-                job_is_remote,
-                job_offer_expiration_date,
-                salary_low,
-                salary_high,
-                salary_currency,
-                salary_period,
-                job_benefits,
-                city,
-                state,
-                country,
-                apply_options,
-                required_skills,
-                required_experience,
-                required_education,
-                description,
-                highlights
-            FROM jobs_new 
-            ORDER BY date DESC, resume_similarity DESC
+if choice == "Search":
+    st.title("Positions")
 
-        """
-        st.session_state['query_result'] = pd.read_sql(query, conn)
-        conn.close()
-        st.success("Results returned successfully!")
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+    st.write(POSITIONS)
 
-if st.session_state['data_queried']:
-    filtered_df = filter_dataframe(st.session_state['query_result'])
-    st.dataframe(filtered_df)
+    st.title("Start Searching for Jobs")
+
+    if st.button("Run Search"):
+        steps = [
+            extract,
+            run_transform,
+            load,
+        ]
+        progress_bar = st.progress(0)
+
+        for i, step in enumerate(steps):
+            step()  # Execute each function
+            progress_bar.progress((i + 1) / len(steps))  # Update progress bar
+
+        file_handler.delete_local()
+
+        st.success("Search complete!")
+
+elif choice == "Resumes":
+    st.title("Resumes")
+    if st.button("Upload Resume") or st.session_state.button_clicked:
+        st.session_state.button_clicked = True
+        uploaded_file = st.file_uploader("Choose a file", type=["pdf", "txt"])
+        text = " "
+        logging.info("File uploader initialized")
+        if uploaded_file is not None:
+            try:
+                if uploaded_file.type == "application/pdf":
+                    logging.info("File uploaded is a pdf")
+                    pdf = PyPDF2.PdfFileReader(uploaded_file)
+                    number_of_pages = pdf.getNumPages()
+                    for page_num in range(0, number_of_pages):
+                        page = pdf.getPage(page_num)
+                        text += page.extractText()
+                        print(text)
+                    logging.info("Resume text extracted successfully!")
+                else:  # For txt files
+                    text = uploaded_file.read().decode("utf-8")
+                logging.info("Resume text extracted successfully!")
+
+                save_text_to_db(uploaded_file.name, text)
+                logging.info("Resume text saved to database!")
+                st.success("Saved to database!")
+            except Exception as e:
+                logging.error(f"An error occurred: {e}")
+                st.error(f"An error occurred: {e}")
+
+    if st.button("Select Resume") or st.session_state.select_resume_button_clicked:
+        st.session_state.select_resume_button_clicked = True
+
+        available_resumes = fetch_resumes_from_db()
+        selected_resume = st.selectbox("Choose a resume:", available_resumes)
+
+        if st.button("Use Selected Resume"):
+            # Here you can add the code to process the selected resume
+            update_similarity_in_db(selected_resume)
+
+elif choice == "Jobs":
+    st.title("Jobs")
+    if st.button("Query DB"):
+        st.session_state['data_queried'] = True
+        try:
+            # Connect to SQLite database
+            conn = sqlite3.connect("all_jobs.db")
+
+            # Perform SQL query
+            query = """
+                SELECT 
+                    id, 
+                    primary_key, 
+                    date, 
+                    CAST(resume_similarity AS REAL) AS resume_similarity,
+                    title,
+                    company,
+                    company_url,
+                    company_type,
+                    job_type,
+                    job_is_remote,
+                    job_offer_expiration_date,
+                    salary_low,
+                    salary_high,
+                    salary_currency,
+                    salary_period,
+                    job_benefits,
+                    city,
+                    state,
+                    country,
+                    apply_options,
+                    required_skills,
+                    required_experience,
+                    required_education,
+                    description,
+                    highlights
+                FROM jobs_new 
+                ORDER BY date DESC, resume_similarity DESC
+
+            """
+            st.session_state['query_result'] = pd.read_sql(query, conn)
+            conn.close()
+            st.success("Results returned successfully!")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+
+    if st.session_state['data_queried']:
+        filtered_df = filter_dataframe(st.session_state['query_result'])
+        st.dataframe(filtered_df)
