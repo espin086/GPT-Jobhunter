@@ -27,13 +27,12 @@ logging.basicConfig(level=config.LOGGING_LEVEL)
 
 
 def search_jobs(
-    search_term: str, remote_jobs_only: str, page: int = 1
+    search_term: str, page: int = 1
 ) -> List[Dict]:
     url = JOB_SEARCH_URL
     querystring = {
         "query": search_term,
-        "page": page,
-        "remote_jobs_only": remote_jobs_only,
+        "page": page
     }
     headers = {
         "X-RapidAPI-Key": str(RAPID_API_KEY),
@@ -50,9 +49,9 @@ def search_jobs(
         return [{"error": value_err}]
 
 
-def main(search_term, remote_jobs_only, page):
+def main(search_term, page):
     results = search_jobs(
-        search_term=search_term, remote_jobs_only=remote_jobs_only, page=page
+        search_term=search_term, page=page
     )
     return results
 
@@ -68,13 +67,6 @@ def entrypoint():
     )
 
     parser.add_argument(
-        "remote_jobs_only",
-        type=str,
-        metavar="remote_jobs_only",
-        help="Search for only remote jobs",
-    )
-
-    parser.add_argument(
         "page",
         type=int,
         default=1,
@@ -85,7 +77,7 @@ def entrypoint():
     args = parser.parse_args()
 
     result = main(
-        search_term=args.search, remote_jobs_only=args.remote_jobs_only, page=args.page
+        search_term=args.search, page=args.page
     )
 
     pp.pprint(result)

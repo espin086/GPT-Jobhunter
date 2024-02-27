@@ -17,9 +17,8 @@ def test_search_linkedin_jobs():
     This is a test function for search_jobs().
     """
     search_term = "Software Engineer"
-    remote_jobs_only = "true"
     page = 1
-    result = search_jobs(search_term, remote_jobs_only, page)
+    result = search_jobs(search_term, page)
     assert result is not None and result != {
         "message": "You are not subscribed to this API."
     }
