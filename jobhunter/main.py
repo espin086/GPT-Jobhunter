@@ -18,7 +18,6 @@ from pandas.api.types import (
 )
 
 from config import (
-    POSITIONS,
     PROCESSED_DATA_PATH,
     RAW_DATA_PATH,
     RESUME_PATH,
@@ -133,25 +132,30 @@ with st.sidebar:
 if choice == "Search":
     st.title("Positions")
 
-    st.write(POSITIONS)
+    job_titles_input = st.text_input("Enter job titles (comma-separated):")
+    job_titles = [title.strip() for title in job_titles_input.split(',')]
+    st.write("Job Titles:", job_titles)
 
     st.title("Start Searching for Jobs")
 
     if st.button("Run Search"):
-        steps = [
-            extract,
-            run_transform,
-            load,
-        ]
-        progress_bar = st.progress(0)
+        if job_titles:
+            steps = [
+                lambda: extract(job_titles),
+                run_transform,
+                load,
+            ]
+            progress_bar = st.progress(0)
 
-        for i, step in enumerate(steps):
-            step()  # Execute each function
-            progress_bar.progress((i + 1) / len(steps))  # Update progress bar
+            for i, step in enumerate(steps):
+                step()  # Execute each function
+                progress_bar.progress((i + 1) / len(steps))  # Update progress bar
 
-        file_handler.delete_local()
+            file_handler.delete_local()
 
-        st.success("Search complete!")
+            st.success("Search complete!")
+        else:
+            st.warning("Please enter job titles before running the search.")
 
 elif choice == "Resumes":
     st.title("Resumes")

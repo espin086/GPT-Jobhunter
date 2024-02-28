@@ -70,13 +70,13 @@ def get_all_jobs(search_term, pages):
     return all_jobs
 
 
-def extract():
+def extract(POSITIONS):
     """
     This function extracts data from the jobs API and saves it locally.
     """
     file_handler.create_data_folders_if_not_exists()
     try:
-        positions = config.POSITIONS
+        positions = POSITIONS
 
         logging.info(
             "Starting extraction process for positions: %s",
