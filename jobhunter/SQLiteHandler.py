@@ -166,6 +166,29 @@ def save_text_to_db(filename, text):
     conn.commit()
     conn.close()
 
+def update_resume_in_db(filename, new_text):
+    """Update resume text in the database."""
+    conn = sqlite3.connect(config.DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        f"UPDATE {config.TABLE_RESUMES} SET content = ? WHERE filename = ?",
+                (new_text, filename),
+    )
+    conn.commit()
+    data = cursor.fetchall()
+    return data
+
+def delete_resume_in_db(filename):
+    """Update resume text in the database."""
+    conn = sqlite3.connect(config.DATABASE)
+    cursor = conn.cursor()
+    cursor.execute(
+        f"DELETE FROM {config.TABLE_RESUMES} WHERE filename = ?",
+            (filename),
+    )
+    conn.commit()
+
 
 def fetch_resumes_from_db():
     """Fetch resumes from the database."""
