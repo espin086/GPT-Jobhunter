@@ -5,7 +5,9 @@
 ## Features 🌟
 
 ### Upload Resume for AI Analysis
-![Resume Upload](images/image_ui_resume_load.png)
+![Resume Upload](images/image_ui_resume_load.jpg)
+
+![Resume CRUD Operations](images/image_ui_resume_CRUD.jpg)
 
 ### Highly Configurable Job Searching 🧐
 ![Job Search](images/image_ui_job_search.png)

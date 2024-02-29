@@ -1,6 +1,7 @@
 import json
 import logging
 import sqlite3
+import streamlit as st
 from sklearn.metrics.pairwise import cosine_similarity
 
 import config
@@ -166,6 +167,29 @@ def save_text_to_db(filename, text):
     conn.commit()
     conn.close()
 
+def update_resume_in_db(filename, new_text):
+    """Update resume text in the database."""
+    conn = sqlite3.connect(config.DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        f"UPDATE {config.TABLE_RESUMES} SET content = ? WHERE filename = ?",
+                (new_text, filename),
+    )
+    conn.commit()
+    data = cursor.fetchall()
+    return data
+
+def delete_resume_in_db(filename):
+    """Delete resume from the database."""
+    conn = sqlite3.connect(config.DATABASE)
+    cursor = conn.cursor()
+    cursor.execute(
+        f"DELETE FROM {config.TABLE_RESUMES} WHERE filename = ?",
+        (filename,),  # Add a comma to create a tuple
+    )
+    conn.commit()
+
 
 def fetch_resumes_from_db():
     """Fetch resumes from the database."""
@@ -229,6 +253,10 @@ def update_similarity_in_db(filename):
     conn = sqlite3.connect(config.DATABASE)
     c = conn.cursor()
     resume_text = get_resume_text(filename)
+    if resume_text is None:
+        # Print a warning or handle the absence of text as needed
+        st.warning("No file selected or empty text.")
+        return None 
     resume_embedding = generate_gpt_embedding(resume_text)
     for primary_key in primary_keys:
         try:

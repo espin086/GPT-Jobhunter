@@ -29,7 +29,9 @@ from load import load
 from SQLiteHandler import (
     fetch_resumes_from_db,
     get_resume_text,
+    update_resume_in_db,
     save_text_to_db,
+    delete_resume_in_db,
     update_similarity_in_db,
 )
 
@@ -113,6 +115,15 @@ if "button_clicked" not in st.session_state:
 if "select_resume_button_clicked" not in st.session_state:
     st.session_state.select_resume_button_clicked = False
 
+if "save_update_button_clicked" not in st.session_state:
+    st.session_state.save_update_button_clicked = False
+
+if "read_resume_button_clicked" not in st.session_state:
+    st.session_state.read_resume_button_clicked = False
+
+if "update_similarity_resume_button_clicked" not in st.session_state:
+    st.session_state.update_similarity_resume_button_clicked = True
+
 if 'data_queried' not in st.session_state:
     st.session_state['data_queried'] = False
 
@@ -159,8 +170,11 @@ if choice == "Search":
 
 elif choice == "Resumes":
     st.title("Resumes")
-    if st.button("Upload Resume") or st.session_state.button_clicked:
+
+    if st.button("Upload Resume"):
         st.session_state.button_clicked = True
+
+    if st.session_state.get('button_clicked', False):
         uploaded_file = st.file_uploader("Choose a file", type=["pdf", "txt"])
         text = " "
         logging.info("File uploader initialized")
@@ -186,15 +200,57 @@ elif choice == "Resumes":
                 logging.error(f"An error occurred: {e}")
                 st.error(f"An error occurred: {e}")
 
-    if st.button("Select Resume") or st.session_state.select_resume_button_clicked:
+    if st.button("Create Resume"):
+        st.session_state.create_resume_button_clicked = True
+    
+    if st.session_state.get('create_resume_button_clicked', False):
+        file_name = st.text_input("Enter Resume File Name")
+        new_resume_text = st.text_area("Write Resume Content",)
+        if st.button("Save Resume"):
+                save_text_to_db(f"{file_name}.txt", new_resume_text)
+                logging.info("Resume saved to database!")
+                del st.session_state['create_resume_button_clicked']
+            
+    if st.button("Select Resume"):
         st.session_state.select_resume_button_clicked = True
+
+    if st.session_state.get('select_resume_button_clicked', False):
 
         available_resumes = fetch_resumes_from_db()
         selected_resume = st.selectbox("Choose a resume:", available_resumes)
 
         if st.button("Use Selected Resume"):
-            # Here you can add the code to process the selected resume
+            st.session_state.use_select_resume_button_clicked = True
+
+        if st.session_state.get('use_select_resume_button_clicked', False):
+            if st.button("Read Resume"):
+                st.session_state.read_resume_button_clicked = True
+
+            if st.session_state.get('read_resume_button_clicked', False):
+                resume_text = get_resume_text(selected_resume)
+                st.text_area("Resume Content", resume_text, height=500)
+                del st.session_state['read_resume_button_clicked']
+            
+            if st.button("Edit Resume"):
+                st.session_state.editing_resume = selected_resume 
+
+            if 'editing_resume' in st.session_state and st.session_state.editing_resume == selected_resume:
+                new_text = st.text_area("Update Resume Content", get_resume_text(selected_resume), height=500)
+                if st.button("Save Update"):
+                    update_resume_in_db(selected_resume, new_text)
+                    st.success("Resume updated successfully!")
+                    del st.session_state['editing_resume']
+            
+            if st.button("Delete Resume"):
+                st.session_state.delete_resume_button_clicked = True
+            
+            if st.session_state.get('delete_resume_button_clicked', False):
+                delete_resume_in_db(selected_resume)
+                st.success("Resume deleted successfully!")
+                del st.session_state['delete_resume_button_clicked']
+            
             update_similarity_in_db(selected_resume)
+            
 
 elif choice == "Jobs":
     st.title("Jobs")
