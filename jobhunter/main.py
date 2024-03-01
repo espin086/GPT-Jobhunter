@@ -310,17 +310,6 @@ elif choice == "Jobs":
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
-    # if st.session_state['data_queried']:
-    #     filtered_df = filter_dataframe(st.session_state['query_result'])
-    #     st.session_state['filtered_result']  = filtered_df
-    #     st.dataframe(filtered_df)
-
-    # if 'last_opened_index' not in st.session_state:
-    #     st.session_state['last_opened_index'] = 0
-
-    # if st.button("Open Next 5 URLs"):
-    #     open_next_job_urls(st.session_state['filtered_result'] , st.session_state['last_opened_index'], 5)
-    #     st.session_state['last_opened_index'] += 5
     if st.session_state['data_queried']:
         filtered_df = filter_dataframe(st.session_state['query_result'])
 
