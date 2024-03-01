@@ -27,6 +27,7 @@ def create_db_if_not_there():
                     company_type TEXT,
                     job_type TEXT,
                     job_is_remote TEXT,
+                    job_apply_link TEXT,
                     job_offer_expiration_date TEXT,
                     salary_low REAL,
                     salary_high REAL,
@@ -81,7 +82,7 @@ def check_and_upload_to_db(json_list):
                 )
                 logging.info("Embeddings generated for %s", primary_key)
                 c.execute(
-                    f"INSERT INTO {config.TABLE_JOBS_NEW} (primary_key, date, resume_similarity, title, company, company_url, company_type, job_type, job_is_remote, job_offer_expiration_date, salary_low,  salary_high, salary_currency, salary_period,  job_benefits, city, state, country, apply_options, required_skills, required_experience, required_education, description, highlights, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    f"INSERT INTO {config.TABLE_JOBS_NEW} (primary_key, date, resume_similarity, title, company, company_url, company_type, job_type, job_is_remote,job_apply_link, job_offer_expiration_date, salary_low,  salary_high, salary_currency, salary_period,  job_benefits, city, state, country, apply_options, required_skills, required_experience, required_education, description, highlights, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         primary_key,
                         item.get("date", ""),
@@ -92,6 +93,7 @@ def check_and_upload_to_db(json_list):
                         item.get("company_type", ""),
                         item.get("job_type", ""),
                         item.get("job_is_remote", ""),
+                        item.get("job_apply_link", ""),
                         item.get("job_offer_expiration_date", ""),
                         item.get("salary_low", ""),
                         item.get("salary_high", ""),
