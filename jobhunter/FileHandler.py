@@ -173,6 +173,7 @@ class FileHandler:
             "company_type",
             "job_type",
             "job_is_remote",
+            "job_apply_link",
             "job_offer_expiration_date",
             "salary_low",
             "salary_high",

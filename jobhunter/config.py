@@ -73,6 +73,7 @@ SELECTED_KEYS = [
     "employer_company_type",
     "job_employment_type",
     "job_is_remote",
+    "job_apply_link",
     "job_offer_expiration_datetime_utc",
     "job_min_salary",
     "job_max_salary",

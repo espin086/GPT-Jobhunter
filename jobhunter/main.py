@@ -5,6 +5,7 @@ import logging
 import os
 import sqlite3
 from pathlib import Path
+import webbrowser
 
 import pandas as pd
 import PyPDF2
@@ -34,6 +35,14 @@ from SQLiteHandler import (
     delete_resume_in_db,
     update_similarity_in_db,
 )
+
+def open_next_job_urls(filtered_df, start_index, num_jobs):
+    jobs_to_open = filtered_df.iloc[start_index : start_index + num_jobs]
+
+    for index, row in jobs_to_open.iterrows():
+        job_url = row['job_apply_link']
+        if job_url:
+            webbrowser.open(job_url)
 
 def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
@@ -130,6 +139,9 @@ if 'data_queried' not in st.session_state:
 if 'query_result' not in st.session_state:
     st.session_state['query_result'] = pd.DataFrame()
 
+if 'filtered_result' not in st.session_state:
+    st.session_state['filtered_result'] = pd.DataFrame()
+
 with st.sidebar:
     st.image(
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_xdPASjFQb1WY8M3-9yeilpa_46ECb_mTjg&usqp=CAU"
@@ -162,7 +174,7 @@ if choice == "Search":
                 step()  # Execute each function
                 progress_bar.progress((i + 1) / len(steps))  # Update progress bar
 
-            file_handler.delete_local()
+            # file_handler.delete_local()
 
             st.success("Search complete!")
         else:
@@ -273,6 +285,7 @@ elif choice == "Jobs":
                     company_type,
                     job_type,
                     job_is_remote,
+                    job_apply_link,
                     job_offer_expiration_date,
                     salary_low,
                     salary_high,
@@ -290,7 +303,6 @@ elif choice == "Jobs":
                     highlights
                 FROM jobs_new 
                 ORDER BY date DESC, resume_similarity DESC
-
             """
             st.session_state['query_result'] = pd.read_sql(query, conn)
             conn.close()
@@ -300,4 +312,16 @@ elif choice == "Jobs":
 
     if st.session_state['data_queried']:
         filtered_df = filter_dataframe(st.session_state['query_result'])
+
+        # Check if filters have changed
+        if 'filtered_result' not in st.session_state or st.session_state['filtered_result'].shape[0] != filtered_df.shape[0]:
+            st.session_state['filtered_result'] = filtered_df
+            st.session_state['last_opened_index'] = 0
+        else:
+            st.session_state['filtered_result'] = filtered_df
+
         st.dataframe(filtered_df)
+
+    if st.button("Open Job URLs"):
+        open_next_job_urls(st.session_state['filtered_result'], st.session_state['last_opened_index'], 5)
+        st.session_state['last_opened_index'] += 5
