@@ -10,6 +10,9 @@ from tqdm import tqdm
 from jobhunter import config
 from FileHandler import FileHandler
 from search_jobs import search_jobs
+import argparse
+import logging
+import argparse
 
 # import config
 
@@ -95,6 +98,17 @@ def extract(POSITIONS):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
+    parser = argparse.ArgumentParser(description="Job Extraction")
+    parser.add_argument(
+        "positions",
+        metavar="POSITIONS",
+        type=str,
+        nargs="+",
+        help="List of positions to extract jobs for",
+    )
+    args = parser.parse_args()
     logging.info("Application started.")
-    extract()
+    extract(args.positions)
     logging.info("Application finished.")
