@@ -9,19 +9,14 @@ Before proceeding with the installation, please make sure you have the following
 - Access to a Linux terminal (Mac or Ubuntu) or a WSL on Windows
 - Subscription to Rapidapi and the Linkedin Job search service: [Rapidapi](https://rapidapi.com/jaypat87/api/linkedin-jobs-search)
 
-## Step 0: Clone the repository and create a virtual environment.
+## Step 0: Clone the repository and create a virtual environment and install the software.
 
 Clone the repository to your local environment and create the virtual environment.
 
 ```bash
-cd jobhunter
-make virtualenv
-```
-
-Once the virtual environment is created, activate it using the following command:
-
-```bash
-source jobhunter-venv/bin/activate
+conda create --name jobhunter python=3.10
+conda activate jobhunter
+pip install -r requirements.txt
 ```
 
 ## Step 1: Copy the .env-template
@@ -39,29 +34,10 @@ Next, open the `.env` file in a text editor and add your Rapid API Key. This key
 ### Add OpenAI API KEY (Optional)
 You can also add OpenAI API key to the `.env` file to get GPT based resume similarity score. This is optional feature, and currently in development, and will be available in full version soon. You can sign up for OpenAI API [here](https://platform.openai.com/apps)
 
-## Step 3: Update the job titles and locations
 
-Update the job titles and locations you'd like to search for by opening up the `config.py` file located here:
+## Step 5: Set up Dependencies and Test the Installation
 
-```shell
-jobhunter/jobhunter/config.py
-```
-
-Update the lists below:
-
-![Alt](images/image_job_config.png)
-
-## Step 4: Upload your resume in .txt format
-
-You will need to add your resume as `resume.txt` to the following location:
-
-```
-jobhunter/temp/resumes/resume.txt
-```
-
-## Step 5: Test the program
-
-To ensure that everything is set up correctly, run the following command to run the tests:
+To ensure that everything is set up correctly, run the following command to run the install all dependencies and run unit tests on the jobhunter:
 
 ```shell
 make check

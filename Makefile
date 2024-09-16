@@ -3,14 +3,15 @@ SRC_DIR:=$(ROOT_DIR)/jobhunter
 
 virtualenv:
 	cp .env-template .env
-	python3 -m venv jobhunter-venv
-	echo "RUN THIS!!!: source jobhunter-venv/bin/activate"
+	conda create --name jobhunter python=3.11
+	conda activate jobhunter
 
 .PHONY: install test lint format
 
 install:
-	python -m pip install --upgrade pip
-	python3 -m pip install -e .
+	conda create --name jobhunter python=3.10
+	conda activate jobhunter
+	pip install -r requirements.txt
 
 format:
 	python3 -m black $(SRC_DIR)
