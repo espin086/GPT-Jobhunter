@@ -1,6 +1,6 @@
 ### GPT-Jobhunter 📋
 
-🤖 AI-powered job analysis tool using GPT. Analyzes job postings and provides personalized recommendations to job seekers based on their resume. 📝
+🤖 AI-powered job analysis tool using GPT. Analyzes job postings and provides personalized jobs recommendations to job seekers based on their resume. 📝
 
 <a href="https://buymeacoffee.com/jjespinozag" target="_blank">
     <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174">
