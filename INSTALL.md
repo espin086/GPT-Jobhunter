@@ -16,7 +16,7 @@ Clone the repository to your local environment and create the virtual environmen
 ```bash
 conda create --name jobhunter python=3.10
 conda activate jobhunter
-pip install -r requirements.txt
+pip install .
 ```
 
 ## Step 1: Copy the .env-template
