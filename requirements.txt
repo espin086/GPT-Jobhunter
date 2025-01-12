@@ -10,6 +10,6 @@ streamlit==1.25.0
 tqdm==4.65.0
 gensim==4.3.2
 PyPDF2==1.27.0
-openai==0.28
+openai==1.24.0
 streamlit==1.25.0
 scipy==1.11.2
