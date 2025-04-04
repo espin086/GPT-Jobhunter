@@ -22,6 +22,7 @@ gensim = "4.3.2"
 PyPDF2 = "1.27.0"
 openai = "^1.70.0"
 scipy = "1.11.2"
+pdfplumber = "^0.11.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.0"
