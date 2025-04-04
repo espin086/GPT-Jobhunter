@@ -415,402 +415,370 @@ if st.session_state.active_resume:
 st.title("GPT Job Hunter")
 st.write("AI-powered job search assistant")
 
-# Main content area with tabs for integrated flow
-# Combine Tab 2 and Tab 3
-tab1, tab2 = st.tabs(["📄 Resume Management", "🔍 Job Search & Results"])
+# --- Section 1: Resume Management --- 
+st.header("Resume Management")
 
-# Tab 1: Resume Management
-with tab1:
-    st.header("Resume Management")
+# OpenAI API Key Input Section - Make more prominent
+api_key_container = st.container()
+with api_key_container:
+    st.markdown("""
+    <div style="background-color: #2e2e2e; border-left: 5px solid #0078ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+        <h3 style="margin-top: 0;">⚠️ OpenAI API Key Required</h3>
+        <p>An OpenAI API key is <strong>required</strong> for analyzing resumes and calculating job matches. Your key is stored only in your browser session and not saved on any servers.</p>
+        <p>You can get an API key from <a href="https://platform.openai.com/account/api-keys" target="_blank">OpenAI's website</a>.</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # OpenAI API Key Input Section - Make more prominent
-    api_key_container = st.container()
-    with api_key_container:
-        st.markdown("""
-        <div style="background-color: #2e2e2e; border-left: 5px solid #0078ff; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-            <h3 style="margin-top: 0;">⚠️ OpenAI API Key Required</h3>
-            <p>An OpenAI API key is <strong>required</strong> for analyzing resumes and calculating job matches. Your key is stored only in your browser session and not saved on any servers.</p>
-            <p>You can get an API key from <a href="https://platform.openai.com/account/api-keys" target="_blank">OpenAI's website</a>.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # API Key input
-        openai_api_key = st.text_input(
-            "OpenAI API Key",
-            type="password",
-            value=st.session_state.openai_api_key,
-            placeholder="sk-...",
-            help="Enter your OpenAI API key here. Get one at https://platform.openai.com/account/api-keys"
-        )
-        
-        if openai_api_key:
-            if openai_api_key.startswith("sk-") and len(openai_api_key) > 30:
-                st.session_state.openai_api_key = openai_api_key
-                os.environ["OPENAI_API_KEY"] = openai_api_key
-                st.success("✅ API key set successfully!")
-            else:
-                st.error("❌ This doesn't look like a valid OpenAI API key. API keys should start with 'sk-' and be at least 30 characters long.")
-        else:
-            st.warning("⚠️ Please enter an OpenAI API key to enable resume analysis and job matching.")
-        
-        # Use a subtle divider for dark theme
-        st.markdown("<hr style='border-top: 1px solid #444;'>", unsafe_allow_html=True)
-    
-    # Check for available resumes
-    available_resumes = fetch_resumes_from_db()
-    
-    # Display current active resume if any
-    if st.session_state.active_resume:
-        # Use the new CSS class for active resume styling
-        st.markdown(f'<div class="active-resume-div">Current active resume: <strong>{st.session_state.active_resume}</strong></div>', unsafe_allow_html=True)
-    else:
-        st.info("No active resume selected. Please upload or select a resume.")
-    
-    # Resume actions in columns for better organization
-    st.markdown('<div class="resume-container">', unsafe_allow_html=True)
-    st.markdown('<div class="section-header">Resume Actions</div>', unsafe_allow_html=True)
-    
-    action_col1, action_col2 = st.columns(2)
-    
-    upload_tab = action_col1.expander("UPLOAD RESUME", expanded=True) # Expand by default
-    
-    # Handle Upload Resume - Now Automatic
-    with upload_tab:
-        st.write("Upload your existing resume (PDF or TXT). It will be processed automatically.")
-        # Use a unique key for the uploader to handle updates correctly
-        uploaded_file = st.file_uploader("Choose a file", type=["pdf", "txt"], key="resume_uploader") 
-        
-        # Automatically process if a file is uploaded
-        if uploaded_file is not None:
-            # Check if this specific file has already been processed in this session run
-            # to prevent reprocessing on every interaction after upload.
-            # We use the file ID which should be stable for the uploaded file instance.
-            if uploaded_file.id != st.session_state.get("last_uploaded_file_id", None):
-                with st.spinner(f"Processing '{uploaded_file.name}'..."):
-                    try:
-                        text = " "
-                        if uploaded_file.type == "application/pdf":
-                            logging.info(f"Reading PDF file: {uploaded_file.name} using pdfplumber")
-                            # Use pdfplumber to extract text
-                            text = "" # Reset text
-                            with pdfplumber.open(uploaded_file) as pdf:
-                                for page in pdf.pages:
-                                    page_text = page.extract_text()
-                                    if page_text:
-                                        text += page_text + "\n" # Add newline between pages
-                            logging.info(f"Successfully extracted text from PDF: {uploaded_file.name}")
-                        else:  
-                            logging.info(f"Reading TXT file: {uploaded_file.name}")
-                            text = uploaded_file.read().decode("utf-8")
-                            logging.info(f"Successfully read text from TXT: {uploaded_file.name}")
-                        
-                        # Ensure filename uniqueness or handle overwrites gracefully if needed
-                        # For simplicity, we assume filename is unique enough or overwrite is acceptable
-                        save_text_to_db(uploaded_file.name, text)
-                        st.session_state.active_resume = uploaded_file.name
-                        st.success(f"✅ Resume '{uploaded_file.name}' uploaded and set as active!")
-                        
-                        # Analyze the newly uploaded resume
-                        with st.spinner("Analyzing resume for job matching..."):
-                            update_success = update_similarity_in_db(uploaded_file.name)
-                            if update_success:
-                                st.success("Resume analyzed and ready for job matching!")
-                            else:
-                                st.error("Failed to analyze resume. Job matching might be incomplete.")
-                        
-                        # Store the ID of the processed file to prevent immediate reprocessing
-                        st.session_state.last_uploaded_file_id = uploaded_file.id
-                        
-                        # Rerun to update the UI to reflect the new active resume immediately
-                        st.experimental_rerun()
-                            
-                    except Exception as e:
-                        st.error(f"An error occurred processing the file '{uploaded_file.name}': {e}")
-                        logger.error(f"File processing error: {e}", exc_info=True)
-                        # Clear the last uploaded ID if processing failed
-                        st.session_state.last_uploaded_file_id = None 
-
-    st.markdown('</div>', unsafe_allow_html=True)  
-    
-    if available_resumes:
-        st.markdown('<div class="resume-container">', unsafe_allow_html=True)
-        st.markdown('<div class="section-header">Your Resumes</div>', unsafe_allow_html=True)
-        
-        for idx, resume in enumerate(available_resumes):
-            col1, col2, col3 = st.columns([3, 1, 1])
-            
-            is_active = resume == st.session_state.active_resume
-            # Use div with class for active styling instead of inline style
-            active_class = "active-resume-div" if is_active else ""
-            
-            with col1:
-                st.markdown(f'''
-                <div class="{active_class}" style="padding: 10px; border-radius: 5px;">
-                    <strong>{resume}</strong>
-                    {' (Active)' if is_active else ''}
-                </div>
-                ''', unsafe_allow_html=True)
-            
-            with col2:
-                if st.button("Use", key=f"use_{idx}", help=f"Set {resume} as your active resume"):
-                    st.session_state.active_resume = resume
-                    with st.spinner("Analyzing resume for job matching..."):
-                        update_similarity_in_db(resume)
-                        st.success(f"✅ Resume '{resume}' is now active and ready for job matching!")
-                    st.experimental_rerun()
-            
-            with col3:
-                if st.button("View/Edit", key=f"view_{idx}", help=f"View or edit {resume}"):
-                    st.session_state.editing_resume = resume
-        
-        st.markdown('</div>', unsafe_allow_html=True)  
-        
-        if "editing_resume" in st.session_state:
-            selected_resume = st.session_state.editing_resume
-            st.markdown('<div class="resume-container">', unsafe_allow_html=True)
-            st.subheader(f"Editing: {selected_resume}")
-            
-            resume_text = get_resume_text(selected_resume)
-            edited_text = st.text_area("Resume Content", value=resume_text, height=400, key="edit_text_area")
-            
-            edit_col1, edit_col2, edit_col3 = st.columns(3)
-            
-            if edit_col1.button("Save Changes", key="save_edit"):
-                if edited_text != resume_text:
-                    with st.spinner("Saving changes..."):
-                        update_resume_in_db(selected_resume, edited_text)
-                        st.success(f"Resume '{selected_resume}' updated successfully!")
-                        
-                        if selected_resume == st.session_state.active_resume:
-                            with st.spinner("Re-analyzing updated resume..."):
-                                update_similarity_in_db(selected_resume)
-                                st.success("Resume re-analyzed with new content!")
-                        
-                        del st.session_state.editing_resume
-                        st.experimental_rerun()
-                else:
-                    st.info("No changes detected.")
-                    del st.session_state.editing_resume
-                    st.experimental_rerun()
-            
-            if edit_col2.button("Cancel Edit", key="cancel_edit"):
-                del st.session_state.editing_resume
-                st.experimental_rerun()
-            
-            if edit_col3.button("Delete Resume", key="delete_resume"):
-                st.session_state.confirming_delete = selected_resume
-            
-            if "confirming_delete" in st.session_state and st.session_state.confirming_delete == selected_resume:
-                st.warning(f"Are you sure you want to delete '{selected_resume}'? This cannot be undone.")
-                
-                confirm_col1, confirm_col2 = st.columns(2)
-                
-                if confirm_col1.button("Yes, Delete", key="confirm_delete"):
-                    with st.spinner("Deleting resume..."):
-                        delete_resume_in_db(selected_resume)
-                        if st.session_state.active_resume == selected_resume:
-                            st.session_state.active_resume = None
-                        
-                        del st.session_state.editing_resume
-                        del st.session_state.confirming_delete
-                        st.success(f"Resume '{selected_resume}' deleted successfully!")
-                        st.experimental_rerun()
-                
-                if confirm_col2.button("Cancel Delete", key="cancel_delete_confirm"):
-                    del st.session_state.confirming_delete
-                    st.experimental_rerun()
-            
-            st.markdown('</div>', unsafe_allow_html=True)  
-    else:
-        st.info("No resumes found. Please upload or create one.")
-
-
-# Tab 2: Job Search & Results (Combined)
-with tab2:
-    st.header("Job Search & Results")
-    
-    # --- Job Search Input Section --- 
-    if not st.session_state.active_resume:
-        st.warning("Please select or upload a resume first in the Resume Management tab.")
-        st.stop() 
-    else:
-        # Use the new CSS class for active resume display
-        st.markdown(f'<div class="active-resume-div">Using active resume: <strong>{st.session_state.active_resume}</strong></div>', unsafe_allow_html=True)
-    
-    with st.container():
-        st.markdown('<div class="job-search-container">', unsafe_allow_html=True)
-        st.markdown('<div class="section-header">Search Parameters</div>', unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns([2, 1, 1])
-        with col1:
-            job_titles_input = st.text_input(
-                "Job Titles",
-                placeholder="Enter job titles separated by commas",
-                help="e.g., Data Scientist, ML Engineer",
-                key="job_titles_input"
-            )
-        with col2:
-            country = st.selectbox(
-                "Country", options=["us", "uk", "ca", "au", "de", "fr", "es", "it"], index=0, key="country_select"
-            )
-        with col3:
-            date_posted = st.selectbox(
-                "Time Frame", options=["all", "today", "3days", "week", "month"], index=0, key="date_posted_select"
-            )
-        location = st.text_input(
-            "Location", placeholder="City, state, or region (e.g., Chicago, Remote)", key="location_input"
-        )
-        
-        job_titles = [title.strip() for title in job_titles_input.split(",")] if job_titles_input else []
-        if job_titles and job_titles[0]: 
-            st.markdown("##### Selected Positions:")
-            cols = st.columns(min(len(job_titles), 4))
-            for i, title in enumerate(job_titles):
-                with cols[i % len(cols)]:
-                    st.markdown(f'<div class="job-pill">{title}</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)  # Close job-search-container
-    
-    search_disabled = not (job_titles and job_titles[0])
-    search_button = st.button(
-        "🔍 Find Jobs", type="primary", disabled=search_disabled, use_container_width=True, key="find_jobs_button"
+    # API Key input
+    openai_api_key = st.text_input(
+        "OpenAI API Key",
+        type="password",
+        value=st.session_state.openai_api_key,
+        placeholder="sk-...",
+        help="Enter your OpenAI API key here. Get one at https://platform.openai.com/account/api-keys"
     )
     
-    if search_disabled:
-        st.info("Please enter at least one job title to search.")
-
-    # --- Job Search Execution Section --- 
-    if search_button:
-        with st.spinner("Searching for jobs..."):
-            if st.session_state.openai_api_key:
-                os.environ["OPENAI_API_KEY"] = st.session_state.openai_api_key
-                logging.info("Set OpenAI API key from session state for job search")
-            
-            steps = [
-                lambda: extract(job_titles, country=country, date_posted=date_posted, location=location),
-                run_transform,
-                load, 
-            ]
-            
-            progress_container = st.container()
-            with progress_container:
-                progress_text = st.empty()
-                progress_bar = st.progress(0)
-            
-            try:
-                progress_text.text("Step 1/3: Searching for jobs...")
-                total_jobs = steps[0]()
-                progress_bar.progress(1/3)
-                
-                progress_text.text("Step 2/3: Processing job data...")
-                steps[1]()
-                progress_bar.progress(2/3)
-                
-                progress_text.text("Step 3/3: Saving to database...")
-                steps[2]()
-                progress_bar.progress(1.0)
-                
-                progress_text.empty()
-                time.sleep(0.5)
-                progress_container.empty()
-
-                if total_jobs > 0:
-                    st.success(f"✅ Search complete! Found {total_jobs} jobs matching your criteria. Updating results table...")
-                else:
-                     st.warning("No new jobs found matching your search criteria.")
-                     st.markdown("""
-                     <div style="background-color: #3a3a3a; padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; margin: 10px 0;">
-                         <h4 style="margin-top: 0;">Suggestions</h4>
-                         <ul>
-                             <li>Try more general job titles</li>
-                             <li>Specify a major tech hub location</li>
-                             <li>Broaden your search time frame</li>
-                             <li>Check spelling</li>
-                         </ul>
-                     </div>
-                     """, unsafe_allow_html=True)
-
-                # --- Trigger results update AFTER pipeline finishes ---
-                try:
-                    conn = sqlite3.connect("all_jobs.db")
-                    query = """
-                        SELECT 
-                            id, primary_key, date, 
-                            CAST(resume_similarity AS REAL) AS resume_similarity,
-                            title, company, company_url, company_type, job_type, 
-                            job_is_remote, job_apply_link, job_offer_expiration_date, 
-                            salary_low, salary_high, salary_currency, salary_period, 
-                            job_benefits, city, state, country, apply_options, 
-                            required_skills, required_experience, required_education, 
-                            description, highlights
-                        FROM jobs_new 
-                        ORDER BY resume_similarity DESC, date DESC 
-                    """
-                    st.session_state["query_result"] = pd.read_sql(query, conn)
-                    conn.close()
-                    st.session_state["data_queried"] = True
-                    st.session_state["last_opened_index"] = 0 
-                    logger.info(f"Successfully queried and updated results for {len(st.session_state['query_result'])} jobs.")
-                except Exception as query_e:
-                    st.error(f"An error occurred while querying the database after search: {query_e}")
-                    logger.error(f"DB Query Error after search: {query_e}", exc_info=True)
-                    st.session_state["data_queried"] = False 
-            
-            except Exception as pipeline_error:
-                 st.error(f"An error occurred during the job search pipeline: {pipeline_error}")
-                 logger.error(f"Pipeline Error: {pipeline_error}", exc_info=True)
-                 progress_text.empty()
-                 progress_container.empty()
-                 st.session_state["data_queried"] = False 
-
-    # --- Results Display Section (Always attempts to display if data queried) ---
-    # Use a subtle divider
-    st.markdown("<hr style='border-top: 1px solid #444;'>", unsafe_allow_html=True)
-    st.header("Search Results")
-    
-    if st.session_state["data_queried"] and not st.session_state["query_result"].empty:
-        filtered_df = filter_dataframe(st.session_state["query_result"], key_prefix="results_filter")
-        
-        st.session_state["filtered_result"] = filtered_df 
-        
-        col1_res, col2_res, col3_res = st.columns([2, 1, 1])
-        
-        with col1_res:
-            st.write(f"Showing {len(filtered_df)} jobs")
-            
-        with col2_res:
-            if st.button("Open Top 5 Job URLs", type="primary", key="open_top_5"):
-                open_next_job_urls(
-                    filtered_df, 
-                    0, 
-                    5,
-                )
-        
-        with col3_res:
-            if st.button("Open Next 5 Job URLs", type="secondary", key="open_next_5"):
-                open_next_job_urls(
-                    filtered_df, 
-                    st.session_state["last_opened_index"], 
-                    5,
-                )
-                st.session_state["last_opened_index"] += 5 
-        
-        st.dataframe(filtered_df, height=500)
-        
-    elif st.session_state["data_queried"] and st.session_state["query_result"].empty:
-        # If data was queried (either initially or after search) but results are empty
-        st.warning("No job results found in the database. Run a new search to populate it.") 
+    if openai_api_key:
+        if openai_api_key.startswith("sk-") and len(openai_api_key) > 30:
+            st.session_state.openai_api_key = openai_api_key
+            os.environ["OPENAI_API_KEY"] = openai_api_key
+            st.success("✅ API key set successfully!")
+        else:
+            st.error("❌ This doesn't look like a valid OpenAI API key. API keys should start with 'sk-' and be at least 30 characters long.")
     else:
-        # Initial state OR after a search yielded nothing and DB was empty
-        st.info("Database is currently empty. Run a job search using the parameters above to populate results.")
-        st.markdown("""
-        <div style="background-color: #2e2e2e; padding: 20px; border-radius: 10px; margin-top: 20px;">
-            <h4>How to use GPT Job Hunter</h4>
-            <ol>
-                <li>Ensure a resume is selected/uploaded in <b>Resume Management</b>.</li>
-                <li>Enter job titles and criteria above, then click <b>Find Jobs</b>.</li>
-                <li>Results will appear below after the search completes.</li>
-                <li>Use filters and buttons to explore results.</li>
-            </ol>
-        </div>
-        """, unsafe_allow_html=True)
+        st.warning("⚠️ Please enter an OpenAI API key to enable resume analysis and job matching.")
+    
+    # Use a subtle divider for dark theme
+    st.markdown("<hr style='border-top: 1px solid #444;'>", unsafe_allow_html=True)
+
+# Check for available resumes
+available_resumes = fetch_resumes_from_db()
+
+# Display current active resume if any
+if st.session_state.active_resume:
+    # Use the new CSS class for active resume styling
+    st.markdown(f'<div class="active-resume-div">Current active resume: <strong>{st.session_state.active_resume}</strong></div>', unsafe_allow_html=True)
+else:
+    st.info("No active resume selected. Please upload or select a resume below.")
+
+# Resume actions 
+st.markdown('<div class="resume-container">', unsafe_allow_html=True)
+st.markdown('<div class="section-header">Resume Actions</div>', unsafe_allow_html=True)
+
+upload_tab = st.expander("UPLOAD RESUME", expanded=not available_resumes) # Expand if no resumes exist
+
+# Handle Upload Resume - Now Automatic
+with upload_tab:
+    st.write("Upload your existing resume (PDF or TXT). It will be processed automatically.")
+    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "txt"], key="resume_uploader") 
+    
+    # Automatically process if a file is uploaded
+    if uploaded_file is not None:
+        if uploaded_file.id != st.session_state.get("last_uploaded_file_id", None):
+            with st.spinner(f"Processing '{uploaded_file.name}'..."):
+                try:
+                    text = " "
+                    if uploaded_file.type == "application/pdf":
+                        logging.info(f"Reading PDF file: {uploaded_file.name} using pdfplumber")
+                        text = "" 
+                        with pdfplumber.open(uploaded_file) as pdf:
+                            for page in pdf.pages:
+                                page_text = page.extract_text()
+                                if page_text:
+                                    text += page_text + "\n" 
+                        logging.info(f"Successfully extracted text from PDF: {uploaded_file.name}")
+                    else:  
+                        logging.info(f"Reading TXT file: {uploaded_file.name}")
+                        text = uploaded_file.read().decode("utf-8")
+                        logging.info(f"Successfully read text from TXT: {uploaded_file.name}")
+                    
+                    save_text_to_db(uploaded_file.name, text)
+                    st.session_state.active_resume = uploaded_file.name
+                    st.success(f"✅ Resume '{uploaded_file.name}' uploaded and set as active!")
+                    
+                    with st.spinner("Analyzing resume for job matching..."):
+                        update_success = update_similarity_in_db(uploaded_file.name)
+                        if update_success:
+                            st.success("Resume analyzed and ready for job matching!")
+                        else:
+                            st.error("Failed to analyze resume. Job matching might be incomplete.")
+                    
+                    st.session_state.last_uploaded_file_id = uploaded_file.id
+                    st.experimental_rerun()
+                        
+                except Exception as e:
+                    st.error(f"An error occurred processing the file '{uploaded_file.name}': {e}")
+                    logger.error(f"File processing error: {e}", exc_info=True)
+                    st.session_state.last_uploaded_file_id = None 
+
+st.markdown('</div>', unsafe_allow_html=True)  
+
+# "Your Resumes" section 
+if available_resumes:
+    st.markdown('<div class="resume-container">', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Your Resumes</div>', unsafe_allow_html=True)
+    
+    for idx, resume in enumerate(available_resumes):
+        col1, col2, col3 = st.columns([3, 1, 1])
+        is_active = resume == st.session_state.active_resume
+        active_class = "active-resume-div" if is_active else ""
+        with col1:
+            st.markdown(f'''
+            <div class="{active_class}" style="padding: 10px; border-radius: 5px;">
+                <strong>{resume}</strong>
+                {' (Active)' if is_active else ''}
+            </div>
+            ''', unsafe_allow_html=True)
+        with col2:
+            if st.button("Use", key=f"use_{idx}", help=f"Set {resume} as your active resume"):
+                st.session_state.active_resume = resume
+                with st.spinner("Analyzing resume for job matching..."):
+                    update_similarity_in_db(resume)
+                    st.success(f"✅ Resume '{resume}' is now active and ready for job matching!")
+                st.experimental_rerun()
+        with col3:
+            if st.button("View/Edit", key=f"view_{idx}", help=f"View or edit {resume}"):
+                st.session_state.editing_resume = resume
+    st.markdown('</div>', unsafe_allow_html=True)  
+    
+    # Resume Editor (if view/edit clicked)
+    if "editing_resume" in st.session_state:
+        selected_resume = st.session_state.editing_resume
+        st.markdown('<div class="resume-container">', unsafe_allow_html=True)
+        st.subheader(f"Editing: {selected_resume}")
+        resume_text = get_resume_text(selected_resume)
+        edited_text = st.text_area("Resume Content", value=resume_text, height=400, key="edit_text_area")
+        edit_col1, edit_col2, edit_col3 = st.columns(3)
+        if edit_col1.button("Save Changes", key="save_edit"):
+            if edited_text != resume_text:
+                with st.spinner("Saving changes..."):
+                    update_resume_in_db(selected_resume, edited_text)
+                    st.success(f"Resume '{selected_resume}' updated successfully!")
+                    if selected_resume == st.session_state.active_resume:
+                        with st.spinner("Re-analyzing updated resume..."):
+                            update_similarity_in_db(selected_resume)
+                            st.success("Resume re-analyzed with new content!")
+                    del st.session_state.editing_resume
+                    st.experimental_rerun()
+            else:
+                st.info("No changes detected.")
+                del st.session_state.editing_resume
+                st.experimental_rerun()
+        if edit_col2.button("Cancel Edit", key="cancel_edit"):
+            del st.session_state.editing_resume
+            st.experimental_rerun()
+        if edit_col3.button("Delete Resume", key="delete_resume"):
+            st.session_state.confirming_delete = selected_resume
+        if "confirming_delete" in st.session_state and st.session_state.confirming_delete == selected_resume:
+            st.warning(f"Are you sure you want to delete '{selected_resume}'? This cannot be undone.")
+            confirm_col1, confirm_col2 = st.columns(2)
+            if confirm_col1.button("Yes, Delete", key="confirm_delete"):
+                with st.spinner("Deleting resume..."):
+                    delete_resume_in_db(selected_resume)
+                    if st.session_state.active_resume == selected_resume:
+                        st.session_state.active_resume = None
+                    del st.session_state.editing_resume
+                    del st.session_state.confirming_delete
+                    st.success(f"Resume '{selected_resume}' deleted successfully!")
+                    st.experimental_rerun()
+            if confirm_col2.button("Cancel Delete", key="cancel_delete_confirm"):
+                del st.session_state.confirming_delete
+                st.experimental_rerun()
+        st.markdown('</div>', unsafe_allow_html=True)  
+else:
+    # This message appears only if no resumes exist at all
+    st.info("No resumes found. Please upload one using the section above.")
+
+
+# --- Separator --- 
+st.markdown("<hr style='border-top: 2px solid #555; margin-top: 30px; margin-bottom: 30px;'>", unsafe_allow_html=True)
+
+
+# --- Section 2: Job Search & Results --- 
+st.header("Job Search & Results")
+
+# Check for active resume before allowing search
+if not st.session_state.active_resume:
+    st.warning("Please select or upload a resume in the Resume Management section above before searching.")
+    st.stop() 
+else:
+    # Use the new CSS class for active resume display (already shown above, maybe remove here?)
+    # st.markdown(f'<div class="active-resume-div">Using active resume: <strong>{st.session_state.active_resume}</strong></div>', unsafe_allow_html=True)
+    pass # Resume is active, proceed
+
+# Search Parameter Input
+with st.container():
+    st.markdown('<div class="job-search-container">', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Search Parameters</div>', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([2, 1, 1])
+    with col1:
+        job_titles_input = st.text_input(
+            "Job Titles",
+            placeholder="Enter job titles separated by commas",
+            help="e.g., Data Scientist, ML Engineer",
+            key="job_titles_input"
+        )
+    with col2:
+        country = st.selectbox(
+            "Country", options=["us", "uk", "ca", "au", "de", "fr", "es", "it"], index=0, key="country_select"
+        )
+    with col3:
+        date_posted = st.selectbox(
+            "Time Frame", options=["all", "today", "3days", "week", "month"], index=0, key="date_posted_select"
+        )
+    location = st.text_input(
+        "Location", placeholder="City, state, or region (e.g., Chicago, Remote)", key="location_input"
+    )
+    
+    job_titles = [title.strip() for title in job_titles_input.split(",")] if job_titles_input else []
+    if job_titles and job_titles[0]: 
+        st.markdown("##### Selected Positions:")
+        cols = st.columns(min(len(job_titles), 4))
+        for i, title in enumerate(job_titles):
+            with cols[i % len(cols)]:
+                st.markdown(f'<div class="job-pill">{title}</div>', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)  
+
+# Search Button
+search_disabled = not (job_titles and job_titles[0])
+search_button = st.button(
+    "🔍 Find Jobs", type="primary", disabled=search_disabled, use_container_width=True, key="find_jobs_button"
+)
+if search_disabled:
+    st.info("Please enter at least one job title to search.")
+
+# --- Job Search Execution Section --- 
+if search_button:
+    with st.spinner("Searching for jobs..."):
+        if st.session_state.openai_api_key:
+            os.environ["OPENAI_API_KEY"] = st.session_state.openai_api_key
+            logging.info("Set OpenAI API key from session state for job search")
+        
+        steps = [
+            lambda: extract(job_titles, country=country, date_posted=date_posted, location=location),
+            run_transform,
+            load, 
+        ]
+        
+        progress_container = st.container()
+        with progress_container:
+            progress_text = st.empty()
+            progress_bar = st.progress(0)
+        
+        try:
+            progress_text.text("Step 1/3: Searching for jobs...")
+            total_jobs = steps[0]()
+            progress_bar.progress(1/3)
+            
+            progress_text.text("Step 2/3: Processing job data...")
+            steps[1]()
+            progress_bar.progress(2/3)
+            
+            progress_text.text("Step 3/3: Saving to database...")
+            steps[2]()
+            progress_bar.progress(1.0)
+            
+            progress_text.empty()
+            time.sleep(0.5)
+            progress_container.empty()
+
+            if total_jobs > 0:
+                st.success(f"✅ Search complete! Found {total_jobs} jobs matching your criteria. Updating results table...")
+            else:
+                 st.warning("No new jobs found matching your search criteria.")
+                 st.markdown("""
+                 <div style="background-color: #3a3a3a; padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; margin: 10px 0;">
+                     <h4 style="margin-top: 0;">Suggestions</h4>
+                     <ul>
+                         <li>Try more general job titles</li>
+                         <li>Specify a major tech hub location</li>
+                         <li>Broaden your search time frame</li>
+                         <li>Check spelling</li>
+                     </ul>
+                 </div>
+                 """, unsafe_allow_html=True)
+
+            # --- Trigger results update AFTER pipeline finishes ---
+            try:
+                conn = sqlite3.connect("all_jobs.db")
+                query = """
+                    SELECT 
+                        id, primary_key, date, 
+                        CAST(resume_similarity AS REAL) AS resume_similarity,
+                        title, company, company_url, company_type, job_type, 
+                        job_is_remote, job_apply_link, job_offer_expiration_date, 
+                        salary_low, salary_high, salary_currency, salary_period, 
+                        job_benefits, city, state, country, apply_options, 
+                        required_skills, required_experience, required_education, 
+                        description, highlights
+                    FROM jobs_new 
+                    ORDER BY resume_similarity DESC, date DESC 
+                """
+                st.session_state["query_result"] = pd.read_sql(query, conn)
+                conn.close()
+                st.session_state["data_queried"] = True
+                st.session_state["last_opened_index"] = 0 
+                logger.info(f"Successfully queried and updated results for {len(st.session_state['query_result'])} jobs.")
+                # Force rerun to display results immediately after search
+                st.experimental_rerun()
+            except Exception as query_e:
+                st.error(f"An error occurred while querying the database after search: {query_e}")
+                logger.error(f"DB Query Error after search: {query_e}", exc_info=True)
+                st.session_state["data_queried"] = False 
+        
+        except Exception as pipeline_error:
+             st.error(f"An error occurred during the job search pipeline: {pipeline_error}")
+             logger.error(f"Pipeline Error: {pipeline_error}", exc_info=True)
+             progress_text.empty()
+             progress_container.empty()
+             st.session_state["data_queried"] = False 
+
+# --- Results Display Section --- 
+st.markdown("<hr style='border-top: 1px solid #444;'>", unsafe_allow_html=True)
+st.header("Job Results")
+
+if st.session_state["data_queried"] and not st.session_state["query_result"].empty:
+    filtered_df = filter_dataframe(st.session_state["query_result"], key_prefix="results_filter")
+    
+    st.session_state["filtered_result"] = filtered_df 
+    
+    col1_res, col2_res, col3_res = st.columns([2, 1, 1])
+    
+    with col1_res:
+        st.write(f"Showing {len(filtered_df)} jobs")
+        
+    with col2_res:
+        if st.button("Open Top 5 Job URLs", type="primary", key="open_top_5"):
+            open_next_job_urls(
+                filtered_df, 
+                0, 
+                5,
+            )
+    
+    with col3_res:
+        if st.button("Open Next 5 Job URLs", type="secondary", key="open_next_5"):
+            open_next_job_urls(
+                filtered_df, 
+                st.session_state["last_opened_index"], 
+                5,
+            )
+            st.session_state["last_opened_index"] += 5 
+    
+    st.dataframe(filtered_df, height=500)
+    
+elif st.session_state["data_queried"] and st.session_state["query_result"].empty:
+    st.warning("No job results found in the database. Run a new search to populate it.") 
+else:
+    st.info("Database is currently empty. Run a job search using the parameters above to populate results.")
+    st.markdown("""
+    <div style="background-color: #2e2e2e; padding: 20px; border-radius: 10px; margin-top: 20px;">
+        <h4>How to use GPT Job Hunter</h4>
+        <ol>
+            <li>Ensure a resume is selected/uploaded in <b>Resume Management</b>.</li>
+            <li>Enter job titles and criteria above, then click <b>Find Jobs</b>.</li>
+            <li>Results will appear below after the search completes.</li>
+            <li>Use filters and buttons to explore results.</li>
+        </ol>
+    </div>
+    """, unsafe_allow_html=True)
