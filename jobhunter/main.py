@@ -11,9 +11,15 @@ import sys
 import time
 
 import pandas as pd
-import pdfplumber
+try:
+    import pdfplumber
+except ImportError:
+    # Handle case where pdfplumber is not installed in environment
+    pdfplumber = None
+    logging.warning("pdfplumber module not found - PDF resume upload may not work")
 import streamlit as st
 import streamlit.components.v1 as components
+from jobhunter import config
 from jobhunter.config import PROCESSED_DATA_PATH, RAW_DATA_PATH, RESUME_PATH
 from jobhunter.dataTransformer import DataTransformer
 from jobhunter.extract import extract
@@ -32,6 +38,7 @@ from jobhunter.SQLiteHandler import (
     save_text_to_db,
     update_resume_in_db,
     update_similarity_in_db,
+    check_and_upload_to_db,
 )
 
 # Add correct import for textAnalysis functions
@@ -265,6 +272,11 @@ def load_initial_data():
     """Queries the database on app start to load existing jobs and set default resume."""
     if not st.session_state.get("initial_data_loaded", False): # Run only once per session
         logger.info("Attempting initial data load...")
+        
+        # Get paths from config for loading
+        processed_data_dir = config.PROCESSED_DATA_PATH
+        logger.info(f"Loading JSON files from {processed_data_dir}")
+        
         conn = None
         try:
             conn = sqlite3.connect("all_jobs.db")
@@ -297,6 +309,29 @@ def load_initial_data():
                 st.session_state["query_result"] = pd.DataFrame() 
                 st.session_state["data_queried"] = False 
                 logger.info("Jobs table is empty. No initial jobs loaded.")
+                
+                # If jobs_new is empty but we have job files, try to load them
+                # This helps when Docker container has JSON files but hasn't loaded them to the DB yet
+                if processed_data_dir.exists():
+                    json_files = list(processed_data_dir.glob("*.json"))
+                    if json_files:
+                        logger.info(f"Found {len(json_files)} JSON files in {processed_data_dir} but database is empty")
+                        try:
+                            # Use the file handler to load jobs from JSON files
+                            from jobhunter.FileHandler import FileHandler
+                            file_handler = FileHandler()
+                            json_jobs = file_handler.load_json_files(processed_data_dir)
+                            if json_jobs:
+                                logger.info(f"Found {len(json_jobs)} jobs in JSON files, adding to database")
+                                # Import the check_and_upload function
+                                from jobhunter.SQLiteHandler import check_and_upload_to_db
+                                check_and_upload_to_db(json_jobs)
+                                logger.info("Re-querying database after loading JSON files")
+                                # Refresh from database
+                                st.session_state["query_result"] = pd.read_sql(query, conn)
+                                st.session_state["data_queried"] = True 
+                        except Exception as json_e:
+                            logger.error(f"Error loading JSON files: {json_e}")
 
             # --- Set Default Resume --- 
             available_resumes = fetch_resumes_from_db() # Assumes fetch_resumes_from_db uses the same connection if needed or opens its own
@@ -483,9 +518,37 @@ with resume_container:
             # Update the displayed active resume immediately
             active_resume_placeholder.markdown(f'<div class="active-resume-div">Active Resume: <strong>{st.session_state.active_resume}</strong></div>', unsafe_allow_html=True)
             # Trigger analysis
-            with st.spinner(f"Analyzing selected resume '{selected_resume}'..."):
-                update_similarity_in_db(selected_resume)
-                st.success(f"Resume '{selected_resume}' is now active and analyzed.")
+            with st.spinner(f"Analyzing selected resume '{selected_resume}' and updating job similarity scores..."):
+                # Update similarity scores for the selected resume
+                update_success = update_similarity_in_db(selected_resume)
+                
+                if update_success:
+                    # Re-query the database to get updated scores
+                    try:
+                        conn = sqlite3.connect("all_jobs.db")
+                        query = """
+                            SELECT
+                                id, primary_key, date,
+                                CAST(resume_similarity AS REAL) AS resume_similarity,
+                                title, company, company_url, company_type, job_type,
+                                job_is_remote, job_apply_link, job_offer_expiration_date,
+                                salary_low, salary_high, salary_currency, salary_period,
+                                job_benefits, city, state, country, apply_options,
+                                required_skills, required_experience, required_education,
+                                description, highlights
+                            FROM jobs_new
+                            ORDER BY resume_similarity DESC, date DESC
+                        """
+                        st.session_state["query_result"] = pd.read_sql(query, conn)
+                        conn.close()
+                        st.session_state["data_queried"] = True
+                    except Exception as query_e:
+                        logger.error(f"Error re-querying database after resume change: {query_e}")
+                    
+                    st.success(f"Resume '{selected_resume}' is now active and all jobs have been analyzed.")
+                else:
+                    st.error(f"Failed to analyze resume '{selected_resume}'.")
+                    
             st.experimental_rerun() # Use experimental_rerun instead of rerun
 
         # Delete button (only enabled if a resume is selected/available)
@@ -609,7 +672,39 @@ else:
             progress_message.empty()
 
             if total_jobs > 0:
-                st.sidebar.success(f"✅ Search complete! Found {total_jobs} jobs. Refreshing results...")
+                st.sidebar.success(f"✅ Search complete! Found {total_jobs} jobs.")
+                
+                # Add a pause with spinner to allow similarity calculations to complete
+                similarity_container = st.empty()
+                with similarity_container.container():
+                    with st.spinner("Calculating resume similarities for your jobs..."):
+                        # Calculate how many jobs need similarity calculation
+                        conn = sqlite3.connect("all_jobs.db")
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT COUNT(*) FROM jobs_new WHERE resume_similarity = 0 OR resume_similarity IS NULL")
+                        zero_similarity_count = cursor.fetchone()[0]
+                        conn.close()
+                        
+                        if zero_similarity_count > 0:
+                            st.info(f"Calculating similarity scores for {zero_similarity_count} jobs...")
+                            
+                            # Wait a bit for calculations to complete
+                            # The timeout should be proportional to the number of jobs
+                            # but with a reasonable maximum wait time
+                            wait_time = min(max(5, zero_similarity_count / 10), 30)  # Between 5-30 seconds
+                            
+                            # Show a countdown
+                            countdown_text = st.empty()
+                            for i in range(int(wait_time), 0, -1):
+                                countdown_text.text(f"Refreshing in {i} seconds...")
+                                time.sleep(1)
+                            
+                            # Final refresh
+                            countdown_text.text("Refreshing now...")
+                
+                # Clear the spinner container
+                similarity_container.empty()
+                st.sidebar.success(f"Ready to view your {total_jobs} jobs with similarity scores!")
             else:
                 st.sidebar.warning("No new jobs found matching your search criteria.")
                 st.sidebar.markdown("""
@@ -661,6 +756,53 @@ else:
 
 # --- Main Content Area: Job Search Results ---
 st.title("Job Search Results")
+
+# Add a refresh button to manually update similarity scores
+refresh_col1, refresh_col2 = st.columns([1, 5])
+if refresh_col1.button("🔄 Refresh Scores", help="Click to refresh similarity scores for all jobs"):
+    with st.spinner("Refreshing similarity scores..."):
+        try:
+            # Add countdown timer for 20 seconds
+            countdown_container = st.empty()
+            progress_bar = st.progress(0)
+            
+            # Show countdown
+            for i in range(20, 0, -1):
+                # Update progress bar (from 0 to 1.0)
+                progress_bar.progress((20 - i) / 20)
+                countdown_container.info(f"Waiting {i} seconds for similarity calculations to complete...")
+                time.sleep(1)
+            
+            # Clear countdown elements
+            countdown_container.empty()
+            progress_bar.empty()
+            
+            # Now refresh from database
+            conn = sqlite3.connect("all_jobs.db")
+            query = """
+                SELECT
+                    id, primary_key, date,
+                    CAST(resume_similarity AS REAL) AS resume_similarity,
+                    title, company, company_url, company_type, job_type,
+                    job_is_remote, job_apply_link, job_offer_expiration_date,
+                    salary_low, salary_high, salary_currency, salary_period,
+                    job_benefits, city, state, country, apply_options,
+                    required_skills, required_experience, required_education,
+                    description, highlights
+                FROM jobs_new
+                ORDER BY resume_similarity DESC, date DESC
+            """
+            st.session_state["query_result"] = pd.read_sql(query, conn)
+            conn.close()
+            st.session_state["data_queried"] = True
+            
+            # Display success message using refresh_col2 to show it inline with the button
+            refresh_col2.success("✅ Scores refreshed successfully!")
+            time.sleep(1.5)  # Let the success message be visible briefly
+            st.experimental_rerun()  # Rerun to update the display
+        except Exception as e:
+            refresh_col2.error(f"Error refreshing scores: {e}")
+            logger.error(f"Error during refresh: {e}", exc_info=True)
 
 # Check if data is ready to be displayed
 if st.session_state["data_queried"] and not st.session_state["query_result"].empty:
@@ -824,3 +966,77 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Function to load/reload data from DB into session state
+def load_data_from_db():
+    """Queries the database and updates the session state."""
+    try:
+        conn = sqlite3.connect(config.DATABASE) # Use config for DB name
+        # Ensure the query selects the resume_similarity column correctly
+        query = """
+            SELECT 
+                id, primary_key, date, 
+                CAST(resume_similarity AS REAL) AS resume_similarity, 
+                title, company, company_url, company_type, job_type, 
+                job_is_remote, job_apply_link, job_offer_expiration_date, 
+                salary_low, salary_high, salary_currency, salary_period, 
+                job_benefits, city, state, country, apply_options, 
+                required_skills, required_experience, required_education, 
+                description, highlights
+            FROM jobs_new 
+            ORDER BY resume_similarity DESC, date DESC 
+        """
+        # Update the session state directly
+        st.session_state["query_result"] = pd.read_sql(query, conn)
+        st.session_state["data_queried"] = True
+        # Reset index if needed, or handle elsewhere
+        # st.session_state["last_opened_index"] = 0 
+        logger.info(f"Reloaded {len(st.session_state['query_result'])} jobs into session state.")
+        conn.close()
+    except Exception as e:
+        logger.error(f"Error loading data from database: {e}")
+        st.error("Failed to load job data from the database.")
+        # Initialize with empty dataframe on error to prevent crashes
+        if "query_result" not in st.session_state:
+             st.session_state["query_result"] = pd.DataFrame()
+
+
+# --- Somewhere in your UI layout ---
+
+# Assuming 'selected_resume' holds the name of the chosen resume
+selected_resume = st.selectbox("Select Resume", st.session_state.get("resumes", []))
+
+if st.button("🔄 Refresh Scores", key="refresh_scores_button"):
+    if selected_resume:
+        with st.spinner(f"Calculating similarity scores for {selected_resume}..."):
+            try:
+                # Call the function that updates the database
+                update_similarity_in_db(selected_resume) # From SQLiteHandler
+                st.success(f"Successfully updated similarity scores for {selected_resume} in the database.")
+                
+                # --- THE FIX ---
+                # Explicitly reload the data from the DB into session state AFTER the update
+                logger.info("Reloading data into session state after score refresh.")
+                load_data_from_db() 
+                # --- END FIX ---
+                
+                # Optional: Force a rerun to ensure UI elements depending on the data update
+                # st.experimental_rerun() # Use st.rerun() in newer Streamlit versions
+
+            except Exception as e:
+                logger.error(f"Failed to refresh scores for {selected_resume}: {e}")
+                st.error(f"An error occurred while refreshing scores: {e}")
+    else:
+        st.warning("Please select a resume first.")
+
+# --- Display the data (ensure it uses the updated session state) ---
+if "query_result" in st.session_state and not st.session_state["query_result"].empty:
+    st.dataframe(st.session_state["query_result"]) 
+    # Or st.table, or however you display the jobs
+else:
+    st.info("No job data loaded or available.")
+
+# --- Initial data load on script start ---
+# Ensure this runs only once or when necessary, not on every interaction
+if "data_queried" not in st.session_state:
+     load_data_from_db()

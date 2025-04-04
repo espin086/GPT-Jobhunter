@@ -4,11 +4,21 @@ import os
 import sqlite3
 
 import pandas as pd
-from config import PROCESSED_DATA_PATH, RAW_DATA_PATH, RESUME_PATH
-from dataTransformer import DataTransformer
-from extract import extract
-from FileHandler import FileHandler
-from load import load
+# First try to import from jobhunter package (preferred when installed)
+try:
+    from jobhunter import config
+    from jobhunter.config import PROCESSED_DATA_PATH, RAW_DATA_PATH, RESUME_PATH
+    from jobhunter.dataTransformer import DataTransformer
+    from jobhunter.extract import extract
+    from jobhunter.FileHandler import FileHandler
+    from jobhunter.load import load
+except ImportError:
+    # Fall back to relative imports (for direct script execution)
+    from config import PROCESSED_DATA_PATH, RAW_DATA_PATH, RESUME_PATH
+    from dataTransformer import DataTransformer
+    from extract import extract
+    from FileHandler import FileHandler
+    from load import load
 
 logging.basicConfig(level=logging.INFO)
 

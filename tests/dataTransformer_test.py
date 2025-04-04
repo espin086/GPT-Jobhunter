@@ -152,15 +152,31 @@ def test_concatenate_apply_links(data_transformer_instance):
 
 
 def test_compute_resume_similarity(data_transformer_instance):
-    """Test if the compute_resume_similarity method correctly computes resume similarity."""
-    resume_text = "Sample resume content"
-    data_transformer_instance.compute_resume_similarity(resume_text)
-    for item in data_transformer_instance.data:
-        assert "resume_similarity" in item
-        assert (
-            isinstance(item["resume_similarity"], (float, int))
-            or item["resume_similarity"] is None
-        )
+    """
+    Test if text similarity calculation works correctly.
+    Note: This test was updated because DataTransformer no longer has 
+    compute_resume_similarity method directly. Resume similarity is now 
+    calculated using the text_similarity module.
+    """
+    from jobhunter.text_similarity import text_similarity
+    
+    # Get a sample job description
+    sample_job = data_transformer_instance.data[0]
+    job_description = sample_job.get("job_description", "")
+    
+    # Read the resume text
+    with open(data_transformer_instance.resume_path, "r") as file:
+        resume_text = file.read()
+    
+    # Calculate similarity score directly
+    similarity_score = text_similarity(resume_text, job_description)
+    
+    # Check that we get a valid similarity score
+    assert similarity_score is not None
+    assert isinstance(similarity_score, (float, int))
+    
+    # The score should be between 0 and 1 for cosine similarity
+    assert 0 <= similarity_score <= 1
 
 
 def test_transform(data_transformer_instance, tmpdir, request):

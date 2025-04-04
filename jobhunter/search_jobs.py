@@ -168,14 +168,14 @@ def search_jobs(
     raise requests.exceptions.RequestException(f"Maximum retries reached for '{search_term}' on page {page}")
 
 
-def main(search_term, page=1, num_pages=1, country="us", date_posted="all"):
+def main(search_term, page=1, num_pages=config.PAGES, country="us", date_posted="all"):
     """
     Main function to search for jobs with the specified parameters.
     
     Args:
         search_term: The search term to look for
         page: The page number of results to fetch
-        num_pages: Number of pages to fetch
+        num_pages: Number of pages to fetch (default: from config)
         country: Country code for job search
         date_posted: Time frame for job posting
         
@@ -213,8 +213,8 @@ def entrypoint():
     parser.add_argument(
         "--num-pages",
         type=int,
-        default=1,
-        help="number of pages to fetch",
+        default=config.PAGES,
+        help=f"number of pages to fetch (default: {config.PAGES})",
     )
     
     parser.add_argument(

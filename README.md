@@ -41,3 +41,80 @@ Jobhunter is an **AI-powered job search platform** that automates resume matchin
 ## License
 
 [License](LISENSE.md)
+
+# GPT-Jobhunter
+AI-assisted job hunting application
+
+## Overview
+
+GPT-Jobhunter is a tool that helps streamline your job search by:
+1. Finding relevant job postings
+2. Matching them to your resume using AI
+3. Organizing your job applications
+
+The application uses OpenAI's embeddings to calculate similarity between your resume and job descriptions, providing a smart way to prioritize which positions to apply for.
+
+## Features
+
+- **Job Search**: Search for jobs across multiple platforms
+- **Resume Matching**: Get AI-powered similarity scores between your resume and job listings
+- **Application Tracking**: Keep track of your job applications
+
+## Installation
+
+Please see [INSTALL.md](INSTALL.md) for detailed installation instructions.
+
+Quick start:
+```bash
+# Clone the repository
+git clone https://github.com/your-username/GPT-Jobhunter.git
+cd GPT-Jobhunter
+
+# Install dependencies with Poetry
+poetry install
+
+# Set up environment variables
+cp .env-template .env
+# Edit .env to add your API keys
+
+# Run the application
+poetry run streamlit run jobhunter/main.py
+```
+
+## Troubleshooting Zero Similarity Scores
+
+If you're getting zero similarity scores between your resume and jobs, follow these steps:
+
+1. Ensure the OpenAI API key is set in the environment:
+   ```bash
+   export OPENAI_API_KEY=your-key-here
+   ```
+
+2. Rebuild all embeddings and recalculate similarities with:
+   ```bash
+   poetry run python -m jobhunter.rebuild_embeddings
+   ```
+
+3. Alternatively, upload a new resume in the UI to trigger the calculation.
+
+For more detailed troubleshooting, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+## Docker Deployment
+
+To run the application using Docker:
+
+```bash
+# Build the Docker image
+docker build -t gpt-jobhunter .
+
+# Run the container
+docker run -p 8501:8501 -e OPENAI_API_KEY=your-key-here -e RAPID_API_KEY=your-key-here gpt-jobhunter
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+[LICENSE](LICENSE)

@@ -7,10 +7,19 @@ LOGGING_LEVEL = logging.INFO
 
 
 # === Data Configs ===
-CWD_PATH = Path(os.getcwd())
-RAW_DATA_PATH = Path(f"{CWD_PATH}/temp/data/raw").resolve()
-PROCESSED_DATA_PATH = Path(f"{CWD_PATH}/temp/data/processed").resolve()
-RESUME_PATH = Path(f"{CWD_PATH}/temp/resumes/resume.txt").resolve()
+# Use proper pathlib to create relative paths from the module directory
+# This ensures paths work both locally and in Docker containers
+MODULE_DIR = Path(__file__).parent.absolute()
+PROJECT_ROOT = MODULE_DIR.parent
+
+# Create paths relative to the jobhunter module directory
+RAW_DATA_PATH = MODULE_DIR / "temp" / "data" / "raw"
+PROCESSED_DATA_PATH = MODULE_DIR / "temp" / "data" / "processed"
+RESUME_PATH = MODULE_DIR / "temp" / "resumes" / "resume.txt"
+
+# Create the directories if they don't exist
+for path in [RAW_DATA_PATH, PROCESSED_DATA_PATH, Path(RESUME_PATH).parent]:
+    path.mkdir(parents=True, exist_ok=True)
 
 
 # === Database Configs ===

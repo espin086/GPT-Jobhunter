@@ -4,6 +4,58 @@
 set -e
 echo "====== GPT-JOBHUNTER DOCKER DEPLOYMENT ======"
 
+# Prepare environment for local tests and Docker
+echo "Preparing environment for testing and Docker build..."
+
+# Create necessary directories if they don't exist
+mkdir -p jobhunter/templates jobhunter/temp/data/raw jobhunter/temp/data/processed
+chmod -R 755 jobhunter/temp
+
+# Create a basic README.md file if it doesn't exist
+if [ ! -f "README.md" ]; then
+    echo "# GPT-Jobhunter" > README.md
+    echo "AI-assisted job hunting application" >> README.md
+    echo "Created README.md file"
+fi
+
+# Run pytest to validate the codebase before building
+echo "Running pytest to validate codebase..."
+
+# Separate database tests (which don't need API keys) from API-dependent tests
+echo "Running database tests first..."
+if ! poetry run pytest tests/test_database.py -v; then
+    echo "❌ Database tests failed! Please fix the database issues before continuing."
+    exit 1
+else
+    echo "✅ Database tests passed successfully!"
+fi
+
+echo "Running modified dataTransformer tests..."
+if ! poetry run pytest tests/dataTransformer_test.py -v; then
+    echo "❌ DataTransformer tests failed! Please fix the issues before continuing."
+    exit 1
+else
+    echo "✅ DataTransformer tests passed successfully!"
+fi
+
+# Check if API keys are available for API-dependent tests
+if [ -f ".env" ] && grep -q "OPENAI_API_KEY" .env && grep -q "RAPID_API_KEY" .env; then
+    echo "API keys found, running full test suite..."
+    if ! poetry run pytest; then
+        echo "⚠️ Some tests failed! This might be due to API limitations or other issues."
+        read -p "Do you want to continue with the Docker build anyway? (y/n): " choice
+        if [[ ! "$choice" =~ ^[Yy]$ ]]; then
+            echo "Deployment aborted by user."
+            exit 1
+        fi
+    else
+        echo "✅ All tests passed successfully!"
+    fi
+else
+    echo "⚠️ API keys not found in .env file. Skipping API-dependent tests."
+    echo "You will need API keys for the application to function correctly."
+fi
+
 # Remove existing container if it exists
 echo "Removing existing container (if it exists)..."
 docker rm -f gpt-jobhunter >/dev/null 2>&1 || true
@@ -28,15 +80,24 @@ tar -czh --exclude-vcs --exclude=.git --exclude-from=.dockerignore . | wc -c | a
 
 # Build the Docker image with build cache optimizations
 echo "Building new image with optimizations..."
-docker build --no-cache=false --build-arg BUILDKIT_INLINE_CACHE=1 -t gpt-jobhunter:latest .
+if ! docker build --no-cache=false --build-arg BUILDKIT_INLINE_CACHE=1 -t gpt-jobhunter:latest .; then
+    echo "❌ Docker build failed! Check the errors above."
+    exit 1
+else
+    echo "✅ Docker image built successfully!"
+fi
 
 # Verify that .env file is not in the image (security check)
 echo "Verifying .env file is not in the image (security check)..."
 if docker run --rm gpt-jobhunter:latest ls -la /app | grep -q ".env"; then
-    echo "WARNING: .env file was found in the image! This is a security risk."
+    echo "⚠️ WARNING: .env file was found in the image! This is a security risk."
     echo "Check your .dockerignore file and ensure it includes .env"
     echo "You may want to rebuild the image after fixing this issue."
-    echo "Continuing anyway, but consider fixing this issue..."
+    read -p "Do you want to continue anyway? (y/n): " choice
+    if [[ ! "$choice" =~ ^[Yy]$ ]]; then
+        echo "Deployment aborted by user."
+        exit 1
+    fi
 else
     echo "✅ Security check passed: .env file is properly excluded from the image."
 fi
@@ -84,6 +145,20 @@ import os
 print('RAPID_API_KEY from Python:', 'Available' if os.environ.get('RAPID_API_KEY') else 'Missing')
 print('OPENAI_API_KEY from Python:', 'Available' if os.environ.get('OPENAI_API_KEY') else 'Missing')
 "
+
+# Run the database tests inside the container to ensure the database setup works
+echo "Running database tests inside the container..."
+if ! docker run --rm --env-file .env gpt-jobhunter:latest python -m pytest /app/tests/test_database.py -v; then
+    echo "❌ Database tests failed inside the container! The image may have issues."
+    read -p "Tests failed inside the container. Do you want to continue anyway? (y/n): " choice
+    if [[ ! "$choice" =~ ^[Yy]$ ]]; then
+        echo "Deployment aborted by user."
+        exit 1
+    fi
+    echo "Continuing despite test failures..."
+else
+    echo "✅ Database tests inside the container passed!"
+fi
 
 # Run the container with enhanced options
 echo "Starting container..."

@@ -1,200 +1,220 @@
 #!/usr/bin/env python3
 """
-Tool to rebuild embeddings for all jobs in the database and recalculate similarity scores.
+Script to rebuild all embeddings and recalculate similarities for all resumes.
+
+This script can be used to fix issues with zero similarity scores by:
+1. Regenerating all job embeddings in the database
+2. Recalculating similarity scores for all resumes against the jobs
+
+Usage:
+    python -m jobhunter.rebuild_embeddings
+
+This is useful when:
+- You've replaced your OpenAI API key
+- You're seeing zero similarity scores in the UI
+- You've imported new jobs that don't have embeddings
 """
 
-import os
-import logging
 import json
+import logging
+import os
 import sqlite3
 import time
-import sys
 from pathlib import Path
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+import numpy as np
+import streamlit as st  # For progress bars
+from tqdm import tqdm  # For command-line progress bars
+
+from jobhunter import config
+from jobhunter.textAnalysis import generate_gpt_embedding, generate_gpt_embeddings_batch
+from jobhunter.SQLiteHandler import (
+    fetch_resumes_from_db,
+    get_resume_text,
+    update_similarity_in_db,
+)
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-# Import needed modules
-from jobhunter.textAnalysis import generate_gpt_embedding, generate_gpt_embeddings_batch
-from jobhunter.SQLiteHandler import update_similarity_in_db, fetch_resumes_from_db
-from jobhunter.FileHandler import FileHandler
-from jobhunter import config
-
-def check_api_key():
-    """Make sure we have a valid API key before proceeding."""
-    import os
-    
-    key = os.environ.get("OPENAI_API_KEY")
-    if not key:
-        logger.error("OpenAI API Key not found in environment variables.")
-        print("ERROR: OpenAI API key not found!")
-        print("Please set your API key in the .env file or export it directly:")
-        print("export OPENAI_API_KEY=your-api-key-here")
+def check_openai_api_key():
+    """Check if OpenAI API key is available"""
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        logger.error("OPENAI_API_KEY environment variable is not set.")
+        print("\n❌ OPENAI_API_KEY environment variable is not set.")
+        print("Please set your OpenAI API key with:")
+        print("export OPENAI_API_KEY=your-key-here")
         return False
         
-    # Basic sanity check on key format
-    if not key.startswith("sk-") or len(key) < 20:
-        logger.error(f"OpenAI API Key appears to be invalid: {key[:5]}...")
-        print("ERROR: OpenAI API key appears invalid.")
-        print("Make sure your key starts with 'sk-' and is the correct length.")
+    if len(api_key) < 20 or "your-api-key" in api_key.lower():
+        logger.error("OPENAI_API_KEY appears to be invalid.")
+        print("\n❌ OPENAI_API_KEY appears to be invalid.")
+        print("Please check your OpenAI API key and ensure it's correctly set.")
         return False
         
+    # Mask the key for logging
+    masked_key = f"{api_key[:4]}...{api_key[-4:]}" if len(api_key) > 8 else "***"
+    logger.info(f"Using OpenAI API key (masked): {masked_key}")
+    print(f"✅ Found OpenAI API key (masked): {masked_key}")
     return True
 
 def rebuild_job_embeddings():
-    """Generate new embeddings for all jobs in the database."""
-    logger.info("Rebuilding job embeddings...")
+    """Rebuild embeddings for all jobs in the database"""
+    print("\n🔄 Rebuilding job embeddings...")
     
-    # Connect to database
+    # Connect to the database
     conn = sqlite3.connect("all_jobs.db")
     cursor = conn.cursor()
     
-    # Get all jobs
     try:
+        # Fetch all jobs
         cursor.execute("SELECT primary_key, title, description FROM jobs_new")
         jobs = cursor.fetchall()
-        logger.info(f"Found {len(jobs)} jobs in database.")
         
         if not jobs:
-            logger.error("No jobs found in database!")
-            conn.close()
+            logger.warning("No jobs found in database.")
+            print("❌ No jobs found in database. Try extracting jobs first.")
             return False
             
-        # Prepare job texts for embedding
-        job_texts = []
-        job_ids = []
+        total_jobs = len(jobs)
+        logger.info(f"Found {total_jobs} jobs in database.")
+        print(f"Found {total_jobs} jobs in database.")
         
-        print(f"Preparing {len(jobs)} jobs for embedding generation...")
-        for job_id, title, description in jobs:
-            combined_text = f"{title}\n\n{description}" if title and description else title or description or ""
-            if combined_text:
-                job_texts.append(combined_text)
-                job_ids.append(job_id)
-            else:
-                logger.warning(f"Job {job_id} has no text to embed!")
+        # Process in batches to avoid API rate limits
+        batch_size = 100  # Adjust based on rate limits
+        updated_count = 0
         
-        # Generate embeddings in batches
-        BATCH_SIZE = 50
-        successful_embeddings = 0
-        failed_embeddings = 0
-        
-        for i in range(0, len(job_texts), BATCH_SIZE):
-            batch_texts = job_texts[i:i+BATCH_SIZE]
-            batch_ids = job_ids[i:i+BATCH_SIZE]
+        for start_idx in range(0, total_jobs, batch_size):
+            end_idx = min(start_idx + batch_size, total_jobs)
+            batch = jobs[start_idx:end_idx]
             
-            print(f"Processing batch {i//BATCH_SIZE + 1}/{(len(job_texts) + BATCH_SIZE - 1) // BATCH_SIZE}...")
+            # Prepare texts for batch embedding
+            texts = []
+            primary_keys = []
             
-            # Generate embeddings
-            embeddings = generate_gpt_embeddings_batch(batch_texts)
+            for job_id, title, description in batch:
+                # Combine title and description for better embedding
+                combined_text = f"{title}\n\n{description}" if title and description else description or title or ""
+                texts.append(combined_text)
+                primary_keys.append(job_id)
+            
+            # Generate embeddings in batch
+            print(f"Generating embeddings for batch {start_idx//batch_size + 1}/{(total_jobs+batch_size-1)//batch_size}...")
+            embeddings = generate_gpt_embeddings_batch(texts)
             
             if not embeddings:
-                logger.error(f"Failed to generate embeddings for batch {i//BATCH_SIZE + 1}!")
-                failed_embeddings += len(batch_texts)
+                logger.error(f"Failed to generate embeddings for batch {start_idx}-{end_idx}.")
+                print(f"❌ Failed to generate embeddings for batch {start_idx}-{end_idx}.")
                 continue
                 
-            if len(embeddings) != len(batch_ids):
-                logger.error(f"Mismatch in batch {i//BATCH_SIZE + 1}: {len(embeddings)} embeddings for {len(batch_ids)} jobs!")
-                failed_embeddings += len(batch_texts)
-                continue
-            
-            # Update database
-            batch_updates = []
-            for job_id, embedding in zip(batch_ids, embeddings):
-                if embedding and not all(v == 0.0 for v in embedding):
+            # Update database with new embeddings
+            update_data = []
+            for idx, (embedding, job_id) in enumerate(zip(embeddings, primary_keys)):
+                if embedding and any(v != 0.0 for v in embedding):
                     # Convert embedding to JSON string
                     embedding_json = json.dumps(embedding)
-                    batch_updates.append((embedding_json, job_id))
-                    successful_embeddings += 1
+                    update_data.append((embedding_json, job_id))
+                    updated_count += 1
                 else:
-                    logger.warning(f"Zero or invalid embedding for job {job_id}")
-                    failed_embeddings += 1
+                    logger.warning(f"Empty or zero embedding for job {job_id}, skipping update")
             
-            if batch_updates:
-                try:
-                    cursor.executemany(
-                        "UPDATE jobs_new SET embeddings = ? WHERE primary_key = ?",
-                        batch_updates
-                    )
-                    conn.commit()
-                    logger.info(f"Updated embeddings for {len(batch_updates)} jobs in batch {i//BATCH_SIZE + 1}.")
-                except sqlite3.Error as e:
-                    logger.error(f"Database error updating batch {i//BATCH_SIZE + 1}: {e}")
-                    failed_embeddings += len(batch_updates)
-                    successful_embeddings -= len(batch_updates)
+            if update_data:
+                cursor.executemany(
+                    "UPDATE jobs_new SET embeddings = ? WHERE primary_key = ?",
+                    update_data
+                )
+                conn.commit()
+                
+            # Give some feedback
+            print(f"✅ Updated {len(update_data)}/{len(batch)} embeddings in batch {start_idx//batch_size + 1}")
             
-            # Add a small delay between batches
-            if i + BATCH_SIZE < len(job_texts):
-                time.sleep(0.5)
+            # Slow down to avoid rate limits
+            time.sleep(2)
+            
+        # Summary
+        logger.info(f"Updated embeddings for {updated_count}/{total_jobs} jobs.")
+        print(f"\n✅ Updated embeddings for {updated_count}/{total_jobs} jobs.")
+        return updated_count > 0
         
-        conn.close()
-        
-        print(f"Rebuilding complete! Successful: {successful_embeddings}, Failed: {failed_embeddings}")
-        return successful_embeddings > 0
-        
-    except sqlite3.Error as e:
-        logger.error(f"Database error: {e}")
-        if conn:
-            conn.close()
-        return False
     except Exception as e:
-        logger.error(f"Error rebuilding embeddings: {e}")
-        if conn:
-            conn.close()
+        logger.error(f"Error rebuilding job embeddings: {e}", exc_info=True)
+        print(f"❌ Error rebuilding job embeddings: {e}")
         return False
+    finally:
+        conn.close()
 
-def recalculate_similarities():
-    """Recalculate similarity scores for all resumes."""
-    logger.info("Recalculating similarity scores...")
+def recalculate_all_similarities():
+    """Recalculate similarity scores for all resumes"""
+    print("\n🔄 Recalculating similarity scores for all resumes...")
     
     # Get all resumes
     resumes = fetch_resumes_from_db()
     
     if not resumes:
-        logger.error("No resumes found in database!")
-        print("No resumes found. Please upload at least one resume first.")
+        logger.warning("No resumes found in database.")
+        print("❌ No resumes found in database. Try uploading a resume first.")
         return False
-    
-    print(f"Found {len(resumes)} resumes: {resumes}")
+        
+    logger.info(f"Found {len(resumes)} resumes in database.")
+    print(f"Found {len(resumes)} resumes in database: {', '.join(resumes)}")
     
     # Update similarity for each resume
-    for resume in resumes:
-        print(f"Processing similarity for resume: {resume}")
-        success = update_similarity_in_db(resume)
+    success_count = 0
+    
+    for resume_name in resumes:
+        print(f"\nUpdating similarity scores for resume: {resume_name}")
+        success = update_similarity_in_db(resume_name)
         
         if success:
-            print(f"✓ Similarity updated for '{resume}'")
+            success_count += 1
+            print(f"✅ Successfully updated similarity scores for {resume_name}")
         else:
-            print(f"✗ Failed to update similarity for '{resume}'")
+            print(f"❌ Failed to update similarity scores for {resume_name}")
     
-    return True
+    # Summary
+    if success_count == len(resumes):
+        logger.info(f"Successfully updated similarity scores for all {len(resumes)} resumes.")
+        print(f"\n✅ Successfully updated similarity scores for all {len(resumes)} resumes.")
+        return True
+    else:
+        logger.warning(f"Updated similarity scores for {success_count}/{len(resumes)} resumes.")
+        print(f"\n⚠️ Updated similarity scores for {success_count}/{len(resumes)} resumes.")
+        return success_count > 0
 
-if __name__ == "__main__":
-    print("=" * 60)
-    print("JOB EMBEDDING REBUILDER & SIMILARITY RECALCULATOR")
-    print("=" * 60)
-    print("\nThis tool will regenerate all job embeddings and recalculate resume similarities.\n")
+def main():
+    """Main function to run the rebuild process"""
+    print("\n" + "="*50)
+    print("📊 GPT-JobHunter: Embedding Rebuilder")
+    print("="*50)
     
-    if not check_api_key():
-        sys.exit(1)
+    # Check API key
+    if not check_openai_api_key():
+        return
     
-    choice = input("Ready to proceed? This may use a significant amount of OpenAI API credits. (y/n): ")
-    if choice.lower() != 'y':
-        print("Operation cancelled.")
-        sys.exit(0)
+    # Rebuild job embeddings
+    job_success = rebuild_job_embeddings()
     
-    print("\nStep 1: Rebuilding job embeddings...")
-    rebuild_success = rebuild_job_embeddings()
-    
-    if rebuild_success:
-        print("\nStep 2: Recalculating similarity scores...")
-        similarity_success = recalculate_similarities()
+    # Recalculate similarities
+    if job_success:
+        similarity_success = recalculate_all_similarities()
         
         if similarity_success:
-            print("\n✓ Process completed successfully!")
+            print("\n" + "="*50)
+            print("✅ Embeddings and similarities successfully rebuilt!")
+            print("="*50)
         else:
-            print("\n✗ Failed to recalculate similarities!")
+            print("\n" + "="*50)
+            print("⚠️ Some issues occurred during similarity recalculation.")
+            print("="*50)
     else:
-        print("\n✗ Failed to rebuild job embeddings!")
-    
-    print("\nDone!") 
+        print("\n" + "="*50)
+        print("❌ Failed to rebuild job embeddings. Cannot proceed with similarity recalculation.")
+        print("="*50)
+
+if __name__ == "__main__":
+    main() 

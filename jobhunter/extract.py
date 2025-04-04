@@ -8,6 +8,7 @@ import time
 import random
 import requests
 import platform
+from pathlib import Path
 
 from dotenv import load_dotenv
 from jobhunter.FileHandler import FileHandler
@@ -122,8 +123,8 @@ def search_jobs(search_term, page=1, country="us", date_posted="all", delay=DELA
 def get_all_jobs(search_term, pages, country="us", date_posted="all"):
     all_jobs = []
     
-    # Always use Sequential processing 
-    pages_to_fetch = 1 # Keep limit to 1 page for testing
+    # Use the pages parameter instead of hardcoded value
+    pages_to_fetch = pages
     for page_index in range(pages_to_fetch):
         page_number_for_api = page_index + 1 # API pages are often 1-based
         try:
@@ -185,7 +186,7 @@ def extract(POSITIONS, country="us", date_posted="all", location=""):
     logging.info("=== ENVIRONMENT DIAGNOSTICS ===")
     logging.info(f"Platform: {platform.platform()}")
     logging.info(f"Current working directory: {os.getcwd()}")
-    logging.info(f"THIS_DIR value: {THIS_DIR}")
+    logging.info(f"Module directory: {Path(__file__).parent.absolute()}")
     logging.info(f"RAPID_API_KEY available: {'Yes' if RAPID_API_KEY else 'No'}")
     logging.info(f"RAPID_API_KEY masked: {RAPID_API_KEY[:4] + '****' if RAPID_API_KEY and len(RAPID_API_KEY) > 4 else 'None'}")
     logging.info(f"RAW_DATA_PATH: {config.RAW_DATA_PATH}")
@@ -193,9 +194,9 @@ def extract(POSITIONS, country="us", date_posted="all", location=""):
     logging.info("=== END DIAGNOSTICS ===")
     
     try:
-        # Ensure data directories exist
-        os.makedirs(config.RAW_DATA_PATH, exist_ok=True)
-        os.makedirs(config.PROCESSED_DATA_PATH, exist_ok=True)
+        # Ensure data directories exist - using pathlib mkdir for better cross-platform support
+        config.RAW_DATA_PATH.mkdir(parents=True, exist_ok=True)
+        config.PROCESSED_DATA_PATH.mkdir(parents=True, exist_ok=True)
         logging.info(f"Created data folders at {config.RAW_DATA_PATH} and {config.PROCESSED_DATA_PATH}")
     except Exception as e:
         logging.error(f"Error creating data folders: {e}")
@@ -208,6 +209,9 @@ def extract(POSITIONS, country="us", date_posted="all", location=""):
         raise ValueError(error_msg)
         
     try:
+        # Create file handler using paths from config
+        file_handler = FileHandler()
+        
         # Create directories if they don't exist
         file_handler.create_data_folders_if_not_exists()
         logging.info(f"Created data folders at {file_handler.raw_path} and {file_handler.processed_path}")
@@ -262,7 +266,7 @@ def extract(POSITIONS, country="us", date_posted="all", location=""):
                     try:
                         jobs = get_all_jobs(
                             search_term=search_term,
-                            pages=1, # Keep pages=1 for testing limit
+                            pages=config.PAGES, # Use PAGES from config instead of hardcoded value
                             country=country,
                             date_posted=date_posted,
                         )
@@ -326,7 +330,7 @@ def extract(POSITIONS, country="us", date_posted="all", location=""):
                                 
                                 fallback_jobs = get_all_jobs(
                                     search_term=fallback_search_term,
-                                    pages=1,  # Keep fallback pages=1
+                                    pages=config.PAGES, # Use PAGES from config instead of hardcoded value
                                     country=country,
                                     date_posted=date_posted,
                                 )
