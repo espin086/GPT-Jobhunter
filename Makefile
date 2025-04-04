@@ -9,8 +9,9 @@ virtualenv:
 .PHONY: install test lint format
 
 install:
-	conda create --name jobhunter python=3.10
-	conda activate jobhunter
+	conda create --name jobhunter python=3.10 && \
+	eval "$(conda shell.bash hook)" && \
+	conda activate jobhunter && \
 	pip install -r requirements.txt
 
 format:
@@ -23,7 +24,7 @@ test:
 coverage:
 	python3 -m pytest --cov=$(SRC_DIR) --cov-report term --cov-report html
 
-check: install format test
+check: format test
 
 run:
 	streamlit run $(SRC_DIR)/main.py

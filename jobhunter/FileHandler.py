@@ -6,7 +6,9 @@ import pprint
 from pathlib import Path
 
 from jobhunter import config
+
 # import config
+
 
 class FileHandler:
     """This class handles all of the local file movements for the project"""

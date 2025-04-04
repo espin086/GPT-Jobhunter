@@ -1,18 +1,21 @@
 import concurrent.futures
 import logging
+import time
 from pathlib import Path
 from typing import Dict, List
 
+# Use the correct import for config within the package
+from jobhunter import config
+from jobhunter.FileHandler import FileHandler
+from jobhunter.text_similarity import text_similarity
+
+# Remove commented out alternative imports
 # from config import LOGGING_LEVEL
 # from FileHandler import FileHandler
 # from text_similarity import text_similarity
 
-# For running the test cases
-from jobhunter.config import LOGGING_LEVEL
-from jobhunter.FileHandler import FileHandler
-from jobhunter.text_similarity import text_similarity
 
-logging.basicConfig(level=LOGGING_LEVEL)
+logging.basicConfig(level=config.LOGGING_LEVEL)
 
 
 class DataTransformer:
@@ -74,7 +77,10 @@ class DataTransformer:
         """Concatenates all apply links from apply_options."""
         for item in self.data:
             apply_options = item.get("apply_options", [])
-            apply_links = [option.get("apply_link", "") if isinstance(option, dict) else "" for option in apply_options]
+            apply_links = [
+                option.get("apply_link", "") if isinstance(option, dict) else ""
+                for option in apply_options
+            ]
             concatenated_links = "\n".join(apply_links)
             item["apply_options"] = concatenated_links
 
@@ -82,6 +88,12 @@ class DataTransformer:
         """Transforms the required_experience dictionary into the desired format."""
         for item in self.data:
             required_experience = item.get("required_experience", {})
+            # Check if required_experience is None or not a dictionary
+            if required_experience is None or not isinstance(required_experience, dict):
+                # Set to empty string or empty object as appropriate
+                item["required_experience"] = ""
+                continue
+                
             formatted_experience = ", \n".join(
                 f"{key}: {value}" for key, value in required_experience.items()
             )
@@ -91,6 +103,12 @@ class DataTransformer:
         """Transforms the required_education dictionary into the desired format."""
         for item in self.data:
             required_education = item.get("required_education", {})
+            # Check if required_education is None or not a dictionary
+            if required_education is None or not isinstance(required_education, dict):
+                # Set to empty string or empty object as appropriate
+                item["required_education"] = ""
+                continue
+                
             formatted_education = ", \n".join(
                 f"{key}: {value}" for key, value in required_education.items()
             )
@@ -102,6 +120,12 @@ class DataTransformer:
         """
         for item in self.data:
             highlights = item.get("highlights", {})
+            # Check if highlights is None or not a dictionary
+            if highlights is None or not isinstance(highlights, dict):
+                # Set to empty string or empty object as appropriate
+                item["highlights"] = ""
+                continue
+                
             formatted_highlights = ", ".join(
                 [
                     f"\n{key}:\n {', '.join(values)}"
@@ -116,16 +140,17 @@ class DataTransformer:
         """
         for entry in self.data:
             if "job_is_remote" in entry:
-                entry["job_is_remote"] = "Remote" if entry["job_is_remote"] == True else "Not Remote"
+                entry["job_is_remote"] = (
+                    "Remote" if entry["job_is_remote"] == True else "Not Remote"
+                )
 
     def transform_single_skills(self):
         """
         Transform 'required_skills' field from a list to a single string if it has only one item.
         """
         for entry in self.data:
-            if (
-                "required_skills" in entry
-                and isinstance(entry["required_skills"], list)
+            if "required_skills" in entry and isinstance(
+                entry["required_skills"], list
             ):
                 skills_list = entry["required_skills"]
                 if len(skills_list) == 1:
@@ -146,21 +171,41 @@ class DataTransformer:
                     entry["job_benefits"] = ", \n".join(skills_list)
 
     def compute_resume_similarity(self, resume_text):
-        """Computes the similarity between the job description and the resume."""
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = []
-            for item in self.data:
-                description = item.get("description")
-                future = executor.submit(text_similarity, description, resume_text)
-                futures.append((item, future))
-
-            for item, future in futures:
-                similarity = future.result()
+        """
+        Computes the similarity between the job description and the resume SEQUENTIALLY.
+        """
+        # Constants for rate limiting (less critical now but keep for potential future use)
+        # BATCH_SIZE = 5  # Number of jobs to process in a batch
+        # BATCH_DELAY = 10  # Seconds to wait between batches
+        
+        # Log the total number of jobs to process
+        total_jobs = len(self.data)
+        logging.info(f"Computing similarity for {total_jobs} jobs sequentially...")
+        
+        processed_count = 0
+        # Process jobs sequentially
+        for i, item in enumerate(self.data):
+            logging.info(f"Processing job {i+1}/{total_jobs}")
+            description = item.get("description")
+            if not description:
+                item["resume_similarity"] = 0.0
+                logging.warning(f"Job {item.get('primary_key', 'Unknown')} has no description, setting similarity to 0")
+                continue
+                
+            try:
+                similarity = text_similarity(description, resume_text)
                 item["resume_similarity"] = (
-                    float(similarity)
-                    if isinstance(similarity, (float, int))
-                    else None
+                    float(similarity) if isinstance(similarity, (float, int)) else 0.0
                 )
+                logging.info(f"Computed similarity for job: {item.get('title', 'Unknown')} - {item['resume_similarity']:.2f}")
+                processed_count += 1
+                # Add a small delay between individual calls to avoid hitting rate limits too fast
+                time.sleep(0.5) 
+            except Exception as e:
+                logging.error(f"Error computing similarity for job {item.get('primary_key', 'Unknown')}: {e}")
+                item["resume_similarity"] = 0.0
+        
+        logging.info(f"Completed similarity computation for {processed_count}/{total_jobs} jobs")
 
     def transform(self):
         """Transforms the raw data into a format that is ready for analysis."""
@@ -218,6 +263,8 @@ class DataTransformer:
 
 class Main:
     def __init__(self):
+        # Explicitly import config here
+        from jobhunter import config 
         self.file_handler = FileHandler(
             raw_path=config.RAW_DATA_PATH, processed_path=config.PROCESSED_DATA_PATH
         )
@@ -237,5 +284,7 @@ class Main:
 
 
 if __name__ == "__main__":
+    # Explicitly import config here as well for the main block
+    from jobhunter import config 
     main = Main()
     main.run()

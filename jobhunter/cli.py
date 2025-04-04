@@ -2,12 +2,13 @@ import argparse
 import logging
 import os
 import sqlite3
+
 import pandas as pd
-from extract import extract
+from config import PROCESSED_DATA_PATH, RAW_DATA_PATH, RESUME_PATH
 from dataTransformer import DataTransformer
+from extract import extract
 from FileHandler import FileHandler
 from load import load
-from config import PROCESSED_DATA_PATH, RAW_DATA_PATH, RESUME_PATH
 
 logging.basicConfig(level=logging.INFO)
 
