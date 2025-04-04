@@ -33,5 +33,36 @@ CONTRIBUTING.md
 LICENSE.md
 .devcontainer
 docs/
-temp/
 images/
+
+# Temp directory - exclude ALL content
+temp/
+jobhunter/temp/
+**/temp/**
+
+# Explicitly exclude all JSON files in any temp directory
+**/temp/**/*.json
+**/temp/**/*.csv
+**/temp/**/*.pkl
+**/temp/**/*.npy
+
+# Database files
+*.db
+**/*.db
+all_jobs.db
+jobhunter/*.db
+jobhunter/all_jobs.db
+
+# Resume and job data
+**/data/raw/
+**/data/processed/
+jobhunter/temp/data/raw/*
+jobhunter/temp/data/processed/*
+
+# Any large data files that might have been saved
+**/*.zip
+**/*.tar
+**/*.gz
+**/*.pdf
+**/*.docx
+**/*.xlsx

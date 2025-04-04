@@ -254,6 +254,12 @@ if "filtered_result" not in st.session_state:
 if "last_opened_index" not in st.session_state:
     st.session_state["last_opened_index"] = 0
 
+# Handle file uploader reset by checking for a rerun trigger flag
+if st.session_state.get("trigger_rerun_after_upload", False):
+    # Clear the flag
+    st.session_state["trigger_rerun_after_upload"] = False
+    # Don't need to clear uploader here - just cleared the flag so next rerun will be clean
+
 # --- Function to Load Initial Data --- 
 def load_initial_data():
     """Queries the database on app start to load existing jobs and set default resume."""
@@ -443,8 +449,8 @@ with resume_container:
                         else:
                             st.error("Failed to analyze resume.")
 
-                    # Clear the uploader and rerun
-                    st.session_state.resume_uploader = None # Attempt to clear uploader state
+                    # Use a flag to indicate we need to rerun instead
+                    st.session_state["trigger_rerun_after_upload"] = True
                     st.experimental_rerun()
 
                 except Exception as e:
@@ -564,89 +570,94 @@ else:
 
     # --- Job Search Execution Section ---
     if search_button:
-        with st.sidebar.spinner("Searching for jobs..."):
-            if st.session_state.openai_api_key:
-                os.environ["OPENAI_API_KEY"] = st.session_state.openai_api_key
-                logging.info("Set OpenAI API key from session state for job search")
+        # Replace sidebar spinner with a proper placeholder approach
+        progress_message = st.sidebar.empty()
+        progress_message.info("Searching for jobs...")
+        
+        if st.session_state.openai_api_key:
+            os.environ["OPENAI_API_KEY"] = st.session_state.openai_api_key
+            logging.info("Set OpenAI API key from session state for job search")
 
-            steps = [
-                lambda: extract(job_titles, country=country, date_posted=date_posted, location=location),
-                run_transform,
-                load,
-            ]
+        steps = [
+            lambda: extract(job_titles, country=country, date_posted=date_posted, location=location),
+            run_transform,
+            load,
+        ]
 
-            progress_container = st.sidebar.container()
-            with progress_container:
-                progress_text = st.empty()
-                progress_bar = st.progress(0)
+        progress_container = st.sidebar.container()
+        with progress_container:
+            progress_text = st.empty()
+            progress_bar = st.progress(0)
 
+        try:
+            progress_text.text("Step 1/3: Searching for jobs...")
+            total_jobs = steps[0]()
+            progress_bar.progress(1/3)
+
+            progress_text.text("Step 2/3: Processing job data...")
+            steps[1]()
+            progress_bar.progress(2/3)
+
+            progress_text.text("Step 3/3: Saving to database...")
+            steps[2]()
+            progress_bar.progress(1.0)
+
+            progress_text.empty()
+            time.sleep(0.5)
+            progress_container.empty()
+            # Clear the initial progress message
+            progress_message.empty()
+
+            if total_jobs > 0:
+                st.sidebar.success(f"✅ Search complete! Found {total_jobs} jobs. Refreshing results...")
+            else:
+                st.sidebar.warning("No new jobs found matching your search criteria.")
+                st.sidebar.markdown("""
+                <div style="background-color: #3a3a3a; padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; margin: 10px 0;">
+                    <h4 style="margin-top: 0;">Suggestions</h4>
+                    <ul>
+                        <li>Try more general job titles</li>
+                        <li>Specify a major tech hub location</li>
+                        <li>Broaden your search time frame</li>
+                        <li>Check spelling</li>
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # --- Trigger results update AFTER pipeline finishes ---
             try:
-                progress_text.text("Step 1/3: Searching for jobs...")
-                total_jobs = steps[0]()
-                progress_bar.progress(1/3)
-
-                progress_text.text("Step 2/3: Processing job data...")
-                steps[1]()
-                progress_bar.progress(2/3)
-
-                progress_text.text("Step 3/3: Saving to database...")
-                steps[2]()
-                progress_bar.progress(1.0)
-
-                progress_text.empty()
-                time.sleep(0.5)
-                progress_container.empty()
-
-                if total_jobs > 0:
-                    st.sidebar.success(f"✅ Search complete! Found {total_jobs} jobs. Refreshing results...")
-                else:
-                    st.sidebar.warning("No new jobs found matching your search criteria.")
-                    st.sidebar.markdown("""
-                    <div style="background-color: #3a3a3a; padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; margin: 10px 0;">
-                        <h4 style="margin-top: 0;">Suggestions</h4>
-                        <ul>
-                            <li>Try more general job titles</li>
-                            <li>Specify a major tech hub location</li>
-                            <li>Broaden your search time frame</li>
-                            <li>Check spelling</li>
-                        </ul>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                # --- Trigger results update AFTER pipeline finishes ---
-                try:
-                    conn = sqlite3.connect("all_jobs.db")
-                    query = """
-                        SELECT
-                            id, primary_key, date,
-                            CAST(resume_similarity AS REAL) AS resume_similarity,
-                            title, company, company_url, company_type, job_type,
-                            job_is_remote, job_apply_link, job_offer_expiration_date,
-                            salary_low, salary_high, salary_currency, salary_period,
-                            job_benefits, city, state, country, apply_options,
-                            required_skills, required_experience, required_education,
-                            description, highlights
-                        FROM jobs_new
-                        ORDER BY resume_similarity DESC, date DESC
-                    """
-                    st.session_state["query_result"] = pd.read_sql(query, conn)
-                    conn.close()
-                    st.session_state["data_queried"] = True
-                    st.session_state["last_opened_index"] = 0
-                    logger.info(f"Successfully queried and updated results for {len(st.session_state['query_result'])} jobs.")
-                    # Force rerun to display results immediately after search
-                    st.experimental_rerun()
-                except Exception as query_e:
-                    st.sidebar.error(f"An error occurred while querying the database after search: {query_e}")
-                    logger.error(f"DB Query Error after search: {query_e}", exc_info=True)
-                    st.session_state["data_queried"] = False
-
-            except Exception as pipeline_error:
-                st.sidebar.error(f"An error occurred during the job search pipeline: {pipeline_error}")
-                logger.error(f"Pipeline Error: {pipeline_error}", exc_info=True)
-                progress_text.empty()
-                progress_container.empty()
+                conn = sqlite3.connect("all_jobs.db")
+                query = """
+                    SELECT
+                        id, primary_key, date,
+                        CAST(resume_similarity AS REAL) AS resume_similarity,
+                        title, company, company_url, company_type, job_type,
+                        job_is_remote, job_apply_link, job_offer_expiration_date,
+                        salary_low, salary_high, salary_currency, salary_period,
+                        job_benefits, city, state, country, apply_options,
+                        required_skills, required_experience, required_education,
+                        description, highlights
+                    FROM jobs_new
+                    ORDER BY resume_similarity DESC, date DESC
+                """
+                st.session_state["query_result"] = pd.read_sql(query, conn)
+                conn.close()
+                st.session_state["data_queried"] = True
+                st.session_state["last_opened_index"] = 0
+                logger.info(f"Successfully queried and updated results for {len(st.session_state['query_result'])} jobs.")
+                # Force rerun to display results immediately after search
+                st.experimental_rerun()
+            except Exception as query_e:
+                st.sidebar.error(f"An error occurred while querying the database after search: {query_e}")
+                logger.error(f"DB Query Error after search: {query_e}", exc_info=True)
                 st.session_state["data_queried"] = False
+
+        except Exception as pipeline_error:
+            st.sidebar.error(f"An error occurred during the job search pipeline: {pipeline_error}")
+            logger.error(f"Pipeline Error: {pipeline_error}", exc_info=True)
+            progress_text.empty()
+            progress_container.empty()
+            st.session_state["data_queried"] = False
 
 # --- Main Content Area: Job Search Results ---
 st.title("Job Search Results")

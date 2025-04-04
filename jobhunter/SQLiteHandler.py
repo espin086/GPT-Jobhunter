@@ -68,166 +68,164 @@ def create_db_if_not_there():
 
 
 def check_and_upload_to_db(json_list):
-    """Check if primary key exists, generate embeddings via synchronous batching, remove duplicates, and upload."""
-    logging.info(f"Starting upload process for {len(json_list)} received items.")
-    conn = None
-    jobs_to_process = []
-    processed_keys_in_this_run = set() # Keep track of keys added in this run
-    jobs_skipped = 0
+    """
+    This function checks if a job is already in the database and uploads it if it's not.
+    """
+    db_name = "all_jobs.db"
     
+    if not json_list:
+        logger.info("No new jobs to add to the database.")
+        return
+    
+    # Start by creating a connection to the database
+    logger.info("Starting upload process for %s received items.", len(json_list))
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+    
+    # Check if embeddings column exists, add it if it doesn't
+    cursor.execute("PRAGMA table_info(jobs_new)")
+    columns = [col[1] for col in cursor.fetchall()]
+    if "embeddings" not in columns:
+        logger.info("Adding embeddings column to jobs_new table")
+        cursor.execute("ALTER TABLE jobs_new ADD COLUMN embeddings TEXT")
+        conn.commit()
+
+    # Query existing primary keys
     try:
-        conn = sqlite3.connect("all_jobs.db")
-        c = conn.cursor()
-
-        # 1. Identify jobs not already in the database AND not duplicated in this run
-        logging.info("Checking database for existing jobs and filtering internal duplicates...")
-        existing_keys = set(fetch_primary_keys_from_db()) 
-        
-        for item in json_list:
-            try:
-                primary_key = item["primary_key"]
+        cursor.execute("SELECT primary_key FROM jobs_new")
+        existing_keys = {row[0] for row in cursor.fetchall()}
+        logger.info("Found %s existing jobs in database.", len(existing_keys))
+    except sqlite3.Error as e:
+        logger.error("Error fetching existing keys: %s", e)
+        conn.close()
+        return
+    
+    # Identify new unique items to add
+    new_items = []
+    internal_duplicates = set()
+    duplicates_count = 0
+    invalid_items = 0
+    
+    for item in json_list:
+        try:
+            # Skip items without a primary key or where it's already processed in this batch
+            if not item.get("primary_key"):
+                invalid_items += 1
+                continue
                 
-                # Skip if already in DB OR already added in this run
-                if primary_key in existing_keys or primary_key in processed_keys_in_this_run:
-                    jobs_skipped += 1
-                    continue # Skip this duplicate item
+            # Check if it's already in our database
+            if item["primary_key"] in existing_keys:
+                duplicates_count += 1
+                continue
+                
+            # Check for internal duplicates in this batch
+            if item["primary_key"] in internal_duplicates:
+                duplicates_count += 1
+                continue
+                
+            # This is a new unique item
+            internal_duplicates.add(item["primary_key"])
+            new_items.append(item)
+                
+        except Exception as e:
+            logger.error("Error processing item %s: %s", item, e)
+            invalid_items += 1
 
-                # Basic validation: Ensure item has necessary fields for embedding
-                if item.get("description") or item.get("title"):
-                    jobs_to_process.append(item)
-                    processed_keys_in_this_run.add(primary_key) # Mark as processed for this run
+    # If no new items, we're done
+    if not new_items:
+        logger.info("No new unique jobs to add among %s items. Skipped %s existing, %s duplicate, and %s invalid items.", 
+                   len(json_list), duplicates_count, len(internal_duplicates) - len(new_items), invalid_items)
+        conn.close()
+        return
+        
+    # Generate embeddings for new items in batch - with progress
+    logger.info("Generating embeddings for %s new items...", len(new_items))
+    successful_items = []
+    
+    # Extract texts for embedding (job description and title)
+    texts = []
+    for item in new_items:
+        # Create a combined text from job title and description for better embedding
+        title = item.get("title", "")
+        description = item.get("description", "")
+        combined_text = f"{title}\n\n{description}"
+        texts.append(combined_text)
+    
+    # Get embeddings in batch
+    try:
+        from jobhunter.textAnalysis import generate_gpt_embeddings_batch
+        embeddings_batch = generate_gpt_embeddings_batch(texts)
+        
+        if embeddings_batch:
+            logger.info(f"Successfully generated {len(embeddings_batch)} embeddings in batch")
+            
+            # Match embeddings back to items
+            for i, (item, embedding) in enumerate(zip(new_items, embeddings_batch)):
+                if embedding and any(v != 0.0 for v in embedding):
+                    # Store embedding as JSON string
+                    item["embeddings"] = json.dumps(embedding)
+                    successful_items.append(item)
+                elif embedding:
+                    logger.warning(f"Zero embedding generated for item {i} ({item.get('primary_key')})")
+                    item["embeddings"] = None  # Store as NULL in database
+                    successful_items.append(item)
                 else:
-                    logging.warning(f"Skipping item {primary_key} due to missing description and title.")
-                    jobs_skipped += 1
-                        
-            except KeyError:
-                logging.error("Skipping item due to missing primary_key.")
-                jobs_skipped += 1
-            except Exception as e:
-                 logging.error(f"Error checking item {item.get('primary_key', 'Unknown')}: {e}")
-                 jobs_skipped += 1
-                 
-        logging.info(f"Identified {len(jobs_to_process)} unique new jobs to process. Skipped {jobs_skipped} existing, duplicate, or invalid items.")
-
-        if not jobs_to_process:
-            logging.info("No new jobs to add to the database.")
-            if conn: conn.close()
-            return
-
-        # 2. Generate embeddings in batches using synchronous API calls
-        embedding_results = {}
-        embedding_failures_count = 0
-        total_batches = (len(jobs_to_process) + OPENAI_BATCH_SIZE - 1) // OPENAI_BATCH_SIZE
-        logging.info(f"Generating embeddings in {total_batches} batches (size={OPENAI_BATCH_SIZE})...")
-        start_time = time.time()
-
-        for i in range(0, len(jobs_to_process), OPENAI_BATCH_SIZE):
-            batch_items = jobs_to_process[i : i + OPENAI_BATCH_SIZE]
-            batch_texts = []
-            batch_pks = []
-            
-            logger.info(f"Processing batch {i // OPENAI_BATCH_SIZE + 1}/{total_batches}...")
-            
-            for item in batch_items:
-                pk = item["primary_key"]
-                text_to_embed = item.get("description", "") + " " + item.get("title", "")
-                batch_texts.append(text_to_embed)
-                batch_pks.append(pk)
-            
-            batch_embeddings = generate_gpt_embeddings_batch(batch_texts)
-            
-            if batch_embeddings and len(batch_embeddings) == len(batch_pks):
-                for pk, embedding in zip(batch_pks, batch_embeddings):
-                    if embedding is None: 
-                        embedding_results[pk] = None 
-                        embedding_failures_count += 1
-                    else:
-                        embedding_results[pk] = embedding
-            else:
-                logger.error(f"Batch {i // OPENAI_BATCH_SIZE + 1} failed or returned mismatched results. Marking all items in batch as failed.")
-                for pk in batch_pks:
-                    embedding_results[pk] = None
-                embedding_failures_count += len(batch_pks) - sum(1 for pk in batch_pks if embedding_results.get(pk) is None) 
-
-            if total_batches > 1 and (i // OPENAI_BATCH_SIZE + 1) < total_batches:
-                 time.sleep(0.5) 
-                 
-        end_time = time.time()
-        logging.info(f"Embedding generation finished in {end_time - start_time:.2f} seconds. Encountered {embedding_failures_count} individual failures.")
-
-        # 3. Insert jobs with their embeddings sequentially (batched commits)
-        logging.info("Inserting processed jobs into the database...")
-        jobs_added = 0
-        insert_batch_count = 0
-
-        for item in jobs_to_process:
-            primary_key = item["primary_key"] 
-            embedding_data = embedding_results.get(primary_key)
-
-            if embedding_data is None:
-                final_embedding_json = json.dumps([0.0] * 1536) 
-            else:
-                final_embedding_json = json.dumps(embedding_data)
-
-            try:
-                c.execute(
-                    "INSERT INTO jobs_new (primary_key, date, resume_similarity, title, company, company_url, company_type, job_type, job_is_remote,job_apply_link, job_offer_expiration_date, salary_low,  salary_high, salary_currency, salary_period,  job_benefits, city, state, country, apply_options, required_skills, required_experience, required_education, description, highlights, embeddings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (
-                        primary_key,
-                        item.get("date", ""),
-                        item.get("resume_similarity", 0.0), # Default new job similarity to 0.0
-                        item.get("title", ""),
-                        item.get("company", ""),
-                        item.get("company_url", ""),
-                        item.get("company_type", ""),
-                        item.get("job_type", ""),
-                        item.get("job_is_remote", ""),
-                        item.get("job_apply_link", ""),
-                        item.get("job_offer_expiration_date", ""),
-                        item.get("salary_low", None), # Use None for potentially missing numeric vals
-                        item.get("salary_high", None),
-                        item.get("salary_currency", ""),
-                        item.get("salary_period", ""),
-                        item.get("job_benefits", ""),
-                        item.get("city", ""),
-                        item.get("state", ""),
-                        item.get("country", ""),
-                        item.get("apply_options", ""),
-                        item.get("required_skills", ""),
-                        item.get("required_experience", ""),
-                        item.get("required_education", ""),
-                        item.get("description", ""),
-                        item.get("highlights", ""),
-                        final_embedding_json, 
-                    ),
-                )
-                jobs_added += 1
-                insert_batch_count += 1
-                if insert_batch_count % DB_COMMIT_INTERVAL == 0:
-                    conn.commit()
-
-            except sqlite3.Error as insert_error:
-                # Log UNIQUE constraint errors specifically, others generally
-                if "UNIQUE constraint failed" in str(insert_error):
-                    logger.warning(f"Attempted to insert duplicate primary key {primary_key}. This should have been caught earlier. Error: {insert_error}")
-                else:
-                    logger.error(f"Failed to insert job {primary_key} into database: {insert_error}")
-            except Exception as general_error:
-                logger.error(f"Unexpected error inserting job {primary_key}: {general_error}")
-
-        if insert_batch_count % DB_COMMIT_INTERVAL != 0:
-            conn.commit()
-            
-        logging.info(f"Database upload complete: {jobs_added} new jobs added, {jobs_skipped} jobs skipped initially (existing/duplicate/invalid), {embedding_failures_count} embedding generation failures occurred.")
-
-    except sqlite3.Error as db_error:
-         logging.error(f"Database error during upload process: {db_error}", exc_info=True)
+                    logger.error(f"Failed to generate embedding for item {i} ({item.get('primary_key')})")
+                    # Still add the item, just without embedding
+                    item["embeddings"] = None
+                    successful_items.append(item)
+        else:
+            logger.error("Batch embedding generation failed, proceeding without embeddings")
+            for item in new_items:
+                item["embeddings"] = None
+                successful_items.append(item)
     except Exception as e:
-         logging.error(f"An unexpected error occurred during the upload process: {e}", exc_info=True)
+        logger.error(f"Error during batch embedding generation: {e}", exc_info=True)
+        # Proceed without embeddings if there's an error
+        for item in new_items:
+            item["embeddings"] = None
+            successful_items.append(item)
+    
+    # Insert new items to database
+    try:
+        # Prepare SQL and values list
+        keys = ["primary_key", "date", "title", "company", "company_url", "company_type", 
+                "job_type", "job_is_remote", "job_apply_link", "job_offer_expiration_date", 
+                "salary_low", "salary_high", "salary_currency", "salary_period", "job_benefits", 
+                "city", "state", "country", "apply_options", "required_skills", "required_experience", 
+                "required_education", "description", "highlights", "embeddings"]
+        
+        placeholders = ", ".join(["?"] * len(keys))
+        sql = f"INSERT INTO jobs_new ({', '.join(keys)}) VALUES ({placeholders})"
+        
+        # Extract values in order, handling possible missing keys
+        values_list = []
+        for item in successful_items:
+            values = []
+            for key in keys:
+                if key == "embeddings":
+                    # Handle embeddings separately
+                    values.append(item.get("embeddings"))
+                else:
+                    values.append(item.get(key, None))
+            values_list.append(values)
+        
+        # Commit in reasonable batches
+        batch_size = 50
+        total_inserted = 0
+        
+        for i in range(0, len(values_list), batch_size):
+            batch = values_list[i:i+batch_size]
+            cursor.executemany(sql, batch)
+            conn.commit()
+            total_inserted += len(batch)
+            logger.info(f"Inserted batch {i//batch_size + 1}: {len(batch)} items")
+        
+        logger.info("Successfully added %s new jobs to the database.", total_inserted)
+    except sqlite3.Error as e:
+        logger.error("Error inserting new items to database: %s", e)
     finally:
-         if conn:
-             conn.close()
-             logging.info("Database connection closed.")
+        conn.close()
 
 
 def save_text_to_db(filename, text):
@@ -362,60 +360,105 @@ def _calculate_similarity_for_job(job_data, resume_embedding_np):
     job_id, job_embedding_json = job_data
     try:
         if job_embedding_json:
-            job_embedding_list = json.loads(job_embedding_json)
-            if isinstance(job_embedding_list, list) and any(v != 0.0 for v in job_embedding_list):
+            try:
+                job_embedding_list = json.loads(job_embedding_json)
+                
+                # Validate the embedding
+                if not isinstance(job_embedding_list, list):
+                    logger.warning(f"Invalid embedding format for job {job_id}: not a list")
+                    return job_id, 0.0
+                    
+                if len(job_embedding_list) < 100:  # Sanity check on embedding dimension
+                    logger.warning(f"Invalid embedding dimension for job {job_id}: {len(job_embedding_list)}")
+                    return job_id, 0.0
+                    
+                if all(v == 0.0 for v in job_embedding_list):
+                    logger.warning(f"Zero vector embedding for job {job_id}")
+                    return job_id, 0.0
+                
+                # Calculate similarity
                 job_embedding = np.array(job_embedding_list).reshape(1, -1)
                 similarity_score = cosine_similarity(resume_embedding_np, job_embedding)[0][0]
-                return job_id, float(similarity_score)
-            else:
-                # Invalid or zero embedding stored
-                return job_id, None # Indicate skipped
+                
+                # Ensure we get a valid float
+                result = float(similarity_score)
+                
+                # Sanity check on the score
+                if result < 0.0 or result > 1.0:
+                    logger.warning(f"Invalid similarity score for job {job_id}: {result}")
+                    result = max(0.0, min(1.0, result))  # Clamp to valid range
+                
+                return job_id, result
+                
+            except json.JSONDecodeError:
+                logger.error(f"Error decoding JSON embedding for job {job_id}, using zero similarity")
+                return job_id, 0.0
         else:
             # No embedding stored
-            return job_id, None # Indicate skipped
-    except json.JSONDecodeError:
-        logger.error(f"THREAD Error decoding JSON embedding for job {job_id}, skipping.")
-        return job_id, None
+            logger.debug(f"No embedding found for job {job_id}")
+            return job_id, 0.0
     except Exception as e:
-        logger.error(f"THREAD Error calculating similarity for job {job_id}: {e}")
-        return job_id, None
+        logger.error(f"Error calculating similarity for job {job_id}: {e}")
+        return job_id, 0.0
 
 
 def update_similarity_in_db(resume_name):
     """Updates the similarity scores concurrently for all jobs against the specified resume."""
     try:
-        # 1. Get resume text & embedding (unchanged)
+        # 1. Get resume text & embedding
         resume_text = get_resume_text(resume_name)
         if not resume_text:
             logger.error(f"Resume {resume_name} not found.")
+            st.error(f"Resume '{resume_name}' not found in database. Please upload it first.")
             return False
+            
         logger.info(f"Generating embedding for active resume: {resume_name}")
         try:
+            from jobhunter.textAnalysis import generate_gpt_embedding
             resume_embedding = generate_gpt_embedding(resume_text) 
-            if not resume_embedding or all(v == 0.0 for v in resume_embedding):
-                logger.error(f"Failed to generate embedding for resume {resume_name}.")
+            
+            if not resume_embedding:
+                logger.error(f"Failed to generate embedding for resume {resume_name} - result is None.")
                 st.error(f"Failed to generate embedding for resume {resume_name}. Check OpenAI API key/quota.")
                 return False
+                
+            if all(v == 0.0 for v in resume_embedding):
+                logger.error(f"Failed to generate embedding for resume {resume_name} - got zero vector.")
+                st.error(f"Failed to generate embedding for resume {resume_name}. Check your API key and quota.")
+                return False
+                
+            # Quick stats on the embedding
+            non_zero_count = sum(1 for v in resume_embedding if v != 0.0)
+            non_zero_percentage = (non_zero_count / len(resume_embedding)) * 100
+            logger.info(f"Resume embedding stats: dimension={len(resume_embedding)}, non-zero={non_zero_percentage:.1f}%")
+            
             resume_embedding_np = np.array(resume_embedding).reshape(1, -1)
-            logger.info(f"Successfully generated embedding for resume {resume_name}.")
+            logger.info(f"Successfully generated embedding for resume {resume_name}")
+            
         except Exception as resume_emb_error:
-            logger.error(f"Error generating resume embedding: {resume_emb_error}")
+            logger.error(f"Error generating resume embedding: {resume_emb_error}", exc_info=True)
             st.error(f"Error generating resume embedding: {resume_emb_error}")
             return False
 
-        # Connect to database & Fetch jobs (unchanged)
+        # Connect to database & Fetch jobs
         conn = sqlite3.connect("all_jobs.db")
         cursor = conn.cursor()
         logger.info("Fetching job primary keys and embeddings...")
         cursor.execute("SELECT primary_key, embeddings FROM jobs_new")
         jobs_data = cursor.fetchall() # List of (job_id, job_embedding_json)
         logger.info(f"Fetched {len(jobs_data)} jobs.")
+        
+        # Check if any jobs have embeddings
+        jobs_with_embeddings = sum(1 for _, emb in jobs_data if emb is not None)
+        logger.info(f"Jobs with stored embeddings: {jobs_with_embeddings}/{len(jobs_data)}")
+        
         if not jobs_data:
             logger.warning("No jobs found to update similarity scores.")
             conn.close()
+            st.warning("No jobs found in database. Run a job search to populate it.")
             return True
 
-        # Setup progress bar (unchanged)
+        # Setup progress bar
         total_jobs = len(jobs_data)
         progress_text = st.empty()
         progress_bar = st.progress(0)
@@ -424,10 +467,11 @@ def update_similarity_in_db(resume_name):
         # 2. Calculate similarities concurrently
         similarity_results = {}
         skipped_count = 0
+        zero_emb_count = 0
         start_time = time.time()
         
         # Prepare arguments for the helper function
-        # Need to pass resume_embedding_np to each worker, lambda can do this
+        # Need to pass resume_embedding_np to each worker
         from functools import partial
         calculation_helper = partial(_calculate_similarity_for_job, resume_embedding_np=resume_embedding_np)
 
@@ -439,17 +483,32 @@ def update_similarity_in_db(resume_name):
             for index, (job_id, score) in enumerate(future_results):
                 if score is None:
                     skipped_count += 1
+                elif score == 0.0:
+                    zero_emb_count += 1
+                    similarity_results[job_id] = score
                 else:
                     similarity_results[job_id] = score
-                # Update progress bar periodically, not necessarily on every result
-                if (index + 1) % 100 == 0 or (index + 1) == total_jobs: # Update every 100 jobs or at the end
+                    
+                # Update progress bar periodically
+                if (index + 1) % 100 == 0 or (index + 1) == total_jobs:
                      progress = (index + 1) / total_jobs
                      progress_bar.progress(progress)
-                     # Progress text can be updated less frequently if desired
-                     # progress_text.text(f"Calculating similarity: {int(progress * 100)}% completed...")
 
         end_time = time.time()
         logger.info(f"Similarity calculation finished in {end_time - start_time:.2f} seconds.")
+        logger.info(f"Results: {len(similarity_results)} calculated, {skipped_count} skipped, {zero_emb_count} zero scores.")
+
+        # Log summary of similarity scores
+        if similarity_results:
+            scores = list(similarity_results.values())
+            avg_score = sum(scores) / len(scores)
+            max_score = max(scores)
+            min_score = min(scores)
+            logger.info(f"Similarity scores - min: {min_score:.4f}, avg: {avg_score:.4f}, max: {max_score:.4f}")
+            
+            # Check if all scores are 0
+            if max_score == 0.0:
+                logger.warning("⚠️ All similarity scores are zero! This indicates a possible issue.")
 
         # 3. Update database with calculated similarities (batched)
         update_batch = list(similarity_results.items()) # Convert dict items to list of tuples [(job_id, score), ...]
@@ -468,11 +527,10 @@ def update_similarity_in_db(resume_name):
                 conn.commit()
             except sqlite3.Error as db_update_err:
                  logger.error(f"Database error updating batch starting at index {i}: {db_update_err}")
-                 # Consider how to handle partial batch failures if necessary
             
         conn.close()
         
-        # Final UI update (unchanged)
+        # Final UI update
         progress_bar.progress(1.0)
         progress_text.text(f"Completed! Updated similarity for {updated_count} jobs, skipped {skipped_count} jobs for resume '{resume_name}'.")
         time.sleep(1.5)

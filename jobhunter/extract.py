@@ -7,6 +7,7 @@ import pprint
 import time
 import random
 import requests
+import platform
 
 from dotenv import load_dotenv
 from jobhunter.FileHandler import FileHandler
@@ -22,8 +23,11 @@ file_handler = FileHandler(
     raw_path=config.RAW_DATA_PATH, processed_path=config.PROCESSED_DATA_PATH
 )
 
-# Load the .env file
-load_dotenv("../../.env")
+# Load environment variables - first try .env file in various locations, but rely on actual env vars which work in Docker
+# This ensures compatibility with both local development and containerized environments
+load_dotenv() # Try current directory first
+load_dotenv("../.env") # Try one level up (project root when running locally)
+load_dotenv("../../.env") # Try two levels up (for backward compatibility)
 
 # Get the API key from the environment variable
 RAPID_API_KEY = os.environ.get("RAPID_API_KEY")
@@ -175,185 +179,210 @@ def get_all_jobs(search_term, pages, country="us", date_posted="all"):
 
 def extract(POSITIONS, country="us", date_posted="all", location=""):
     """
-    This function extracts data from the jobs API and saves it locally.
-    
-    Args:
-        POSITIONS: List of job positions to search for
-        country: Country code for job search (e.g., 'us', 'uk')
-        date_posted: Time frame for job posting (e.g., 'all', 'today', 'week', 'month')
-        location: Location to search for jobs (e.g., 'chicago', 'new york')
-        
-    Returns:
-        int: Number of jobs found. Returns 0 if no jobs were found.
+    Load the data from the API and save it to a file.
     """
-    file_handler.create_data_folders_if_not_exists()
+    # Enhanced debug logging for Docker environments
+    logging.info("=== ENVIRONMENT DIAGNOSTICS ===")
+    logging.info(f"Platform: {platform.platform()}")
+    logging.info(f"Current working directory: {os.getcwd()}")
+    logging.info(f"THIS_DIR value: {THIS_DIR}")
+    logging.info(f"RAPID_API_KEY available: {'Yes' if RAPID_API_KEY else 'No'}")
+    logging.info(f"RAPID_API_KEY masked: {RAPID_API_KEY[:4] + '****' if RAPID_API_KEY and len(RAPID_API_KEY) > 4 else 'None'}")
+    logging.info(f"RAW_DATA_PATH: {config.RAW_DATA_PATH}")
+    logging.info(f"PROCESSED_DATA_PATH: {config.PROCESSED_DATA_PATH}")
+    logging.info("=== END DIAGNOSTICS ===")
     
-    # Validate inputs
-    if not POSITIONS or not isinstance(POSITIONS, list) or len(POSITIONS) == 0:
-        error_msg = "No positions provided for job search"
+    try:
+        # Ensure data directories exist
+        os.makedirs(config.RAW_DATA_PATH, exist_ok=True)
+        os.makedirs(config.PROCESSED_DATA_PATH, exist_ok=True)
+        logging.info(f"Created data folders at {config.RAW_DATA_PATH} and {config.PROCESSED_DATA_PATH}")
+    except Exception as e:
+        logging.error(f"Error creating data folders: {e}")
+        raise
+
+    # Validate API key before proceeding
+    if not RAPID_API_KEY:
+        error_msg = "RAPID_API_KEY is missing. Cannot perform job search."
         logging.error(error_msg)
         raise ValueError(error_msg)
         
-    # Log the API configuration
-    logging.info(f"API Configuration: Using country='{country}', date_posted='{date_posted}'")
-    logging.info(f"Using API key: {RAPID_API_KEY[:4]}...{RAPID_API_KEY[-4:] if RAPID_API_KEY else 'None'}")
-    
     try:
-        positions = POSITIONS
-        total_jobs_found = 0
-
-        logging.info(
-            "Starting extraction process for positions: %s",
-            positions,
-        )
+        # Create directories if they don't exist
+        file_handler.create_data_folders_if_not_exists()
+        logging.info(f"Created data folders at {file_handler.raw_path} and {file_handler.processed_path}")
         
-        # Default location based on country if none provided
-        if not location:
-            # Map country codes to default locations
-            country_locations = {
-                "us": "United States",
-                "uk": "United Kingdom",
-                "ca": "Canada",
-                "au": "Australia",
-                "de": "Germany",
-                "fr": "France",
-                "es": "Spain",
-                "it": "Italy"
-            }
-            location = country_locations.get(country.lower(), country)
-        
-        search_results = {}  # To track results per position
-        
-        for position_index, position in enumerate(positions):
-            try:
-                # Try original position first
-                # Format search term according to API recommendation: "job title in location"
-                # Check if position already contains location information
-                if "in " + location.lower() not in position.lower() and " jobs in " not in position.lower():
-                    search_term = f"{position} jobs in {location}"
-                    logging.info(f"Reformatted search term to: '{search_term}'")
-                else:
-                    search_term = position
-                
-                try:
-                    jobs = get_all_jobs(
-                        search_term=search_term,
-                        pages=1, # Keep pages=1 for testing limit
-                        country=country,
-                        date_posted=date_posted,
-                    )
-                    
-                    job_count = len(jobs)
-                    total_jobs_found += job_count
-                    search_results[position] = job_count
-                    
-                    logging.info(f"Found {job_count} jobs for position '{position}'")
-                    
-                except ValueError as e:
-                    # Initial search failed, try with more general terms
-                    logging.warning(f"Initial search failed: {str(e)}")
-                    logging.info("Attempting search with more general terms...")
-                    
-                    # Generate more general search terms based on the position
-                    general_terms = []
-                    
-                    # Split the position into words and extract key components
-                    words = position.lower().split()
-                    
-                    # If title contains 'senior', 'principal', etc., try without those qualifiers
-                    qualifiers = ['senior', 'principal', 'lead', 'staff', 'head', 'chief', 'vp', 'vice president', 'director']
-                    
-                    # If title is something like "Principal Machine Learning Engineer"
-                    # Try "Machine Learning Engineer" and "Machine Learning"
-                    position_without_qualifiers = ' '.join([w for w in words if w.lower() not in qualifiers])
-                    if position_without_qualifiers and position_without_qualifiers != position:
-                        general_terms.append(position_without_qualifiers)
-                    
-                    # Try to extract key domain/role
-                    domains = [
-                        'machine learning', 'data science', 'data engineering', 'software engineering', 
-                        'artificial intelligence', 'ai', 'ml', 'software development', 
-                        'developer', 'engineer', 'programming'
-                    ]
-                    
-                    for domain in domains:
-                        if domain in position.lower():
-                            general_terms.append(domain)
-                            break
-                    
-                    # Default fallbacks if no domain match
-                    if not general_terms:
-                        if 'engineer' in position.lower() or 'engineering' in position.lower():
-                            general_terms.append('engineer')
-                        elif 'developer' in position.lower():
-                            general_terms.append('developer')
-                        elif 'data' in position.lower():
-                            general_terms.append('data')
-                    
-                    # If still no general terms, use some defaults
-                    if not general_terms:
-                        general_terms = ['software engineer', 'developer', 'engineer']
-                    
-                    # Try each general term
-                    for term in general_terms:
-                        try:
-                            fallback_search_term = f"{term} jobs in {location}"
-                            logging.info(f"Trying fallback search term: '{fallback_search_term}'")
-                            
-                            fallback_jobs = get_all_jobs(
-                                search_term=fallback_search_term,
-                                pages=1,  # Keep fallback pages=1
-                                country=country,
-                                date_posted=date_posted,
-                            )
-                            
-                            if fallback_jobs:
-                                logging.info(f"Fallback search successful! Found {len(fallback_jobs)} jobs")
-                                # Add fallback jobs to total
-                                total_jobs_found += len(fallback_jobs)
-                                # Note: we still associate these with the original position in results
-                                search_results[position] = len(fallback_jobs)
-                                break  # Stop trying other terms if we found jobs
-                            
-                        except ValueError:
-                            logging.warning(f"Fallback search term '{fallback_search_term}' returned no results")
-                            continue  # Try next term
-                        except Exception as fallback_err:
-                            logging.error(f"Error in fallback search: {str(fallback_err)}")
-                            continue  # Try next term
-                
-            except ValueError as e:
-                logging.error(f"Failed to find jobs for position '{position}': {str(e)}")
-                search_results[position] = 0
-                
-                continue
-            except Exception as e:
-                logging.error(f"Unexpected error for position '{position}': {str(e)}")
-                search_results[position] = 0
-                    
-                continue
-
-        # Log the results summary
-        logging.info("=== Job Search Results Summary ===")
-        for position, count in search_results.items():
-            logging.info(f"Position '{position}': {count} jobs found")
-        logging.info(f"Total jobs found across all positions: {total_jobs_found}")
-        
-        # Instead of raising an error when no jobs are found, return 0 and log a warning
-        if total_jobs_found == 0:
-            warning_msg = (
-                f"No jobs found for any of the specified positions: {positions}. "
-                f"Please check:\n"
-                f"1. API key (current: {RAPID_API_KEY[:4]}...{RAPID_API_KEY[-4:] if RAPID_API_KEY else 'None'})\n"
-                f"2. API subscription status\n"
-                f"3. API rate limits\n"
-                f"4. Search parameters (country='{country}', date_posted='{date_posted}')\n"
-                f"5. Search terms (try more general terms like 'software engineer' or 'data scientist')\n"
-                f"6. Location (try major tech hubs like 'San Francisco', 'New York', or 'Seattle')"
-            )
-            logging.warning(warning_msg)
+        # Validate inputs
+        if not POSITIONS or not isinstance(POSITIONS, list) or len(POSITIONS) == 0:
+            error_msg = "No positions provided for job search"
+            logging.error(error_msg)
+            raise ValueError(error_msg)
             
-        return total_jobs_found
+        # Log the API configuration
+        logging.info(f"API Configuration: Using country='{country}', date_posted='{date_posted}'")
+        logging.info(f"Using API key: {RAPID_API_KEY[:4]}...{RAPID_API_KEY[-4:] if RAPID_API_KEY else 'None'}")
+        
+        try:
+            positions = POSITIONS
+            total_jobs_found = 0
+
+            logging.info(
+                "Starting extraction process for positions: %s",
+                positions,
+            )
+            
+            # Default location based on country if none provided
+            if not location:
+                # Map country codes to default locations
+                country_locations = {
+                    "us": "United States",
+                    "uk": "United Kingdom",
+                    "ca": "Canada",
+                    "au": "Australia",
+                    "de": "Germany",
+                    "fr": "France",
+                    "es": "Spain",
+                    "it": "Italy"
+                }
+                location = country_locations.get(country.lower(), country)
+            
+            search_results = {}  # To track results per position
+            
+            for position_index, position in enumerate(positions):
+                try:
+                    # Try original position first
+                    # Format search term according to API recommendation: "job title in location"
+                    # Check if position already contains location information
+                    if "in " + location.lower() not in position.lower() and " jobs in " not in position.lower():
+                        search_term = f"{position} jobs in {location}"
+                        logging.info(f"Reformatted search term to: '{search_term}'")
+                    else:
+                        search_term = position
+                    
+                    try:
+                        jobs = get_all_jobs(
+                            search_term=search_term,
+                            pages=1, # Keep pages=1 for testing limit
+                            country=country,
+                            date_posted=date_posted,
+                        )
+                        
+                        job_count = len(jobs)
+                        total_jobs_found += job_count
+                        search_results[position] = job_count
+                        
+                        logging.info(f"Found {job_count} jobs for position '{position}'")
+                        
+                    except ValueError as e:
+                        # Initial search failed, try with more general terms
+                        logging.warning(f"Initial search failed: {str(e)}")
+                        logging.info("Attempting search with more general terms...")
+                        
+                        # Generate more general search terms based on the position
+                        general_terms = []
+                        
+                        # Split the position into words and extract key components
+                        words = position.lower().split()
+                        
+                        # If title contains 'senior', 'principal', etc., try without those qualifiers
+                        qualifiers = ['senior', 'principal', 'lead', 'staff', 'head', 'chief', 'vp', 'vice president', 'director']
+                        
+                        # If title is something like "Principal Machine Learning Engineer"
+                        # Try "Machine Learning Engineer" and "Machine Learning"
+                        position_without_qualifiers = ' '.join([w for w in words if w.lower() not in qualifiers])
+                        if position_without_qualifiers and position_without_qualifiers != position:
+                            general_terms.append(position_without_qualifiers)
+                        
+                        # Try to extract key domain/role
+                        domains = [
+                            'machine learning', 'data science', 'data engineering', 'software engineering', 
+                            'artificial intelligence', 'ai', 'ml', 'software development', 
+                            'developer', 'engineer', 'programming'
+                        ]
+                        
+                        for domain in domains:
+                            if domain in position.lower():
+                                general_terms.append(domain)
+                                break
+                        
+                        # Default fallbacks if no domain match
+                        if not general_terms:
+                            if 'engineer' in position.lower() or 'engineering' in position.lower():
+                                general_terms.append('engineer')
+                            elif 'developer' in position.lower():
+                                general_terms.append('developer')
+                            elif 'data' in position.lower():
+                                general_terms.append('data')
+                        
+                        # If still no general terms, use some defaults
+                        if not general_terms:
+                            general_terms = ['software engineer', 'developer', 'engineer']
+                        
+                        # Try each general term
+                        for term in general_terms:
+                            try:
+                                fallback_search_term = f"{term} jobs in {location}"
+                                logging.info(f"Trying fallback search term: '{fallback_search_term}'")
+                                
+                                fallback_jobs = get_all_jobs(
+                                    search_term=fallback_search_term,
+                                    pages=1,  # Keep fallback pages=1
+                                    country=country,
+                                    date_posted=date_posted,
+                                )
+                                
+                                if fallback_jobs:
+                                    logging.info(f"Fallback search successful! Found {len(fallback_jobs)} jobs")
+                                    # Add fallback jobs to total
+                                    total_jobs_found += len(fallback_jobs)
+                                    # Note: we still associate these with the original position in results
+                                    search_results[position] = len(fallback_jobs)
+                                    break  # Stop trying other terms if we found jobs
+                                
+                            except ValueError:
+                                logging.warning(f"Fallback search term '{fallback_search_term}' returned no results")
+                                continue  # Try next term
+                            except Exception as fallback_err:
+                                logging.error(f"Error in fallback search: {str(fallback_err)}")
+                                continue  # Try next term
+                
+                except ValueError as e:
+                    logging.error(f"Failed to find jobs for position '{position}': {str(e)}")
+                    search_results[position] = 0
+                    
+                    continue
+                except Exception as e:
+                    logging.error(f"Unexpected error for position '{position}': {str(e)}")
+                    search_results[position] = 0
+                    
+                    continue
+
+            # Log the results summary
+            logging.info("=== Job Search Results Summary ===")
+            for position, count in search_results.items():
+                logging.info(f"Position '{position}': {count} jobs found")
+            logging.info(f"Total jobs found across all positions: {total_jobs_found}")
+            
+            # Instead of raising an error when no jobs are found, return 0 and log a warning
+            if total_jobs_found == 0:
+                warning_msg = (
+                    f"No jobs found for any of the specified positions: {positions}. "
+                    f"Please check:\n"
+                    f"1. API key (current: {RAPID_API_KEY[:4]}...{RAPID_API_KEY[-4:] if RAPID_API_KEY else 'None'})\n"
+                    f"2. API subscription status\n"
+                    f"3. API rate limits\n"
+                    f"4. Search parameters (country='{country}', date_posted='{date_posted}')\n"
+                    f"5. Search terms (try more general terms like 'software engineer' or 'data scientist')\n"
+                    f"6. Location (try major tech hubs like 'San Francisco', 'New York', or 'Seattle')"
+                )
+                logging.warning(warning_msg)
+                
+            return total_jobs_found
+
+        except Exception as e:
+            logging.error("An error occurred in the extract function: %s", str(e))
+            # Return 0 instead of raising the error
+            return 0
 
     except Exception as e:
         logging.error("An error occurred in the extract function: %s", str(e))
