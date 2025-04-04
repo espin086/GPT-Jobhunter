@@ -3,7 +3,7 @@ import logging
 import os
 import time
 import random
-from typing import List
+from typing import List, Union
 
 import numpy as np
 from openai import OpenAI, APIError, RateLimitError  # Correct direct imports
@@ -24,6 +24,8 @@ logging.basicConfig(level=logging.INFO)
 MAX_RETRIES = 5
 INITIAL_RETRY_DELAY = 1.0
 MAX_RETRY_DELAY = 60.0
+# Batch size for synchronous OpenAI calls (adjust as needed)
+OPENAI_EMBEDDING_BATCH_SIZE = 100 
 
 def get_openai_api_key():
     """
@@ -192,6 +194,126 @@ def generate_gpt_embedding(text: str) -> List[float]:
     # Return a vector with the dimension for the text-embedding-3-small model
     return [0.0] * 1536
 
+def generate_gpt_embeddings_batch(texts: List[str]) -> List[Union[List[float], None]]:
+    """
+    Generate embeddings for a batch of input texts using OpenAI's embedding API.
+
+    Args:
+        texts: A list of input texts to generate embeddings for.
+
+    Returns:
+        A list containing embedding vectors (List[float]) for each input text.
+        If an embedding for a specific text fails within the batch (or the whole batch fails),
+        its corresponding entry in the list might be None or potentially a zero vector,
+        depending on error type. Returns an empty list if the initial API key check fails.
+    """
+    if not texts:
+        logger.info("Received empty list for batch embedding. Returning empty list.")
+        return []
+
+    api_key = get_openai_api_key()
+    if not api_key:
+        error_msg = "OpenAI API key not found or invalid. Cannot generate embeddings."
+        logger.error(error_msg)
+        # Return a list of Nones matching the input size to signal failure for all
+        return [None] * len(texts) 
+
+    client = OpenAI(api_key=api_key)
+    # logger.info(f"OpenAI client initialized for batch embedding of {len(texts)} texts.")
+
+    # Truncate texts individually if too long
+    max_chars = 8000 # Should align with model limits (e.g., text-embedding-3-small has 8191 tokens)
+    truncated_texts = []
+    for i, text in enumerate(texts):
+        if len(text) > max_chars:
+            truncated_texts.append(text[:max_chars])
+            # logger.warning(f"Text at index {i} truncated to {max_chars} characters for batch embedding.")
+        else:
+            truncated_texts.append(text)
+
+    retry_count = 0
+    retry_delay = INITIAL_RETRY_DELAY
+
+    while retry_count <= MAX_RETRIES:
+        try:
+            # logger.info(f"Calling OpenAI embeddings API for batch of size {len(truncated_texts)} (Retry {retry_count}) ...")
+            response = client.embeddings.create(
+                input=truncated_texts, 
+                model="text-embedding-3-small" # Use the appropriate model
+            )
+            
+            # Extract embeddings - response.data should be a list of Embedding objects
+            # Assuming the order matches the input order as per documentation
+            embeddings = [item.embedding for item in response.data]
+            logger.info(f"Successfully generated {len(embeddings)} embeddings from batch.")
+            
+            # Basic validation: Check if the number of embeddings matches the input
+            if len(embeddings) != len(texts):
+                 logger.error(f"Mismatch in batch embedding results: Expected {len(texts)}, Got {len(embeddings)}. Returning Nones.")
+                 return [None] * len(texts)
+                 
+            return embeddings # Return the list of embedding vectors
+
+        except RateLimitError as e:
+            retry_count += 1
+            if retry_count > MAX_RETRIES:
+                logger.error(f"Maximum retries reached for batch. Rate limit exceeded: {e}")
+                break
+            jitter = random.uniform(0, 0.1 * retry_delay)
+            wait_time = min(retry_delay + jitter, MAX_RETRY_DELAY)
+            logger.warning(f"Rate limit exceeded for batch. Retrying in {wait_time:.2f} seconds (retry {retry_count}/{MAX_RETRIES})...")
+            time.sleep(wait_time)
+            retry_delay *= 2
+
+        except APIError as e:
+            # Handle potential API errors, including rate limits disguised as APIError
+            if "429" in str(e) or "rate limit" in str(e).lower() or "too many requests" in str(e).lower():
+                retry_count += 1
+                if retry_count > MAX_RETRIES:
+                    logger.error(f"Maximum retries reached for batch. API rate limit error: {e}")
+                    break
+                jitter = random.uniform(0, 0.1 * retry_delay)
+                wait_time = min(retry_delay + jitter, MAX_RETRY_DELAY)
+                logger.warning(f"API rate limit error for batch. Retrying in {wait_time:.2f} seconds (retry {retry_count}/{MAX_RETRIES})...")
+                time.sleep(wait_time)
+                retry_delay *= 2
+            else:
+                logger.error(f"API error during batch embedding: {e}")
+                break # Non-retriable API error for the batch
+
+        except Exception as e:
+            logger.error(f"Unexpected error during batch embedding: {e}", exc_info=True)
+            break # Non-retriable unexpected error
+
+    # If loop finishes without returning, it means failure after retries or non-retriable error
+    logger.error(f"Failed to generate embeddings for batch after {retry_count} retries.")
+    # Return a list of Nones matching the input size to indicate failure for all items in this batch
+    return [None] * len(texts)
+
 
 if __name__ == "__main__":
-    print(generate_gpt_embedding("I like to eat pizza"))
+    # Example usage:
+    test_texts = [
+        "This is the first sentence for batching.",
+        "Here is another sentence, slightly longer.",
+        "A third one to test the batch call."
+    ]
+    batch_embeddings = generate_gpt_embeddings_batch(test_texts)
+    
+    if batch_embeddings:
+        print(f"Received {len(batch_embeddings)} embeddings.")
+        for i, emb in enumerate(batch_embeddings):
+            if emb:
+                print(f"Embedding {i+1} length: {len(emb)}")
+            else:
+                print(f"Embedding {i+1}: Failed")
+    else:
+        print("Batch embedding failed entirely.")
+    
+    # Test deprecated single function call
+    print("\nTesting single embedding call (via batch function):")
+    single_embedding = generate_gpt_embedding("Test single embedding.")
+    if single_embedding and any(v != 0.0 for v in single_embedding):
+        print(f"Single embedding length: {len(single_embedding)}")
+    else:
+        print("Single embedding failed or returned zero vector.")
