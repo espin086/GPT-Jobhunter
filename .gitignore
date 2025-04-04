@@ -10,6 +10,7 @@ images/.DS_Store
 jobhunter/*.db
 jobhunter/all_jobs.db
 jobhunter/temp/data/raw/*
+temp/data/
 
 *.db
 

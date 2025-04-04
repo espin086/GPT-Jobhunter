@@ -170,43 +170,6 @@ class DataTransformer:
                 elif len(skills_list) > 1:
                     entry["job_benefits"] = ", \n".join(skills_list)
 
-    def compute_resume_similarity(self, resume_text):
-        """
-        Computes the similarity between the job description and the resume SEQUENTIALLY.
-        """
-        # Constants for rate limiting (less critical now but keep for potential future use)
-        # BATCH_SIZE = 5  # Number of jobs to process in a batch
-        # BATCH_DELAY = 10  # Seconds to wait between batches
-        
-        # Log the total number of jobs to process
-        total_jobs = len(self.data)
-        logging.info(f"Computing similarity for {total_jobs} jobs sequentially...")
-        
-        processed_count = 0
-        # Process jobs sequentially
-        for i, item in enumerate(self.data):
-            logging.info(f"Processing job {i+1}/{total_jobs}")
-            description = item.get("description")
-            if not description:
-                item["resume_similarity"] = 0.0
-                logging.warning(f"Job {item.get('primary_key', 'Unknown')} has no description, setting similarity to 0")
-                continue
-                
-            try:
-                similarity = text_similarity(description, resume_text)
-                item["resume_similarity"] = (
-                    float(similarity) if isinstance(similarity, (float, int)) else 0.0
-                )
-                logging.info(f"Computed similarity for job: {item.get('title', 'Unknown')} - {item['resume_similarity']:.2f}")
-                processed_count += 1
-                # Add a small delay between individual calls to avoid hitting rate limits too fast
-                time.sleep(0.5) 
-            except Exception as e:
-                logging.error(f"Error computing similarity for job {item.get('primary_key', 'Unknown')}: {e}")
-                item["resume_similarity"] = 0.0
-        
-        logging.info(f"Completed similarity computation for {processed_count}/{total_jobs} jobs")
-
     def transform(self):
         """Transforms the raw data into a format that is ready for analysis."""
 
@@ -247,12 +210,6 @@ class DataTransformer:
         self.transform_job_is_remote()
         self.transform_single_skills()
         self.transform_job_benefits()
-
-        if Path(self.resume_path).exists():
-            resume = self.file_handler.read_resume_text(
-                resume_file_path=self.resume_path
-            )
-            self.compute_resume_similarity(resume_text=resume)
 
         self.file_handler.save_data_list(
             data_list=self.data,

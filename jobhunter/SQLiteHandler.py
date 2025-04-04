@@ -68,32 +68,38 @@ def create_db_if_not_there():
 
 
 def check_and_upload_to_db(json_list):
-    """Check if primary key exists, generate embeddings via synchronous batching, and upload."""
+    """Check if primary key exists, generate embeddings via synchronous batching, remove duplicates, and upload."""
     logging.info(f"Starting upload process for {len(json_list)} received items.")
     conn = None
     jobs_to_process = []
+    processed_keys_in_this_run = set() # Keep track of keys added in this run
     jobs_skipped = 0
     
     try:
         conn = sqlite3.connect("all_jobs.db")
         c = conn.cursor()
 
-        # 1. Identify jobs not already in the database
-        logging.info("Checking database for existing jobs...")
+        # 1. Identify jobs not already in the database AND not duplicated in this run
+        logging.info("Checking database for existing jobs and filtering internal duplicates...")
         existing_keys = set(fetch_primary_keys_from_db()) 
         
         for item in json_list:
             try:
                 primary_key = item["primary_key"]
-                if primary_key in existing_keys:
+                
+                # Skip if already in DB OR already added in this run
+                if primary_key in existing_keys or primary_key in processed_keys_in_this_run:
                     jobs_skipped += 1
+                    continue # Skip this duplicate item
+
+                # Basic validation: Ensure item has necessary fields for embedding
+                if item.get("description") or item.get("title"):
+                    jobs_to_process.append(item)
+                    processed_keys_in_this_run.add(primary_key) # Mark as processed for this run
                 else:
-                    # Basic validation: Ensure item has necessary fields for embedding
-                    if item.get("description") or item.get("title"):
-                        jobs_to_process.append(item)
-                    else:
-                        logging.warning(f"Skipping item {primary_key} due to missing description and title.")
-                        jobs_skipped += 1
+                    logging.warning(f"Skipping item {primary_key} due to missing description and title.")
+                    jobs_skipped += 1
+                        
             except KeyError:
                 logging.error("Skipping item due to missing primary_key.")
                 jobs_skipped += 1
@@ -101,7 +107,7 @@ def check_and_upload_to_db(json_list):
                  logging.error(f"Error checking item {item.get('primary_key', 'Unknown')}: {e}")
                  jobs_skipped += 1
                  
-        logging.info(f"Identified {len(jobs_to_process)} new jobs to process. Skipped {jobs_skipped} existing or invalid items.")
+        logging.info(f"Identified {len(jobs_to_process)} unique new jobs to process. Skipped {jobs_skipped} existing, duplicate, or invalid items.")
 
         if not jobs_to_process:
             logging.info("No new jobs to add to the database.")
@@ -128,26 +134,21 @@ def check_and_upload_to_db(json_list):
                 batch_texts.append(text_to_embed)
                 batch_pks.append(pk)
             
-            # Call the batch embedding function
             batch_embeddings = generate_gpt_embeddings_batch(batch_texts)
             
-            # Process the results for this batch
             if batch_embeddings and len(batch_embeddings) == len(batch_pks):
                 for pk, embedding in zip(batch_pks, batch_embeddings):
-                    if embedding is None: # Check if generation failed for this specific item
-                        embedding_results[pk] = None # Mark as failure
+                    if embedding is None: 
+                        embedding_results[pk] = None 
                         embedding_failures_count += 1
                     else:
                         embedding_results[pk] = embedding
             else:
-                # Batch failed entirely or length mismatch
                 logger.error(f"Batch {i // OPENAI_BATCH_SIZE + 1} failed or returned mismatched results. Marking all items in batch as failed.")
                 for pk in batch_pks:
                     embedding_results[pk] = None
-                # Correct failure count for entire batch failure
                 embedding_failures_count += len(batch_pks) - sum(1 for pk in batch_pks if embedding_results.get(pk) is None) 
 
-            # Optional: Add a small delay between batches to help with rate limiting if needed
             if total_batches > 1 and (i // OPENAI_BATCH_SIZE + 1) < total_batches:
                  time.sleep(0.5) 
                  
@@ -206,14 +207,18 @@ def check_and_upload_to_db(json_list):
                     conn.commit()
 
             except sqlite3.Error as insert_error:
-                logging.error(f"Failed to insert job {primary_key} into database: {insert_error}")
+                # Log UNIQUE constraint errors specifically, others generally
+                if "UNIQUE constraint failed" in str(insert_error):
+                    logger.warning(f"Attempted to insert duplicate primary key {primary_key}. This should have been caught earlier. Error: {insert_error}")
+                else:
+                    logger.error(f"Failed to insert job {primary_key} into database: {insert_error}")
             except Exception as general_error:
-                logging.error(f"Unexpected error inserting job {primary_key}: {general_error}")
+                logger.error(f"Unexpected error inserting job {primary_key}: {general_error}")
 
         if insert_batch_count % DB_COMMIT_INTERVAL != 0:
             conn.commit()
             
-        logging.info(f"Database upload complete: {jobs_added} new jobs added, {jobs_skipped} jobs skipped initially, {embedding_failures_count} embedding generation failures occurred.")
+        logging.info(f"Database upload complete: {jobs_added} new jobs added, {jobs_skipped} jobs skipped initially (existing/duplicate/invalid), {embedding_failures_count} embedding generation failures occurred.")
 
     except sqlite3.Error as db_error:
          logging.error(f"Database error during upload process: {db_error}", exc_info=True)
