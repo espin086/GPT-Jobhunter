@@ -1,155 +1,227 @@
-### 💰 **Jobhunter**:  
-Jobhunter is an **AI-powered job search assistant** that saves you countless hours in your job hunt by **automatically matching your resume to relevant job postings**. Instead of manually reading through hundreds of listings, Jobhunter analyzes your resume and **scores each job based on how well it matches your skills and experience**. The platform uses **advanced AI** to understand both job descriptions and your qualifications, prioritizing positions where you're most likely to be a strong candidate. With **similarity scores** ranging from 0-1, you can instantly identify the best opportunities and **focus your time on applying to jobs that match your profile**, dramatically streamlining your job search process and increasing your chances of successful applications.
+# GPT Job Hunter
 
-<a href="https://buymeacoffee.com/jjespinozag" target="_blank">
-    <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174">
-</a>
+AI-powered job search application with resume matching capabilities. The application features a **FastAPI backend** for robust API services and a **Streamlit frontend** for an intuitive user interface.
 
-## Features 🌟
+## 🏗️ Architecture
 
-### Modern Streamlined UI with Enhanced User Experience
-![GPT-Jobhunter Interface](images/ui.png)
+The application is now decoupled into two main components:
 
-Our newly redesigned user interface offers a seamless, intuitive experience with numerous improvements:
+### 🔧 Backend (FastAPI)
+- **Location**: `jobhunter/backend/`
+- **Port**: 8000
+- **Features**:
+  - RESTful API endpoints
+  - Job search and data extraction
+  - Resume management
+  - Similarity scoring using AI embeddings
+  - Database operations
+  - OpenAPI/Swagger documentation at `/docs`
 
-- **Responsive Design**: Clean, modern interface that works well on different screen sizes
-- **Intelligent Waiting**: Automatic countdown timers when processing large job batches (now 20 seconds)
-- **Interactive Filters**: Powerful filtering system to narrow down job results
-- **Resume Management**: Easy uploading, selection, and management of multiple resumes
-- **Visual Feedback**: Clear progress indicators and success/error messages
-- **Similarity Score Refresh**: One-click refresh button to update resume-to-job matching scores
-- **Job Result Prioritization**: Jobs automatically sorted by similarity to your resume
-- **Dark Mode Interface**: Easy on the eyes during long job search sessions
+### 🎨 Frontend (Streamlit)
+- **Location**: `jobhunter/frontend/`
+- **Port**: 8501
+- **Features**:
+  - Interactive web interface
+  - Job search and filtering
+  - Resume upload and management
+  - Real-time similarity scoring
+  - Job application link management
 
-## Key Capabilities
+## 🚀 Quick Start
 
-### Resume Analysis and Management
-- Upload PDF or TXT resumes for AI-powered analysis
-- Store and switch between multiple resumes
-- Delete outdated resumes with confirmation safeguards
+### Using Docker (Recommended)
 
-### Comprehensive Job Search
-- Search multiple job titles simultaneously
-- Filter by country, time frame, and location
-- Results automatically analyzed against your resume
-
-### Smart Similarity Scoring
-- OpenAI-powered embedding technology compares your resume to job listings
-- Automatic calculation of similarity scores (0-1 scale)
-- One-click refresh button with 20-second processing time
-- Results sorted by relevance to your qualifications
-
-### Powerful Search Results Management
-- Filter jobs by any criteria (similarity score, title, company, etc.)
-- Open job application links directly from the interface
-- View comprehensive job details including salary and requirements
-
-## Comprehensive Installation & Quickstart Guide 🚀
-
-> **IMPORTANT: API KEY REQUIREMENTS**
-> 
-> Before proceeding with installation, you must obtain:
-> 
-> 1. **OpenAI API Key** - Required for resume matching and similarity scoring
->    - Sign up at [OpenAI Platform](https://platform.openai.com/api-keys)
->    - A paid tier is strongly recommended as embedding generation uses significant quota
-> 
-> 2. **RapidAPI JSearch API Key** - Required for job searches
->    - Subscribe to [JSearch API on RapidAPI](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch)
->    - Sign up for RapidAPI and subscribe to the JSearch service
->    - Copy your API key from the RapidAPI dashboard
-
-### Prerequisites
-- Python 3.11 or higher
-- [Poetry](https://python-poetry.org/) for Python option
-- [Docker](https://www.docker.com/products/docker-desktop) for Docker option
-- API Keys (as described above)
-
-### Option 1: Python with Poetry (Recommended for Development)
-
-1. **Clone the repository**
+1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/GPT-Jobhunter.git
+   git clone <repository-url>
    cd GPT-Jobhunter
    ```
 
-2. **Set up environment**
+2. **Set up environment variables**:
    ```bash
-   # Install Poetry if needed
-   # curl -sSL https://install.python-poetry.org | python3 -
-   
-   # Install dependencies
+   cp .env.example .env
+   # Edit .env and add your API keys:
+   # OPENAI_API_KEY=your_openai_key
+   # RAPID_API_KEY=your_rapid_api_key
+   ```
+
+3. **Run with Docker Compose**:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the application**:
+   - **Frontend (Streamlit)**: http://localhost:8501
+   - **Backend API (FastAPI)**: http://localhost:8000
+   - **API Documentation**: http://localhost:8000/docs
+
+### Manual Setup
+
+1. **Install dependencies**:
+   ```bash
+   pip install poetry
    poetry install
-   
-   # Create .env file with your API keys
-   cp .env-template .env
-   # Edit the .env file to add your API keys
    ```
 
-3. **Run the application**
+2. **Start the backend**:
    ```bash
-   poetry run streamlit run jobhunter/main.py
+   cd jobhunter
+   python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000
    ```
-   
-4. **Access the application** at http://localhost:8501 in your browser
 
-### Option 2: Docker (Recommended for Deployment)
-
-Our Docker setup includes automated environment preparation, comprehensive testing, and security checks.
-
-1. **Clone the repository & prepare environment**
+3. **Start the frontend** (in a new terminal):
    ```bash
-   git clone https://github.com/your-username/GPT-Jobhunter.git
-   cd GPT-Jobhunter
-   
-   # Create .env file with your API keys
-   cp .env-template .env
-   # Edit the .env file to add your API keys
+   cd jobhunter
+   streamlit run frontend/streamlit_app.py --server.port 8501
    ```
 
-2. **Run the convenience script** (recommended)
+## 📚 API Documentation
+
+The FastAPI backend provides comprehensive API documentation:
+
+- **Interactive Docs**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### Key API Endpoints
+
+#### Job Search
+- `POST /jobs/search` - Search for jobs
+- `GET /jobs` - Get jobs with filtering options
+
+#### Resume Management
+- `POST /resumes/upload` - Upload resume
+- `POST /resumes/upload-file` - Upload resume file (PDF/TXT)
+- `GET /resumes` - List all resumes
+- `GET /resumes/{resume_name}` - Get resume content
+- `PUT /resumes/{resume_name}` - Update resume
+- `DELETE /resumes/{resume_name}` - Delete resume
+
+#### Similarity Scoring
+- `POST /similarity/update` - Update similarity scores
+
+#### System
+- `GET /health` - Health check
+- `GET /stats` - Database statistics
+- `POST /initialize` - Initialize database
+
+## 🛠️ Development
+
+### Running Services Separately
+
+**Backend only**:
+```bash
+./start-backend.sh
+# or
+python -m uvicorn jobhunter.backend.api:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Frontend only**:
+```bash
+export BACKEND_URL=http://localhost:8000
+./start-frontend.sh
+# or
+streamlit run jobhunter/frontend/streamlit_app.py
+```
+
+### Project Structure
+```
+GPT-Jobhunter/
+├── jobhunter/
+│   ├── backend/          # FastAPI backend
+│   │   ├── api.py        # Main FastAPI application
+│   │   ├── models.py     # Pydantic models
+│   │   └── services.py   # Business logic services
+│   ├── frontend/         # Streamlit frontend
+│   │   └── streamlit_app.py
+│   ├── config.py         # Configuration
+│   ├── extract.py        # Job extraction logic
+│   ├── dataTransformer.py # Data transformation
+│   ├── SQLiteHandler.py  # Database operations
+│   ├── textAnalysis.py   # AI/ML text analysis
+│   └── ... (other modules)
+├── tests/               # Test suite
+├── Dockerfile          # Multi-service Docker setup
+├── docker-compose.yml  # Docker Compose configuration
+└── README.md
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+- `OPENAI_API_KEY` - Required for AI embeddings and similarity scoring
+- `RAPID_API_KEY` - Required for job search API
+- `BACKEND_URL` - Backend URL for frontend (default: http://localhost:8000)
+
+### API Keys Setup
+1. **OpenAI API Key**: Get from [OpenAI Platform](https://platform.openai.com/account/api-keys)
+2. **RapidAPI Key**: Get from [RapidAPI JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch)
+
+## 🧪 Testing
+
+Run the test suite:
+```bash
+pytest tests/
+```
+
+## 📝 Features
+
+- **AI-Powered Matching**: Uses OpenAI embeddings for resume-job similarity
+- **Comprehensive Job Search**: Searches multiple job boards via API
+- **Resume Management**: Upload, store, and manage multiple resumes
+- **Advanced Filtering**: Filter jobs by similarity, location, salary, type, etc.
+- **Batch Operations**: Open multiple job applications efficiently
+- **Real-time Updates**: Live similarity score calculations
+- **Clean Architecture**: Decoupled backend and frontend for scalability
+
+## 🏃‍♂️ Migration from Previous Version
+
+If upgrading from the monolithic Streamlit version:
+
+1. **Backup your data**: 
    ```bash
-   # Make the script executable if needed
-   chmod +x run_docker.sh
-   
-   # Run the script
-   ./run_docker.sh
+   cp all_jobs.db all_jobs.db.backup
    ```
-   
-   This script will:
-   - Create necessary directories
-   - Run tests to validate the codebase
-   - Build an optimized Docker image
-   - Perform security checks
-   - Start the container with appropriate settings
-   
-3. **Access the application** at http://localhost:8501 in your browser
 
-   **View logs with:**
+2. **Update dependencies**:
    ```bash
-   docker logs -f gpt-jobhunter
+   poetry install
    ```
 
-4. **Manual Docker commands** (if you prefer not to use the script)
+3. **Initialize the new backend**:
    ```bash
-   # Build the Docker image
-   docker build -t gpt-jobhunter .
-   
-   # Run the container
-   docker run -d --name gpt-jobhunter --env-file .env -p 8501:8501 gpt-jobhunter
+   python -c "from jobhunter.backend.services import DatabaseService; DatabaseService().initialize_database()"
    ```
 
+4. **Start both services** as described above
 
-**Important Note on OpenAI Usage:** 
-Generating embeddings for similarity scores consumes a significant amount of your OpenAI quota. The free tier may not be sufficient. If you encounter `429 - insufficient_quota` errors, you will need to upgrade to a paid plan.
+## 🤝 Contributing
 
-## Contributing 🤝
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
 
-[Contributing](CONTRIBUTING.md)
+## 📄 License
 
-## License
+See LICENSE.md for details.
 
-[License](LICENSE)
+## 🆘 Troubleshooting
+
+### Common Issues
+
+1. **Backend connection errors**: Ensure the FastAPI backend is running on port 8000
+2. **API key errors**: Verify your OpenAI and RapidAPI keys are set correctly
+3. **Database errors**: Try reinitializing with `/initialize` endpoint
+4. **Port conflicts**: Ensure ports 8000 and 8501 are available
+
+### Logs
+- Backend logs: `docker logs <container_name>`
+- Frontend logs: Check Streamlit interface for error messages
+- Supervisor logs: `/var/log/supervisor/` (in Docker)
+
+For more help, check the API documentation at http://localhost:8000/docs or create an issue in the repository.
 
 
    

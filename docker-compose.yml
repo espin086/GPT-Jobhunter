@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  gpt-jobhunter:
+    build: .
+    ports:
+      - "8000:8000"    # FastAPI backend
+      - "8501:8501"    # Streamlit frontend
+    environment:
+      - PYTHONPATH=/app
+      - BACKEND_URL=http://localhost:8000
+      # Add your API keys here
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - RAPID_API_KEY=${RAPID_API_KEY:-}
+    volumes:
+      # Persist database and uploaded files
+      - ./data:/app/data
+      - ./all_jobs.db:/app/all_jobs.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development services - uncomment for separate backend/frontend development
+  # backend:
+  #   build: .
+  #   command: /app/start-backend.sh
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - PYTHONPATH=/app
+  #     - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+  #     - RAPID_API_KEY=${RAPID_API_KEY:-}
+  #   volumes:
+  #     - ./jobhunter:/app/jobhunter
+  #     - ./all_jobs.db:/app/all_jobs.db
+
+  # frontend:
+  #   build: .
+  #   command: /app/start-frontend.sh
+  #   ports:
+  #     - "8501:8501"
+  #   environment:
+  #     - PYTHONPATH=/app
+  #     - BACKEND_URL=http://backend:8000
+  #   volumes:
+  #     - ./jobhunter/frontend:/app/jobhunter/frontend
+  #   depends_on:
+  #     - backend

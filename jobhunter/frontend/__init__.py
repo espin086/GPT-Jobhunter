@@ -1,0 +1,1 @@
+# Frontend module for Streamlit application
