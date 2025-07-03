@@ -245,9 +245,13 @@ async def upload_resume_file(file: UploadFile = File(...)):
             # Handle PDF extraction
             try:
                 import pdfplumber
+                import io
                 content_bytes = await file.read()
                 
-                with pdfplumber.open(content_bytes) as pdf:
+                # Convert bytes to file-like object
+                pdf_file = io.BytesIO(content_bytes)
+                
+                with pdfplumber.open(pdf_file) as pdf:
                     for page in pdf.pages:
                         page_text = page.extract_text()
                         if page_text:

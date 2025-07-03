@@ -62,11 +62,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-def make_api_request(method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
+def make_api_request(method: str, endpoint: str, timeout: int = 30, **kwargs) -> Dict[str, Any]:
     """Make a request to the FastAPI backend."""
     url = f"{BACKEND_URL}{endpoint}"
     try:
-        response = requests.request(method, url, timeout=30, **kwargs)
+        response = requests.request(method, url, timeout=timeout, **kwargs)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.ConnectionError:
@@ -116,6 +116,16 @@ def upload_resume(filename: str, content: str) -> bool:
         return False
 
 
+def upload_resume_file(file) -> bool:
+    """Upload a resume file (PDF or TXT) to the backend."""
+    try:
+        files = {"file": (file.name, file.getvalue(), file.type)}
+        response = make_api_request("POST", "/resumes/upload-file", files=files)
+        return response.get("success", False)
+    except:
+        return False
+
+
 def get_resumes() -> List[str]:
     """Get list of resumes from backend."""
     try:
@@ -134,7 +144,8 @@ def search_jobs(job_titles: List[str], country: str = "us", date_posted: str = "
             "date_posted": date_posted,
             "location": location
         }
-        return make_api_request("POST", "/jobs/search", json=data)
+        # Use longer timeout for job searches (3 minutes) since they involve external API calls
+        return make_api_request("POST", "/jobs/search", timeout=180, json=data)
     except:
         return {"error": "Search failed"}
 
@@ -152,7 +163,8 @@ def update_similarity_scores(resume_name: str) -> Dict[str, Any]:
     """Update similarity scores for a resume."""
     try:
         data = {"resume_name": resume_name}
-        return make_api_request("POST", "/similarity/update", json=data)
+        # Use longer timeout for similarity updates since they involve AI processing
+        return make_api_request("POST", "/similarity/update", timeout=120, json=data)
     except:
         return {"error": "Update failed"}
 
@@ -201,32 +213,44 @@ def main():
         with st.expander("Upload Resume", expanded=False):
             uploaded_file = st.file_uploader("Choose a file", type=['txt', 'pdf'])
             if uploaded_file is not None:
-                try:
-                    if uploaded_file.type == "text/plain":
-                        content = str(uploaded_file.read(), "utf-8")
-                    else:
-                        st.error("PDF support requires backend processing. Use the backend API directly.")
-                        content = None
-                    
-                    if content and st.button("Upload Resume"):
-                        with st.spinner("Uploading..."):
-                            success = upload_resume(uploaded_file.name, content)
+                if st.button("Upload Resume"):
+                    with st.spinner("Uploading and processing..."):
+                        try:
+                            # Use the file upload endpoint for both PDF and TXT files
+                            success = upload_resume_file(uploaded_file)
                             if success:
                                 st.success(f"✅ Resume '{uploaded_file.name}' uploaded successfully!")
                                 st.rerun()
                             else:
-                                st.error("Failed to upload resume")
-                except Exception as e:
-                    st.error(f"Error processing file: {e}")
+                                st.error("Failed to upload resume. Please check the file format and try again.")
+                        except Exception as e:
+                            st.error(f"Error uploading file: {e}")
+                
+                # Show file info
+                st.info(f"📄 **File:** {uploaded_file.name}")
+                st.info(f"📏 **Size:** {uploaded_file.size:,} bytes")
+                st.info(f"🔧 **Type:** {uploaded_file.type}")
+                
+                if uploaded_file.type == "application/pdf":
+                    st.info("💡 **PDF files will be processed to extract text content**")
+                elif uploaded_file.type == "text/plain":
+                    st.info("💡 **Text file will be uploaded directly**")
         
         # Select resume
         resumes = get_resumes()
+        st.write(f"**Debug:** Found {len(resumes)} resumes: {resumes}")  # Debug line
         if resumes:
+            # Calculate the correct index safely
+            current_index = 0
+            if st.session_state.selected_resume and st.session_state.selected_resume in resumes:
+                current_index = resumes.index(st.session_state.selected_resume) + 1
+            
             selected_resume = st.selectbox(
                 "Select Active Resume",
                 ["None"] + resumes,
-                index=0 if not st.session_state.selected_resume else resumes.index(st.session_state.selected_resume) + 1
+                index=current_index
             )
+            
             if selected_resume != "None":
                 st.session_state.selected_resume = selected_resume
             else:

@@ -260,6 +260,20 @@ class JobDataService:
             df = pd.read_sql(base_query, conn, params=params)
             conn.close()
             
+            # Clean data: handle NaN and Infinity values
+            # Replace NaN and Infinity values in numeric columns
+            numeric_columns = ['resume_similarity', 'salary_low', 'salary_high']
+            for col in numeric_columns:
+                if col in df.columns:
+                    # Replace NaN and Infinity with None for salary fields
+                    if col in ['salary_low', 'salary_high']:
+                        df[col] = df[col].replace([float('inf'), float('-inf')], None)
+                        df[col] = df[col].where(pd.notna(df[col]), None)
+                    # Replace NaN and Infinity with 0 for resume_similarity
+                    elif col == 'resume_similarity':
+                        df[col] = df[col].replace([float('inf'), float('-inf')], 0.0)
+                        df[col] = df[col].fillna(0.0)
+            
             # Convert to JobData models
             jobs = []
             for _, row in df.iterrows():

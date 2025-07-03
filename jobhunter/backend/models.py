@@ -4,6 +4,7 @@ Pydantic models for FastAPI backend request/response schemas.
 
 from datetime import datetime
 from typing import List, Optional, Union
+import math
 from pydantic import BaseModel, Field, validator
 
 
@@ -89,6 +90,26 @@ class JobData(BaseModel):
     required_education: Optional[str] = None
     description: Optional[str] = None
     highlights: Optional[str] = None
+
+    @validator('resume_similarity', pre=True)
+    def validate_resume_similarity(cls, v):
+        """Convert NaN/Infinity values to 0.0 for resume_similarity."""
+        if v is None:
+            return 0.0
+        if isinstance(v, (int, float)):
+            if math.isnan(v) or math.isinf(v):
+                return 0.0
+        return v
+
+    @validator('salary_low', 'salary_high', pre=True)
+    def validate_salary_fields(cls, v):
+        """Convert NaN/Infinity values to None for salary fields."""
+        if v is None:
+            return None
+        if isinstance(v, (int, float)):
+            if math.isnan(v) or math.isinf(v):
+                return None
+        return v
 
 
 class JobListResponse(BaseModel):
