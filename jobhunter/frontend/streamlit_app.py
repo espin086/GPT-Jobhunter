@@ -238,7 +238,6 @@ def main():
         
         # Select resume
         resumes = get_resumes()
-        st.write(f"**Debug:** Found {len(resumes)} resumes: {resumes}")  # Debug line
         if resumes:
             # Calculate the correct index safely
             current_index = 0
