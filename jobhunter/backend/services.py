@@ -241,15 +241,21 @@ class JobDataService:
                 base_query += " AND salary_high <= ?"
                 params.append(filter_request.max_salary)
             
-            # Get total count
-            count_query = base_query.replace(
-                "SELECT id, primary_key, date, CAST(resume_similarity AS REAL) AS resume_similarity, title, company, company_url, company_type, job_type, job_is_remote, job_apply_link, job_offer_expiration_date, salary_low, salary_high, salary_currency, salary_period, job_benefits, city, state, country, apply_options, required_skills, required_experience, required_education, description, highlights FROM jobs_new",
-                "SELECT COUNT(*) FROM jobs_new"
-            )
-            
+            # Get total count - build a proper count query
+            # Extract the WHERE clause from base_query
+            where_clause_start = base_query.find("WHERE 1=1")
+            if where_clause_start != -1:
+                where_clause = base_query[where_clause_start:]
+                # Remove any ORDER BY or LIMIT if present (shouldn't be at this point though)
+                where_clause = where_clause.split("ORDER BY")[0].split("LIMIT")[0].strip()
+                count_query = f"SELECT COUNT(*) FROM jobs_new {where_clause}"
+            else:
+                count_query = "SELECT COUNT(*) FROM jobs_new"
+
             cursor = conn.cursor()
             cursor.execute(count_query, params)
-            total_count = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            total_count = result[0] if result else 0
             
             # Add ordering and pagination
             base_query += " ORDER BY resume_similarity DESC, date DESC"

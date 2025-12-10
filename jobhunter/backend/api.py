@@ -52,6 +52,17 @@ job_data_service = JobDataService()
 database_service = DatabaseService()
 
 
+# Startup event handler
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on application startup."""
+    try:
+        database_service.initialize_database()
+        logger.info("Database initialized successfully on startup")
+    except Exception as e:
+        logger.error(f"Failed to initialize database on startup: {e}")
+
+
 # Global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
