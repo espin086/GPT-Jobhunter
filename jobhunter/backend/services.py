@@ -4,7 +4,7 @@ Service layer for FastAPI backend that wraps existing business logic.
 
 import logging
 import sqlite3
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 import pandas as pd
 from pathlib import Path
 import os
@@ -204,19 +204,19 @@ class JobDataService:
         try:
             conn = sqlite3.connect(config.DATABASE)
             
-            # Build the base query
+            # Build the base query - exclude hidden jobs
             base_query = """
-                SELECT 
-                    id, primary_key, date, 
+                SELECT
+                    id, primary_key, date,
                     CAST(resume_similarity AS REAL) AS resume_similarity,
-                    title, company, company_url, company_type, job_type, 
-                    job_is_remote, job_apply_link, job_offer_expiration_date, 
-                    salary_low, salary_high, salary_currency, salary_period, 
-                    job_benefits, city, state, country, apply_options, 
-                    required_skills, required_experience, required_education, 
+                    title, company, company_url, company_type, job_type,
+                    job_is_remote, job_apply_link, job_offer_expiration_date,
+                    salary_low, salary_high, salary_currency, salary_period,
+                    job_benefits, city, state, country, apply_options,
+                    required_skills, required_experience, required_education,
                     description, highlights
-                FROM jobs_new 
-                WHERE 1=1
+                FROM jobs_new
+                WHERE (hidden IS NULL OR hidden = 0)
             """
             
             params = []
@@ -393,7 +393,27 @@ class DatabaseService:
                     resume_text TEXT
                 )
             ''')
-            
+
+            # Create job_tracking table for Kanban board
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS job_tracking (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    job_id INTEGER NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'apply',
+                    date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    notes TEXT,
+                    FOREIGN KEY (job_id) REFERENCES jobs_new(id),
+                    UNIQUE(job_id)
+                )
+            ''')
+
+            # Add hidden column to jobs_new if it doesn't exist
+            try:
+                cursor.execute("ALTER TABLE jobs_new ADD COLUMN hidden INTEGER DEFAULT 0")
+            except:
+                pass  # Column already exists
+
             conn.commit()
             conn.close()
             logger.info("Database initialized successfully")
@@ -517,3 +537,188 @@ Technical Lead"""
         except Exception as e:
             logger.error(f"Error generating job title suggestions: {e}", exc_info=True)
             return False, [], f"Failed to generate suggestions: {str(e)}"
+
+
+class JobTrackingService:
+    """Service for job application tracking (Kanban board)."""
+
+    def save_job(self, job_id: int) -> Tuple[bool, str]:
+        """
+        Save a job to tracking board (starts in 'apply' status).
+
+        Args:
+            job_id: ID of the job to save
+
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
+            # Check if job exists
+            cursor.execute("SELECT id FROM jobs_new WHERE id = ?", (job_id,))
+            if not cursor.fetchone():
+                conn.close()
+                return False, "Job not found"
+
+            # Insert or ignore if already tracked
+            cursor.execute('''
+                INSERT OR IGNORE INTO job_tracking (job_id, status)
+                VALUES (?, 'apply')
+            ''', (job_id,))
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"Job {job_id} saved to tracking board")
+            return True, "Job saved successfully"
+
+        except Exception as e:
+            logger.error(f"Error saving job: {e}", exc_info=True)
+            return False, f"Failed to save job: {str(e)}"
+
+    def pass_job(self, job_id: int) -> Tuple[bool, str]:
+        """
+        Mark a job as hidden/passed.
+
+        Args:
+            job_id: ID of the job to hide
+
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
+            # Update hidden flag
+            cursor.execute("UPDATE jobs_new SET hidden = 1 WHERE id = ?", (job_id,))
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"Job {job_id} marked as hidden")
+            return True, "Job marked as not interested"
+
+        except Exception as e:
+            logger.error(f"Error marking job as hidden: {e}", exc_info=True)
+            return False, f"Failed to hide job: {str(e)}"
+
+    def get_tracked_jobs(self) -> Dict[str, List[Dict]]:
+        """
+        Get all tracked jobs organized by status (for Kanban board).
+
+        Returns:
+            Dictionary with status as keys and lists of jobs as values
+        """
+        try:
+            conn = sqlite3.connect(config.DATABASE)
+
+            query = '''
+                SELECT
+                    jt.id as tracking_id,
+                    jt.job_id,
+                    jt.status,
+                    jt.date_added,
+                    jt.date_updated,
+                    jt.notes,
+                    j.title,
+                    j.company,
+                    j.city,
+                    j.state,
+                    j.job_is_remote,
+                    j.salary_low,
+                    j.salary_high,
+                    j.job_apply_link,
+                    j.resume_similarity,
+                    j.date as posted_date
+                FROM job_tracking jt
+                JOIN jobs_new j ON jt.job_id = j.id
+                ORDER BY jt.date_updated DESC
+            '''
+
+            df = pd.read_sql(query, conn)
+            conn.close()
+
+            # Organize by status
+            statuses = ['apply', 'hr_screen', 'round_1', 'round_2', 'rejected']
+            result = {status: [] for status in statuses}
+
+            for _, row in df.iterrows():
+                job_dict = row.to_dict()
+                status = job_dict.get('status', 'apply')
+                if status in result:
+                    result[status].append(job_dict)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error getting tracked jobs: {e}", exc_info=True)
+            return {status: [] for status in ['apply', 'hr_screen', 'round_1', 'round_2', 'rejected']}
+
+    def update_job_status(self, job_id: int, new_status: str) -> Tuple[bool, str]:
+        """
+        Update the status of a tracked job (for moving between Kanban columns).
+
+        Args:
+            job_id: ID of the job
+            new_status: New status (apply, hr_screen, round_1, round_2, rejected)
+
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            valid_statuses = ['apply', 'hr_screen', 'round_1', 'round_2', 'rejected']
+            if new_status not in valid_statuses:
+                return False, f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
+            # Update status and timestamp
+            cursor.execute('''
+                UPDATE job_tracking
+                SET status = ?, date_updated = CURRENT_TIMESTAMP
+                WHERE job_id = ?
+            ''', (new_status, job_id))
+
+            if cursor.rowcount == 0:
+                conn.close()
+                return False, "Job not found in tracking"
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"Job {job_id} status updated to {new_status}")
+            return True, f"Job moved to {new_status}"
+
+        except Exception as e:
+            logger.error(f"Error updating job status: {e}", exc_info=True)
+            return False, f"Failed to update status: {str(e)}"
+
+    def remove_from_tracking(self, job_id: int) -> Tuple[bool, str]:
+        """
+        Remove a job from tracking board.
+
+        Args:
+            job_id: ID of the job to remove
+
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
+            cursor.execute("DELETE FROM job_tracking WHERE job_id = ?", (job_id,))
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"Job {job_id} removed from tracking")
+            return True, "Job removed from tracking"
+
+        except Exception as e:
+            logger.error(f"Error removing job from tracking: {e}", exc_info=True)
+            return False, f"Failed to remove job: {str(e)}"

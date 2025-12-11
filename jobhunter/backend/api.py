@@ -18,10 +18,11 @@ from jobhunter.backend.models import (
     JobFilterRequest, JobListResponse,
     SimilarityUpdateRequest, SimilarityUpdateResponse,
     JobTitleSuggestionsRequest, JobTitleSuggestionsResponse,
+    SaveJobRequest, PassJobRequest, JobTrackingResponse, TrackedJobsResponse, UpdateJobStatusRequest,
     ErrorResponse, HealthResponse
 )
 from jobhunter.backend.services import (
-    JobSearchService, ResumeService, JobDataService, DatabaseService, AIService
+    JobSearchService, ResumeService, JobDataService, DatabaseService, AIService, JobTrackingService
 )
 
 # Set up logging
@@ -52,6 +53,7 @@ resume_service = ResumeService()
 job_data_service = JobDataService()
 database_service = DatabaseService()
 ai_service = AIService()
+job_tracking_service = JobTrackingService()
 
 
 # Startup event handler
@@ -435,13 +437,13 @@ async def suggest_job_titles(request: JobTitleSuggestionsRequest):
 async def update_similarity_scores(request: SimilarityUpdateRequest):
     """
     Update similarity scores for all jobs against a specific resume.
-    
+
     This calculates embeddings and similarity scores between the specified
     resume and all jobs in the database.
     """
     try:
         success, jobs_updated = job_data_service.update_similarity_scores(request.resume_name)
-        
+
         return SimilarityUpdateResponse(
             success=success,
             message=f"Successfully updated similarity scores for {jobs_updated} jobs" if success else "Failed to update similarity scores",
@@ -452,6 +454,113 @@ async def update_similarity_scores(request: SimilarityUpdateRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Similarity update failed: {str(e)}"
+        )
+
+
+# Job tracking endpoints
+@app.post("/jobs/save", response_model=JobTrackingResponse)
+async def save_job(request: SaveJobRequest):
+    """
+    Save a job to the tracking board.
+
+    Adds the job to job_tracking table with 'apply' status.
+    """
+    try:
+        success, message = job_tracking_service.save_job(request.job_id)
+
+        return JobTrackingResponse(
+            success=success,
+            message=message
+        )
+    except Exception as e:
+        logger.error(f"Failed to save job: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save job: {str(e)}"
+        )
+
+
+@app.post("/jobs/pass", response_model=JobTrackingResponse)
+async def pass_job(request: PassJobRequest):
+    """
+    Pass/hide a job.
+
+    Marks the job as hidden (hidden = 1) so it won't appear in main job list.
+    """
+    try:
+        success, message = job_tracking_service.pass_job(request.job_id)
+
+        return JobTrackingResponse(
+            success=success,
+            message=message
+        )
+    except Exception as e:
+        logger.error(f"Failed to pass job: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to pass job: {str(e)}"
+        )
+
+
+@app.get("/jobs/tracked", response_model=TrackedJobsResponse)
+async def get_tracked_jobs():
+    """
+    Get all tracked jobs organized by status for Kanban board.
+
+    Returns jobs grouped into columns:
+    - apply: Jobs to apply to
+    - hr_screen: HR phone screen stage
+    - round_1: First round interviews
+    - round_2: Second round interviews
+    - rejected: Rejected or ghosted applications
+    """
+    try:
+        jobs_by_status = job_tracking_service.get_tracked_jobs()
+
+        return TrackedJobsResponse(
+            apply=jobs_by_status.get("apply", []),
+            hr_screen=jobs_by_status.get("hr_screen", []),
+            round_1=jobs_by_status.get("round_1", []),
+            round_2=jobs_by_status.get("round_2", []),
+            rejected=jobs_by_status.get("rejected", [])
+        )
+    except Exception as e:
+        logger.error(f"Failed to get tracked jobs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get tracked jobs: {str(e)}"
+        )
+
+
+@app.put("/jobs/tracked/{job_id}/status", response_model=JobTrackingResponse)
+async def update_job_status(job_id: int, request: UpdateJobStatusRequest):
+    """
+    Update the status of a tracked job.
+
+    Moves the job between Kanban columns by updating its status.
+    Valid statuses: apply, hr_screen, round_1, round_2, rejected
+    """
+    try:
+        # Validate that job_id in path matches request body
+        if job_id != request.job_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Job ID in path must match job ID in request body"
+            )
+
+        success, message = job_tracking_service.update_job_status(request.job_id, request.new_status)
+
+        return JobTrackingResponse(
+            success=success,
+            message=message
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update job status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update job status: {str(e)}"
         )
 
 

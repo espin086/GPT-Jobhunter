@@ -155,3 +155,71 @@ class JobTitleSuggestionsResponse(BaseModel):
     suggestions: List[str] = Field(..., description="List of 3 suggested job titles")
     success: bool = Field(..., description="Whether the suggestion generation was successful")
     message: str = Field(..., description="Status message")
+
+
+class SaveJobRequest(BaseModel):
+    """Request model for saving a job to tracking."""
+    job_id: int = Field(..., description="ID of the job to save")
+
+
+class PassJobRequest(BaseModel):
+    """Request model for passing/hiding a job."""
+    job_id: int = Field(..., description="ID of the job to pass")
+
+
+class JobTrackingResponse(BaseModel):
+    """Response model for job tracking operations."""
+    success: bool = Field(..., description="Whether the operation was successful")
+    message: str = Field(..., description="Status message")
+
+
+class TrackedJobData(BaseModel):
+    """Model for tracked job data with tracking info."""
+    # Job details (inherited from JobData)
+    id: Optional[int] = None
+    primary_key: Optional[str] = None
+    date: Optional[str] = None
+    resume_similarity: Optional[float] = 0.0
+    title: Optional[str] = None
+    company: Optional[str] = None
+    company_url: Optional[str] = None
+    company_type: Optional[str] = None
+    job_type: Optional[str] = None
+    job_is_remote: Optional[str] = None
+    job_apply_link: Optional[str] = None
+    job_offer_expiration_date: Optional[str] = None
+    salary_low: Optional[float] = None
+    salary_high: Optional[float] = None
+    salary_currency: Optional[str] = None
+    salary_period: Optional[str] = None
+    job_benefits: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    apply_options: Optional[str] = None
+    required_skills: Optional[str] = None
+    required_experience: Optional[str] = None
+    required_education: Optional[str] = None
+    description: Optional[str] = None
+    highlights: Optional[str] = None
+    # Tracking fields
+    tracking_id: Optional[int] = None
+    status: Optional[str] = None
+    date_added: Optional[str] = None
+    date_updated: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class TrackedJobsResponse(BaseModel):
+    """Response model for tracked jobs organized by status."""
+    apply: List[TrackedJobData] = Field(default=[], description="Jobs in 'Apply' column")
+    hr_screen: List[TrackedJobData] = Field(default=[], description="Jobs in 'HR Phone Screen' column")
+    round_1: List[TrackedJobData] = Field(default=[], description="Jobs in '1st Round' column")
+    round_2: List[TrackedJobData] = Field(default=[], description="Jobs in '2nd Round' column")
+    rejected: List[TrackedJobData] = Field(default=[], description="Jobs in 'Rejected/Ghosted' column")
+
+
+class UpdateJobStatusRequest(BaseModel):
+    """Request model for updating job status."""
+    job_id: int = Field(..., description="ID of the job to update")
+    new_status: str = Field(..., description="New status (apply, hr_screen, round_1, round_2, rejected)")
