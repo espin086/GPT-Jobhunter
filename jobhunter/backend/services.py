@@ -7,6 +7,7 @@ import sqlite3
 from typing import List, Optional, Tuple
 import pandas as pd
 from pathlib import Path
+import os
 
 from jobhunter import config
 from jobhunter.extract import extract
@@ -44,16 +45,16 @@ class JobSearchService:
     def search_jobs(self, request: JobSearchRequest) -> int:
         """
         Search for jobs and return total count found.
-        
+
         Args:
             request: Job search request parameters
-            
+
         Returns:
             Total number of jobs found
         """
         try:
             logger.info(f"Starting job search for: {request.job_titles}")
-            
+
             # Run the extract pipeline
             total_jobs = extract(
                 POSITIONS=request.job_titles,
@@ -61,7 +62,7 @@ class JobSearchService:
                 date_posted=request.date_posted,
                 location=request.location
             )
-            
+
             if total_jobs > 0:
                 # Transform the data
                 logger.info("Transforming job data...")
@@ -72,15 +73,28 @@ class JobSearchService:
                     data=self.file_handler.import_job_data_from_dir(dirpath=config.RAW_DATA_PATH),
                 )
                 transformer.transform()
-                
+
                 # Load to database
                 logger.info("Loading job data to database...")
                 load()
-                
+
+                # Auto-calculate similarity scores if a resume exists
+                try:
+                    resumes = fetch_resumes_from_db()
+                    if resumes:
+                        # Use the first resume for similarity calculation
+                        resume_name = resumes[0]
+                        logger.info(f"Auto-calculating similarity scores using resume: {resume_name}")
+                        update_similarity_in_db(resume_name)
+                        logger.info("Similarity scores calculated successfully")
+                except Exception as similarity_error:
+                    logger.warning(f"Could not auto-calculate similarity scores: {similarity_error}")
+                    # Don't fail the job search if similarity calculation fails
+
                 logger.info(f"Job search completed successfully. Found {total_jobs} jobs.")
-            
+
             return total_jobs
-            
+
         except Exception as e:
             logger.error(f"Error in job search: {e}", exc_info=True)
             raise
@@ -425,7 +439,81 @@ class DatabaseService:
                 "jobs_with_similarity_scores": jobs_with_similarity,
                 "database_path": str(Path(config.DATABASE).absolute())
             }
-            
+
         except Exception as e:
             logger.error(f"Error getting database stats: {e}", exc_info=True)
             raise
+
+
+class AIService:
+    """Service for AI-powered features."""
+
+    def suggest_job_titles(self, resume_name: str) -> Tuple[bool, List[str], str]:
+        """
+        Analyze resume and suggest 3 optimal job titles using OpenAI.
+
+        Args:
+            resume_name: Name of the resume to analyze
+
+        Returns:
+            Tuple of (success, list of job titles, message)
+        """
+        try:
+            # Get resume text
+            resume_text = get_resume_text(resume_name)
+            if not resume_text:
+                return False, [], f"Resume '{resume_name}' not found"
+
+            # Check if OpenAI API key is available
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                logger.warning("OpenAI API key not found, cannot generate suggestions")
+                return False, [], "OpenAI API key not configured"
+
+            # Use OpenAI to analyze resume and suggest job titles
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+
+            prompt = f"""Analyze this resume and suggest exactly 3 job titles that:
+1. Match the candidate's experience and skills
+2. Are high-paying roles (typically $100K+)
+3. Are in-demand positions with high job posting volume
+4. Use standard job market terminology (e.g., "Senior Software Engineer" not "Code Ninja")
+
+Resume:
+{resume_text[:3000]}
+
+Return ONLY the 3 job titles, one per line, with no numbering, bullets, or explanations.
+Example format:
+Senior Software Engineer
+Machine Learning Engineer
+Technical Lead"""
+
+            logger.info(f"Requesting job title suggestions for resume: {resume_name}")
+
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are an expert career advisor and recruiter who understands job market trends and compensation."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=150
+            )
+
+            suggestions_text = response.choices[0].message.content.strip()
+            suggestions = [title.strip() for title in suggestions_text.split('\n') if title.strip()]
+
+            # Ensure we have exactly 3 suggestions
+            if len(suggestions) < 3:
+                logger.warning(f"Only got {len(suggestions)} suggestions, padding with defaults")
+                defaults = ["Senior Software Engineer", "Data Scientist", "Product Manager"]
+                suggestions.extend(defaults[len(suggestions):3])
+            suggestions = suggestions[:3]
+
+            logger.info(f"Generated suggestions: {suggestions}")
+            return True, suggestions, f"Generated {len(suggestions)} job title suggestions"
+
+        except Exception as e:
+            logger.error(f"Error generating job title suggestions: {e}", exc_info=True)
+            return False, [], f"Failed to generate suggestions: {str(e)}"

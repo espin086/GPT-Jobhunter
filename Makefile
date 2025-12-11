@@ -67,6 +67,12 @@ dev:
 	fi
 	@echo "✅ Environment file found"
 	@echo ""
+	@# Clean database for fresh testing
+	@echo "🗑️  Cleaning database for fresh start..."
+	@rm -f all_jobs.db
+	@rm -rf jobhunter/temp/data/raw/* jobhunter/temp/data/processed/* 2>/dev/null || true
+	@echo "✅ Database cleaned"
+	@echo ""
 	@echo "🚀 Starting backend on http://localhost:$(BACKEND_PORT)"
 	@echo "🚀 Starting frontend on http://localhost:$(FRONTEND_PORT)"
 	@echo ""

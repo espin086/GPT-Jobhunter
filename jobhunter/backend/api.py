@@ -17,10 +17,11 @@ from jobhunter.backend.models import (
     ResumeUploadRequest, ResumeResponse, ResumeListResponse, ResumeContentResponse,
     JobFilterRequest, JobListResponse,
     SimilarityUpdateRequest, SimilarityUpdateResponse,
+    JobTitleSuggestionsRequest, JobTitleSuggestionsResponse,
     ErrorResponse, HealthResponse
 )
 from jobhunter.backend.services import (
-    JobSearchService, ResumeService, JobDataService, DatabaseService
+    JobSearchService, ResumeService, JobDataService, DatabaseService, AIService
 )
 
 # Set up logging
@@ -50,6 +51,7 @@ job_search_service = JobSearchService()
 resume_service = ResumeService()
 job_data_service = JobDataService()
 database_service = DatabaseService()
+ai_service = AIService()
 
 
 # Startup event handler
@@ -385,6 +387,46 @@ async def delete_resume(resume_name: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Resume deletion failed: {str(e)}"
+        )
+
+
+@app.post("/resumes/suggest-job-titles", response_model=JobTitleSuggestionsResponse)
+async def suggest_job_titles(request: JobTitleSuggestionsRequest):
+    """
+    Analyze resume using AI and suggest 3 optimal job titles.
+
+    This endpoint uses OpenAI to analyze the resume content and suggest
+    job titles that:
+    - Match the candidate's experience and skills
+    - Are high-paying roles (typically $100K+)
+    - Are in-demand positions with high job posting volume
+    - Use standard job market terminology
+
+    Returns 3 job title suggestions.
+    """
+    try:
+        logger.info(f"Generating job title suggestions for: {request.resume_name}")
+        success, suggestions, message = ai_service.suggest_job_titles(request.resume_name)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND if "not found" in message.lower() else status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=message
+            )
+
+        return JobTitleSuggestionsResponse(
+            suggestions=suggestions,
+            success=True,
+            message=message
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Job title suggestion failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate job title suggestions: {str(e)}"
         )
 
 

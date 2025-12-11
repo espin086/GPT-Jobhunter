@@ -143,3 +143,15 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description="Health status")
     timestamp: datetime = Field(..., description="Current timestamp")
     version: str = Field(..., description="API version")
+
+
+class JobTitleSuggestionsRequest(BaseModel):
+    """Request model for job title suggestions."""
+    resume_name: str = Field(..., description="Name of the resume to analyze")
+
+
+class JobTitleSuggestionsResponse(BaseModel):
+    """Response model for job title suggestions."""
+    suggestions: List[str] = Field(..., description="List of 3 suggested job titles")
+    success: bool = Field(..., description="Whether the suggestion generation was successful")
+    message: str = Field(..., description="Status message")
