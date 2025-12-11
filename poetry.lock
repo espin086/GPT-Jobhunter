@@ -651,26 +651,6 @@ files = [
 all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2)"]
 
 [[package]]
-name = "importlib-metadata"
-version = "6.11.0"
-description = "Read metadata from Python packages"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "importlib_metadata-6.11.0-py3-none-any.whl", hash = "sha256:f0afba6205ad8f8947c7d338b5342d5db2afbfd82f9cbef7879a9539cc12eb9b"},
-    {file = "importlib_metadata-6.11.0.tar.gz", hash = "sha256:1231cf92d825c9e03cfc4da076a16de6422c863558229ea0b22b675657463443"},
-]
-
-[package.dependencies]
-zipp = ">=0.5"
-
-[package.extras]
-docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (<7.2.5)", "sphinx (>=3.5)", "sphinx-lint"]
-perf = ["ipython"]
-testing = ["flufl.flake8", "importlib-resources (>=1.3) ; python_version < \"3.9\"", "packaging", "pyfakefs", "pytest (>=6)", "pytest-black (>=0.3.7) ; platform_python_implementation != \"PyPy\"", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy (>=0.9.1) ; platform_python_implementation != \"PyPy\"", "pytest-perf (>=0.9.2)", "pytest-ruff"]
-
-[[package]]
 name = "iniconfig"
 version = "2.1.0"
 description = "brain-dead simple config-ini parsing"
@@ -836,31 +816,6 @@ files = [
 referencing = ">=0.31.0"
 
 [[package]]
-name = "markdown-it-py"
-version = "3.0.0"
-description = "Python port of markdown-it. Markdown parsing, done right!"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "markdown-it-py-3.0.0.tar.gz", hash = "sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb"},
-    {file = "markdown_it_py-3.0.0-py3-none-any.whl", hash = "sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1"},
-]
-
-[package.dependencies]
-mdurl = ">=0.1,<1.0"
-
-[package.extras]
-benchmarking = ["psutil", "pytest", "pytest-benchmark"]
-code-style = ["pre-commit (>=3.0,<4.0)"]
-compare = ["commonmark (>=0.9,<1.0)", "markdown (>=3.4,<4.0)", "mistletoe (>=1.0,<2.0)", "mistune (>=2.0,<3.0)", "panflute (>=2.3,<3.0)"]
-linkify = ["linkify-it-py (>=1,<3)"]
-plugins = ["mdit-py-plugins"]
-profiling = ["gprof2dot"]
-rtd = ["jupyter_sphinx", "mdit-py-plugins", "myst-parser", "pyyaml", "sphinx", "sphinx-copybutton", "sphinx-design", "sphinx_book_theme"]
-testing = ["coverage", "pytest", "pytest-cov", "pytest-regressions"]
-
-[[package]]
 name = "markupsafe"
 version = "3.0.2"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -929,18 +884,6 @@ files = [
     {file = "MarkupSafe-3.0.2-cp39-cp39-win32.whl", hash = "sha256:8c4e8c3ce11e1f92f6536ff07154f9d49677ebaaafc32db9db4620bc11ed480f"},
     {file = "MarkupSafe-3.0.2-cp39-cp39-win_amd64.whl", hash = "sha256:6e296a513ca3d94054c2c881cc913116e90fd030ad1c656b3869762b754f5f8a"},
     {file = "markupsafe-3.0.2.tar.gz", hash = "sha256:ee55d3edf80167e48ea11a923c7386f4669df67d7994554387f84e7d8b0a2bf0"},
-]
-
-[[package]]
-name = "mdurl"
-version = "0.1.2"
-description = "Markdown URL utilities"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
-    {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
 ]
 
 [[package]]
@@ -1559,36 +1502,6 @@ carto = ["pydeck-carto"]
 jupyter = ["ipykernel (>=5.1.2) ; python_version >= \"3.4\"", "ipython (>=5.8.0) ; python_version < \"3.4\"", "ipywidgets (>=7,<8)", "traitlets (>=4.3.2)"]
 
 [[package]]
-name = "pygments"
-version = "2.19.1"
-description = "Pygments is a syntax highlighting package written in Python."
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c"},
-    {file = "pygments-2.19.1.tar.gz", hash = "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f"},
-]
-
-[package.extras]
-windows-terminal = ["colorama (>=0.4.6)"]
-
-[[package]]
-name = "pympler"
-version = "1.1"
-description = "A development tool to measure, monitor and analyze the memory behavior of Python objects."
-optional = false
-python-versions = ">=3.6"
-groups = ["main"]
-files = [
-    {file = "Pympler-1.1-py3-none-any.whl", hash = "sha256:5b223d6027d0619584116a0cbc28e8d2e378f7a79c1e5e024f9ff3b673c58506"},
-    {file = "pympler-1.1.tar.gz", hash = "sha256:1eaa867cb8992c218430f1708fdaccda53df064144d1c5656b1e6f1ee6000424"},
-]
-
-[package.dependencies]
-pywin32 = {version = ">=226", markers = "platform_system == \"Windows\""}
-
-[[package]]
 name = "pypdf2"
 version = "1.27.0"
 description = "PDF toolkit"
@@ -1699,48 +1612,6 @@ groups = ["main"]
 files = [
     {file = "pytz-2025.2-py2.py3-none-any.whl", hash = "sha256:5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00"},
     {file = "pytz-2025.2.tar.gz", hash = "sha256:360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3"},
-]
-
-[[package]]
-name = "pytz-deprecation-shim"
-version = "0.1.0.post0"
-description = "Shims to make deprecation of pytz easier"
-optional = false
-python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
-groups = ["main"]
-files = [
-    {file = "pytz_deprecation_shim-0.1.0.post0-py2.py3-none-any.whl", hash = "sha256:8314c9692a636c8eb3bda879b9f119e350e93223ae83e70e80c31675a0fdc1a6"},
-    {file = "pytz_deprecation_shim-0.1.0.post0.tar.gz", hash = "sha256:af097bae1b616dde5c5744441e2ddc69e74dfdcb0c263129610d85b87445a59d"},
-]
-
-[package.dependencies]
-tzdata = {version = "*", markers = "python_version >= \"3.6\""}
-
-[[package]]
-name = "pywin32"
-version = "310"
-description = "Python for Window Extensions"
-optional = false
-python-versions = "*"
-groups = ["main"]
-markers = "platform_system == \"Windows\""
-files = [
-    {file = "pywin32-310-cp310-cp310-win32.whl", hash = "sha256:6dd97011efc8bf51d6793a82292419eba2c71cf8e7250cfac03bba284454abc1"},
-    {file = "pywin32-310-cp310-cp310-win_amd64.whl", hash = "sha256:c3e78706e4229b915a0821941a84e7ef420bf2b77e08c9dae3c76fd03fd2ae3d"},
-    {file = "pywin32-310-cp310-cp310-win_arm64.whl", hash = "sha256:33babed0cf0c92a6f94cc6cc13546ab24ee13e3e800e61ed87609ab91e4c8213"},
-    {file = "pywin32-310-cp311-cp311-win32.whl", hash = "sha256:1e765f9564e83011a63321bb9d27ec456a0ed90d3732c4b2e312b855365ed8bd"},
-    {file = "pywin32-310-cp311-cp311-win_amd64.whl", hash = "sha256:126298077a9d7c95c53823934f000599f66ec9296b09167810eb24875f32689c"},
-    {file = "pywin32-310-cp311-cp311-win_arm64.whl", hash = "sha256:19ec5fc9b1d51c4350be7bb00760ffce46e6c95eaf2f0b2f1150657b1a43c582"},
-    {file = "pywin32-310-cp312-cp312-win32.whl", hash = "sha256:8a75a5cc3893e83a108c05d82198880704c44bbaee4d06e442e471d3c9ea4f3d"},
-    {file = "pywin32-310-cp312-cp312-win_amd64.whl", hash = "sha256:bf5c397c9a9a19a6f62f3fb821fbf36cac08f03770056711f765ec1503972060"},
-    {file = "pywin32-310-cp312-cp312-win_arm64.whl", hash = "sha256:2349cc906eae872d0663d4d6290d13b90621eaf78964bb1578632ff20e152966"},
-    {file = "pywin32-310-cp313-cp313-win32.whl", hash = "sha256:5d241a659c496ada3253cd01cfaa779b048e90ce4b2b38cd44168ad555ce74ab"},
-    {file = "pywin32-310-cp313-cp313-win_amd64.whl", hash = "sha256:667827eb3a90208ddbdcc9e860c81bde63a135710e21e4cb3348968e4bd5249e"},
-    {file = "pywin32-310-cp313-cp313-win_arm64.whl", hash = "sha256:e308f831de771482b7cf692a1f308f8fca701b2d8f9dde6cc440c7da17e47b33"},
-    {file = "pywin32-310-cp38-cp38-win32.whl", hash = "sha256:0867beb8addefa2e3979d4084352e4ac6e991ca45373390775f7084cc0209b9c"},
-    {file = "pywin32-310-cp38-cp38-win_amd64.whl", hash = "sha256:30f0a9b3138fb5e07eb4973b7077e1883f558e40c578c6925acc7a94c34eaa36"},
-    {file = "pywin32-310-cp39-cp39-win32.whl", hash = "sha256:851c8d927af0d879221e616ae1f66145253537bbdd321a77e8ef701b443a9a1a"},
-    {file = "pywin32-310-cp39-cp39-win_amd64.whl", hash = "sha256:96867217335559ac619f00ad70e513c0fcf84b8a3af9fc2bba3b59b97da70475"},
 ]
 
 [[package]]
@@ -1885,25 +1756,6 @@ urllib3 = ">=1.21.1,<3"
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
-
-[[package]]
-name = "rich"
-version = "13.9.4"
-description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
-optional = false
-python-versions = ">=3.8.0"
-groups = ["main"]
-files = [
-    {file = "rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"},
-    {file = "rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098"},
-]
-
-[package.dependencies]
-markdown-it-py = ">=2.2.0"
-pygments = ">=2.13.0,<3.0.0"
-
-[package.extras]
-jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "rpds-py"
@@ -2209,44 +2061,44 @@ full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyam
 
 [[package]]
 name = "streamlit"
-version = "1.25.0"
+version = "1.52.1"
 description = "A faster way to build and share data apps"
 optional = false
-python-versions = ">=3.8, !=3.9.7"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "streamlit-1.25.0-py2.py3-none-any.whl", hash = "sha256:3c561dca1b5430e73b7f2d66bff1d26103936bb4223912ab563ffee881fccc30"},
-    {file = "streamlit-1.25.0.tar.gz", hash = "sha256:8a7c93bee8703869045804afe22e9373c4e974fdb2a3e9abe3b027df3de03119"},
+    {file = "streamlit-1.52.1-py3-none-any.whl", hash = "sha256:97fee2c3421d350fd65548e45a20f506ec1b651d78f95ecacbc0c2f9f838081c"},
+    {file = "streamlit-1.52.1.tar.gz", hash = "sha256:b036a71866b893c97fdebaa2a2ebd21ebf2af7daea4b3abe783a57b26f55b3ca"},
 ]
 
 [package.dependencies]
-altair = ">=4.0,<6"
-blinker = ">=1.0.0,<2"
-cachetools = ">=4.0,<6"
+altair = ">=4.0,<5.4.0 || >5.4.0,<5.4.1 || >5.4.1,<7"
+blinker = ">=1.5.0,<2"
+cachetools = ">=4.0,<7"
 click = ">=7.0,<9"
 gitpython = ">=3.0.7,<3.1.19 || >3.1.19,<4"
-importlib-metadata = ">=1.4,<7"
-numpy = ">=1.19.3,<2"
-packaging = ">=16.8,<24"
-pandas = ">=1.3.0,<3"
-pillow = ">=7.1.0,<10"
-protobuf = ">=3.20,<5"
-pyarrow = ">=6.0"
-pydeck = ">=0.8,<1"
-pympler = ">=0.9,<2"
-python-dateutil = ">=2.7.3,<3"
-requests = ">=2.18,<3"
-rich = ">=10.14.0,<14"
-tenacity = ">=8.1.0,<9"
+numpy = ">=1.23,<3"
+packaging = ">=20"
+pandas = ">=1.4.0,<3"
+pillow = ">=7.1.0,<13"
+protobuf = ">=3.20,<7"
+pyarrow = ">=7.0"
+pydeck = ">=0.8.0b4,<1"
+requests = ">=2.27,<3"
+tenacity = ">=8.1.0,<10"
 toml = ">=0.10.1,<2"
-tornado = ">=6.0.3,<7"
-typing-extensions = ">=4.1.0,<5"
-tzlocal = ">=1.1,<5"
-validators = ">=0.2,<1"
-watchdog = {version = ">=2.1.5", markers = "platform_system != \"Darwin\""}
+tornado = ">=6.0.3,<6.5.0 || >6.5.0,<7"
+typing-extensions = ">=4.4.0,<5"
+watchdog = {version = ">=2.1.5,<7", markers = "platform_system != \"Darwin\""}
 
 [package.extras]
-snowflake = ["snowflake-snowpark-python ; python_version == \"3.8\""]
+all = ["rich (>=11.0.0)", "streamlit[auth,charts,pdf,performance,snowflake,sql]"]
+auth = ["Authlib (>=1.3.2)"]
+charts = ["graphviz (>=0.19.0)", "matplotlib (>=3.0.0)", "orjson (>=3.5.0)", "plotly (>=4.0.0)"]
+pdf = ["streamlit-pdf (>=1.0.0)"]
+performance = ["orjson (>=3.5.0)", "uvloop (>=0.15.2) ; sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\""]
+snowflake = ["snowflake-connector-python (>=3.3.0) ; python_version < \"3.12\"", "snowflake-snowpark-python[modin] (>=1.17.0) ; python_version < \"3.12\""]
+sql = ["SQLAlchemy (>=2.0.0)"]
 
 [[package]]
 name = "tenacity"
@@ -2358,37 +2210,6 @@ files = [
 typing-extensions = ">=4.12.0"
 
 [[package]]
-name = "tzdata"
-version = "2025.2"
-description = "Provider of IANA time zone data"
-optional = false
-python-versions = ">=2"
-groups = ["main"]
-files = [
-    {file = "tzdata-2025.2-py2.py3-none-any.whl", hash = "sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8"},
-    {file = "tzdata-2025.2.tar.gz", hash = "sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9"},
-]
-
-[[package]]
-name = "tzlocal"
-version = "4.3.1"
-description = "tzinfo object for the local timezone"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "tzlocal-4.3.1-py3-none-any.whl", hash = "sha256:67d7e7f4ce0a98e9dfde2e02474c60fe846ed032d78b555c554c2e9cba472d84"},
-    {file = "tzlocal-4.3.1.tar.gz", hash = "sha256:ee32ef8c20803c19a96ed366addd3d4a729ef6309cb5c7359a0cc2eeeb7fa46a"},
-]
-
-[package.dependencies]
-pytz-deprecation-shim = "*"
-tzdata = {version = "*", markers = "platform_system == \"Windows\""}
-
-[package.extras]
-devenv = ["black", "check-manifest", "flake8", "pyroma", "pytest (>=4.3)", "pytest-cov", "pytest-mock (>=3.3)", "zest.releaser"]
-
-[[package]]
 name = "urllib3"
 version = "2.3.0"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -2424,21 +2245,6 @@ h11 = ">=0.8"
 
 [package.extras]
 standard = ["colorama (>=0.4) ; sys_platform == \"win32\"", "httptools (>=0.5.0)", "python-dotenv (>=0.13)", "pyyaml (>=5.1)", "uvloop (>=0.14.0,!=0.15.0,!=0.15.1) ; sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\"", "watchfiles (>=0.13)", "websockets (>=10.4)"]
-
-[[package]]
-name = "validators"
-version = "0.34.0"
-description = "Python Data Validation for Humans™"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "validators-0.34.0-py3-none-any.whl", hash = "sha256:c804b476e3e6d3786fa07a30073a4ef694e617805eb1946ceee3fe5a9b8b1321"},
-    {file = "validators-0.34.0.tar.gz", hash = "sha256:647fe407b45af9a74d245b943b18e6a816acf4926974278f6dd617778e1e781f"},
-]
-
-[package.extras]
-crypto-eth-addresses = ["eth-hash[pycryptodome] (>=0.7.0)"]
 
 [[package]]
 name = "watchdog"
@@ -2573,27 +2379,7 @@ files = [
     {file = "wrapt-1.17.2.tar.gz", hash = "sha256:41388e9d4d1522446fe79d3213196bd9e3b301a336965b9e27ca2788ebd122f3"},
 ]
 
-[[package]]
-name = "zipp"
-version = "3.21.0"
-description = "Backport of pathlib-compatible object wrapper for zip files"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "zipp-3.21.0-py3-none-any.whl", hash = "sha256:ac1bbe05fd2991f160ebce24ffbac5f6d11d83dc90891255885223d42b3cd931"},
-    {file = "zipp-3.21.0.tar.gz", hash = "sha256:2c9958f6430a2040341a52eb608ed6dd93ef4392e02ffe219417c1b28b5dd1f4"},
-]
-
-[package.extras]
-check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1) ; sys_platform != \"cygwin\""]
-cover = ["pytest-cov"]
-doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
-enabler = ["pytest-enabler (>=2.2)"]
-test = ["big-O", "importlib-resources ; python_version < \"3.9\"", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-ignore-flaky"]
-type = ["pytest-mypy"]
-
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.13"
-content-hash = "791dc783afd985250556de51d8b7659cc5730b3438cf5a80387cf988f76bc66b"
+content-hash = "896f1c6afd0062241c56eae61c6dcb8ded2182c8864cbacdc2ad1c8e589d3140"

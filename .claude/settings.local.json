@@ -15,7 +15,11 @@
       "Bash(git commit:*)",
       "Bash(poetry install:*)",
       "Bash(poetry lock:*)",
-      "Bash(poetry show:*)"
+      "Bash(poetry show:*)",
+      "Bash(poetry env:*)",
+      "Bash(poetry run python:*)",
+      "Bash(timeout 10 make:*)",
+      "Bash(poetry run pip:*)"
     ]
   }
 }
