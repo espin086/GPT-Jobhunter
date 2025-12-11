@@ -480,7 +480,7 @@ def render_job_card(job: Dict[str, Any], index: int):
             job_id = job.get("id")
             if job_id and save_job_to_tracking(job_id):
                 st.toast("💾 Job saved to tracker!")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.toast("❌ Failed to save job")
     with col3:
@@ -494,7 +494,7 @@ def render_job_card(job: Dict[str, Any], index: int):
             job_id = job.get("id")
             if job_id and pass_job(job_id):
                 st.toast("❌ Job hidden")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.toast("❌ Failed to hide job")
 
@@ -586,7 +586,7 @@ def main():
                                     st.session_state.last_uploaded_file = file_key
                                     st.session_state.selected_resume = uploaded_file.name
                                     st.success(f"✅ Uploaded and activated!")
-                                    st.experimental_rerun()
+                                    st.rerun()
                                 else:
                                     st.error("Upload failed. Please try again.")
                             except Exception as e:
@@ -611,7 +611,7 @@ def main():
                                 st.session_state.last_uploaded_file = file_key
                                 st.session_state.selected_resume = uploaded_file.name
                                 st.success(f"✅ Resume uploaded!")
-                                st.experimental_rerun()
+                                st.rerun()
                             else:
                                 st.error("Upload failed. Please try again.")
                         except Exception as e:
@@ -891,31 +891,31 @@ def main():
                         if st.button("→ HR Screen", key=f"move_{job_id}_hr", use_container_width=True):
                             if update_job_status(job_id, "hr_screen"):
                                 st.toast("✅ Moved to HR Screen!")
-                                st.experimental_rerun()
+                                st.rerun()
                     elif col_info["key"] == "hr_screen":
                         col_a, col_b = st.columns(2)
                         with col_a:
                             if st.button("→ Round 1", key=f"move_{job_id}_r1", use_container_width=True):
                                 if update_job_status(job_id, "round_1"):
                                     st.toast("✅ Moved to Round 1!")
-                                    st.experimental_rerun()
+                                    st.rerun()
                         with col_b:
                             if st.button("❌ Reject", key=f"move_{job_id}_rej_hr", use_container_width=True):
                                 if update_job_status(job_id, "rejected"):
                                     st.toast("Moved to Rejected")
-                                    st.experimental_rerun()
+                                    st.rerun()
                     elif col_info["key"] == "round_1":
                         col_a, col_b = st.columns(2)
                         with col_a:
                             if st.button("→ Round 2", key=f"move_{job_id}_r2", use_container_width=True):
                                 if update_job_status(job_id, "round_2"):
                                     st.toast("✅ Moved to Round 2!")
-                                    st.experimental_rerun()
+                                    st.rerun()
                         with col_b:
                             if st.button("❌ Reject", key=f"move_{job_id}_rej_r1", use_container_width=True):
                                 if update_job_status(job_id, "rejected"):
                                     st.toast("Moved to Rejected")
-                                    st.experimental_rerun()
+                                    st.rerun()
                     elif col_info["key"] == "round_2":
                         col_a, col_b = st.columns(2)
                         with col_a:
@@ -926,7 +926,7 @@ def main():
                             if st.button("❌ Reject", key=f"move_{job_id}_rej_r2", use_container_width=True):
                                 if update_job_status(job_id, "rejected"):
                                     st.toast("Moved to Rejected")
-                                    st.experimental_rerun()
+                                    st.rerun()
 
                     st.divider()
 

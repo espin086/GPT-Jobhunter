@@ -257,7 +257,7 @@ class JobDataService:
             
             # Get total count - build a proper count query
             # Extract the WHERE clause from base_query
-            where_clause_start = base_query.find("WHERE 1=1")
+            where_clause_start = base_query.find("WHERE")
             if where_clause_start != -1:
                 where_clause = base_query[where_clause_start:]
                 # Remove any ORDER BY or LIMIT if present (shouldn't be at this point though)
