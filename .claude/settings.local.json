@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(make help:*)",
+      "Bash(make test:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nConsolidate shell scripts into comprehensive Makefile\n\nThis update consolidates all shell script functionality into a single,\nwell-organized Makefile with clear commands for development and production workflows.\n\nKey changes:\n- Added ''make dev'' command for local development without Docker (auto-refresh enabled)\n- Added ''make prod'' command for Docker-based production deployment\n- Added ''make stop'' command to stop all services (local and Docker)\n- Enhanced ''make test'' command with comprehensive testing workflow\n- Added ''make rebuild-embeddings'' from rebuild_all.sh functionality\n- Added ''make docker-build'' and ''make docker-run'' for granular Docker control\n- Added ''make docker-clean'' for cleaning Docker resources\n- Added ''make clean'' for cleaning temporary files and cache\n- Improved help command with categorized command listings\n- All commands include clear status messages and error handling\n\nThe Makefile now serves as the single source of truth for all deployment,\ndevelopment, testing, and maintenance tasks.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(make stop:*)",
+      "Bash(make dev:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(git commit:*)",
+      "Bash(poetry install:*)",
+      "Bash(poetry lock:*)",
+      "Bash(poetry show:*)"
+    ]
+  }
+}

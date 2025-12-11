@@ -236,12 +236,15 @@ async def upload_resume(request: ResumeUploadRequest):
 async def upload_resume_file(file: UploadFile = File(...)):
     """
     Upload a resume file (PDF or TXT).
-    
+
     Accepts PDF and TXT files and extracts text content.
     """
     try:
+        logger.info(f"Received file upload: {file.filename}, content_type: {file.content_type}")
+
         # Validate file type
         if file.content_type not in ["application/pdf", "text/plain"]:
+            logger.warning(f"Rejected file with content_type: {file.content_type}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Only PDF and TXT files are supported"
@@ -250,39 +253,47 @@ async def upload_resume_file(file: UploadFile = File(...)):
         # Extract text content
         content = ""
         if file.content_type == "text/plain":
+            logger.info("Processing text file...")
             content_bytes = await file.read()
             content = content_bytes.decode("utf-8")
         elif file.content_type == "application/pdf":
+            logger.info("Processing PDF file...")
             # Handle PDF extraction
             try:
                 import pdfplumber
                 import io
                 content_bytes = await file.read()
-                
+
                 # Convert bytes to file-like object
                 pdf_file = io.BytesIO(content_bytes)
-                
+
                 with pdfplumber.open(pdf_file) as pdf:
                     for page in pdf.pages:
                         page_text = page.extract_text()
                         if page_text:
                             content += page_text + "\n"
-                            
-            except ImportError:
+
+            except ImportError as ie:
+                logger.error(f"PDF library not available: {ie}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="PDF processing not available - pdfplumber not installed"
                 )
-        
+
+        logger.info(f"Extracted {len(content)} characters from file")
+
         if not content.strip():
+            logger.warning("No text content extracted from file")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No text content could be extracted from the file"
             )
-        
+
         # Upload to database
+        logger.info(f"Uploading resume to database: {file.filename}")
         request = ResumeUploadRequest(filename=file.filename, content=content)
         success = resume_service.upload_resume(request)
+        logger.info(f"Resume upload {'succeeded' if success else 'failed'}")
         
         return ResumeResponse(
             resume_name=file.filename,
@@ -293,7 +304,7 @@ async def upload_resume_file(file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"File upload failed: {e}")
+        logger.error(f"File upload failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"File upload failed: {str(e)}"

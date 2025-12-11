@@ -220,7 +220,7 @@ def main():
                             success = upload_resume_file(uploaded_file)
                             if success:
                                 st.success(f"✅ Resume '{uploaded_file.name}' uploaded successfully!")
-                                st.rerun()
+                                st.experimental_rerun()
                             else:
                                 st.error("Failed to upload resume. Please check the file format and try again.")
                         except Exception as e:
