@@ -73,6 +73,8 @@ dev:
 	@rm -rf jobhunter/temp/data/raw/* jobhunter/temp/data/processed/* 2>/dev/null || true
 	@echo "✅ Database cleaned"
 	@echo ""
+	@echo "💡 TIP: If you see old data in browser, press Ctrl+Shift+R to clear cache"
+	@echo ""
 	@echo "🚀 Starting backend on http://localhost:$(BACKEND_PORT)"
 	@echo "🚀 Starting frontend on http://localhost:$(FRONTEND_PORT)"
 	@echo ""

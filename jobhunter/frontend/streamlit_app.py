@@ -27,7 +27,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for a cleaner, more modern look
+# Custom CSS for a cleaner, more modern look with job cards
 st.markdown("""
 <style>
 .main-header {
@@ -73,6 +73,98 @@ st.markdown("""
 .streamlit-expanderHeader {
     font-weight: 600;
     color: #1e88e5;
+}
+
+/* Job Card Styling */
+.job-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    position: relative;
+}
+.job-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+    border-color: #1e88e5;
+}
+.match-score {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+.match-high {
+    background: #d4edda;
+    color: #155724;
+}
+.match-medium {
+    background: #fff3cd;
+    color: #856404;
+}
+.match-low {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+.job-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1e88e5;
+    margin: 0.5rem 0;
+    line-height: 1.3;
+}
+.job-company {
+    font-size: 1.1rem;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.job-meta {
+    color: #666;
+    font-size: 0.95rem;
+    margin: 0.5rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+.job-badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.badge-remote {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+.badge-hybrid {
+    background: #fff3e0;
+    color: #f57c00;
+}
+.badge-onsite {
+    background: #f5f5f5;
+    color: #616161;
+}
+.badge-salary {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 700;
+}
+.job-date {
+    color: #999;
+    font-size: 0.85rem;
+}
+.job-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -195,6 +287,198 @@ def get_job_title_suggestions(resume_name: str) -> Dict[str, Any]:
         return {"error": "Suggestion failed"}
 
 
+def format_relative_time(date_str: str) -> str:
+    """Convert date string to relative time (e.g., '2d ago')."""
+    if not date_str:
+        return "Unknown"
+    try:
+        from datetime import datetime
+
+        # Try different date formats
+        job_date = None
+
+        # Try ISO format with timezone (e.g., 2025-12-08T00:00:00.000Z)
+        try:
+            if 'T' in date_str:
+                # Remove timezone and milliseconds for easier parsing
+                clean_date = date_str.split('T')[0]
+                job_date = datetime.strptime(clean_date, "%Y-%m-%d")
+        except:
+            pass
+
+        # Try simple date format (e.g., 2025-12-08)
+        if not job_date:
+            try:
+                job_date = datetime.strptime(date_str.split()[0], "%Y-%m-%d")
+            except:
+                pass
+
+        # If we couldn't parse it, return a safe default
+        if not job_date:
+            return "Recently"
+
+        now = datetime.now()
+        diff = now - job_date
+
+        if diff.days == 0:
+            return "Today"
+        elif diff.days == 1:
+            return "Yesterday"
+        elif diff.days < 0:
+            return "Recently"  # Future date, shouldn't happen but handle it
+        elif diff.days < 7:
+            return f"{diff.days}d ago"
+        elif diff.days < 30:
+            weeks = diff.days // 7
+            return f"{weeks}w ago"
+        elif diff.days < 365:
+            months = diff.days // 30
+            return f"{months}mo ago"
+        else:
+            years = diff.days // 365
+            return f"{years}y ago"
+    except Exception as e:
+        # Fail gracefully - don't let date parsing break the whole card
+        return "Recently"
+
+
+def format_salary(salary_low: Optional[float], salary_high: Optional[float], currency: Optional[str] = "USD") -> str:
+    """Format salary range for display."""
+    if not salary_low and not salary_high:
+        return None
+
+    def format_amount(amount):
+        if amount >= 1000:
+            return f"${int(amount/1000)}K"
+        return f"${int(amount)}"
+
+    if salary_low and salary_high:
+        return f"{format_amount(salary_low)}-{format_amount(salary_high)}"
+    elif salary_low:
+        return f"{format_amount(salary_low)}+"
+    elif salary_high:
+        return f"Up to {format_amount(salary_high)}"
+    return None
+
+
+def render_job_card(job: Dict[str, Any], index: int):
+    """Render a single job as a card."""
+    import html
+
+    # Calculate match score styling
+    similarity = job.get("resume_similarity", 0)
+    if similarity >= 0.9:
+        match_class = "match-high"
+        match_emoji = "🟢"
+    elif similarity >= 0.7:
+        match_class = "match-medium"
+        match_emoji = "🟡"
+    else:
+        match_class = "match-low"
+        match_emoji = "⚪"
+
+    # Format salary
+    salary_str = format_salary(job.get("salary_low"), job.get("salary_high"))
+
+    # Determine remote status
+    is_remote = job.get("job_is_remote", "").lower()
+    if "yes" in is_remote or "remote" in is_remote:
+        remote_badge = '<span class="job-badge badge-remote">🏠 Remote</span>'
+    elif "hybrid" in is_remote:
+        remote_badge = '<span class="job-badge badge-hybrid">🔀 Hybrid</span>'
+    else:
+        remote_badge = '<span class="job-badge badge-onsite">🏢 On-site</span>'
+
+    # Format location - escape HTML
+    city = job.get("city", "")
+    state = job.get("state", "")
+    location = f"{city}, {state}".strip(", ") or "Location not specified"
+    location = html.escape(location)
+
+    # Format date
+    date_posted = format_relative_time(job.get("date", ""))
+
+    # Escape user content to prevent HTML injection
+    job_title = html.escape(job.get("title", "Unknown Title"))
+    company_name = html.escape(job.get("company", "Unknown Company"))
+    salary_display = html.escape(salary_str) if salary_str else ""
+
+    # Build salary badge HTML (always include, even if empty, to maintain structure)
+    salary_badge_html = f'<span class="job-badge badge-salary">💰 {salary_display}</span>' if salary_str else '<span></span>'
+
+    # Build card HTML - ensure it's always valid with no conditional structure
+    card_html = f"""<div class="job-card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+        <span class="match-score {match_class}">{match_emoji} {int(similarity * 100)}% Match</span>
+        {salary_badge_html}
+    </div>
+    <h3 class="job-title">{job_title}</h3>
+    <div class="job-company">{company_name}</div>
+    <div class="job-meta">
+        <span>{location}</span>
+        <span>•</span>
+        {remote_badge}
+        <span>•</span>
+        <span class="job-date">Posted {date_posted}</span>
+    </div>
+</div>"""
+
+    st.markdown(card_html, unsafe_allow_html=True)
+
+    # Action buttons below the card
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+    with col1:
+        apply_link = job.get("job_apply_link", "")
+        if apply_link:
+            # Use markdown link styled as button for older Streamlit versions
+            st.markdown(
+                f'<a href="{apply_link}" target="_blank" style="display: inline-block; padding: 0.5rem 1rem; background: linear-gradient(90deg, #1e88e5 0%, #1976d2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; text-align: center; width: 100%;">🚀 Apply Now</a>',
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown('<div style="padding: 0.5rem; text-align: center; color: #999;">No link</div>', unsafe_allow_html=True)
+    with col2:
+        if st.button("🔖 Save", key=f"save_{index}", use_container_width=True):
+            st.toast("💾 Job saved!")
+    with col3:
+        if st.button("👁️ View", key=f"view_{index}", use_container_width=True):
+            # Store the expanded state in session
+            if f"expanded_{index}" not in st.session_state:
+                st.session_state[f"expanded_{index}"] = False
+            st.session_state[f"expanded_{index}"] = not st.session_state.get(f"expanded_{index}", False)
+    with col4:
+        if st.button("👎 Pass", key=f"pass_{index}", use_container_width=True):
+            st.toast("❌ Marked as not interested")
+
+    # Show details if expanded
+    if st.session_state.get(f"expanded_{index}", False):
+        with st.container():
+            st.markdown("---")
+            st.write("**📋 Full Job Details**")
+
+            if job.get("description"):
+                st.write("**Description:**")
+                st.write(job.get("description"))
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if job.get("required_skills"):
+                    st.write("**Required Skills:**")
+                    st.write(job.get("required_skills"))
+                if job.get("required_experience"):
+                    st.write("**Experience:**")
+                    st.write(job.get("required_experience"))
+            with col_b:
+                if job.get("required_education"):
+                    st.write("**Education:**")
+                    st.write(job.get("required_education"))
+                if job.get("job_benefits"):
+                    st.write("**Benefits:**")
+                    st.write(job.get("job_benefits"))
+
+            st.markdown("---")
+
+
 def main():
     """Main Streamlit application."""
     
@@ -227,7 +511,12 @@ def main():
         resumes = get_resumes()
         if resumes:
             # Auto-select the most recent resume (last in list)
-            if not st.session_state.selected_resume or st.session_state.selected_resume not in resumes:
+            # But first, clear the session state if the selected resume no longer exists
+            if st.session_state.selected_resume and st.session_state.selected_resume not in resumes:
+                st.session_state.selected_resume = None
+                st.session_state.job_suggestions = None  # Clear suggestions too
+
+            if not st.session_state.selected_resume:
                 st.session_state.selected_resume = resumes[-1]
 
             # Show current resume with a clean indicator
@@ -255,7 +544,11 @@ def main():
                             except Exception as e:
                                 st.error(f"Error: {e}")
         else:
-            # No resumes yet - show uploader prominently
+            # No resumes yet - clear session state and show uploader prominently
+            if st.session_state.selected_resume:
+                st.session_state.selected_resume = None
+                st.session_state.job_suggestions = None
+
             st.info("👋 Start by uploading your resume")
             uploaded_file = st.file_uploader("Choose a file", type=['txt', 'pdf'], key="first_resume_uploader")
 
@@ -412,51 +705,64 @@ def main():
     total_count = jobs_data.get("total_count", 0)
     
     if jobs:
-        st.info(f"Showing {len(jobs)} of {total_count} jobs matching your criteria")
-        
-        # Convert to DataFrame for display
-        df_data = []
-        for job in jobs:
-            df_data.append({
-                "Similarity": round(job.get("resume_similarity", 0), 3),
-                "Title": job.get("title", ""),
-                "Company": job.get("company", ""),
-                "Location": f"{job.get('city', '')}, {job.get('state', '')}".strip(", "),
-                "Type": job.get("job_type", ""),
-                "Remote": job.get("job_is_remote", ""),
-                "Salary Low": job.get("salary_low", ""),
-                "Salary High": job.get("salary_high", ""),
-                "Apply Link": job.get("job_apply_link", ""),
-                "Date": job.get("date", "")
-            })
-        
-        df = pd.DataFrame(df_data)
-        
-        # Display the dataframe
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "Apply Link": st.column_config.LinkColumn("Apply Link"),
-                "Similarity": st.column_config.NumberColumn("Similarity", format="%.3f")
-            }
-        )
-        
-        # Bulk actions
-        st.subheader("🔗 Bulk Actions")
-        col1, col2 = st.columns([1, 3])
+        # Header with view toggle
+        col1, col2 = st.columns([3, 1])
         with col1:
-            num_links = st.number_input("Number of links to open", min_value=1, max_value=len(jobs), value=min(5, len(jobs)))
+            st.info(f"📊 Showing {len(jobs)} of {total_count} jobs matching your criteria")
         with col2:
-            if st.button(f"🔗 Open Top {num_links} Job Links"):
-                links_opened = 0
-                for i, job in enumerate(jobs[:num_links]):
-                    link = job.get("job_apply_link")
-                    if link and link.startswith("http"):
-                        st.markdown(f"[Open Job {i+1}: {job.get('title', 'Unknown')}]({link})")
-                        links_opened += 1
-                st.success(f"Prepared {links_opened} job links for opening")
+            view_mode = st.selectbox("View", ["🎴 Cards", "📊 Table"], label_visibility="collapsed")
+
+        st.divider()
+
+        # Display jobs based on view mode
+        if view_mode == "🎴 Cards":
+            # Card-based view (DEFAULT)
+            for i, job in enumerate(jobs):
+                render_job_card(job, i)
+
+        else:
+            # Table view (legacy)
+            df_data = []
+            for job in jobs:
+                df_data.append({
+                    "Similarity": round(job.get("resume_similarity", 0), 3),
+                    "Title": job.get("title", ""),
+                    "Company": job.get("company", ""),
+                    "Location": f"{job.get('city', '')}, {job.get('state', '')}".strip(", "),
+                    "Type": job.get("job_type", ""),
+                    "Remote": job.get("job_is_remote", ""),
+                    "Salary Low": job.get("salary_low", ""),
+                    "Salary High": job.get("salary_high", ""),
+                    "Apply Link": job.get("job_apply_link", ""),
+                    "Date": job.get("date", "")
+                })
+
+            df = pd.DataFrame(df_data)
+
+            st.dataframe(
+                df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Apply Link": st.column_config.LinkColumn("Apply Link"),
+                    "Similarity": st.column_config.NumberColumn("Similarity", format="%.3f")
+                }
+            )
+
+            # Bulk actions (only in table view)
+            st.subheader("🔗 Bulk Actions")
+            col1, col2 = st.columns([1, 3])
+            with col1:
+                num_links = st.number_input("Number of links to open", min_value=1, max_value=len(jobs), value=min(5, len(jobs)))
+            with col2:
+                if st.button(f"🔗 Open Top {num_links} Job Links"):
+                    links_opened = 0
+                    for i, job in enumerate(jobs[:num_links]):
+                        link = job.get("job_apply_link")
+                        if link and link.startswith("http"):
+                            st.markdown(f"[Open Job {i+1}: {job.get('title', 'Unknown')}]({link})")
+                            links_opened += 1
+                    st.success(f"Prepared {links_opened} job links for opening")
     
     else:
         # Show helpful onboarding message
