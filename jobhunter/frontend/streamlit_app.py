@@ -557,28 +557,77 @@ def main():
         st.session_state.last_search_results = None
     if "job_suggestions" not in st.session_state:
         st.session_state.job_suggestions = None
-    
+    if "similarity_needs_update" not in st.session_state:
+        st.session_state.similarity_needs_update = False
+    if "last_similarity_resume" not in st.session_state:
+        st.session_state.last_similarity_resume = None
+
     # Sidebar
     with st.sidebar:
         st.header("📋 Quick Start")
 
         # Resume Management
         st.subheader("📄 Your Resume")
-        
-        # Get existing resumes and auto-select the latest one
+
+        # Get existing resumes
         resumes = get_resumes()
+
         if resumes:
-            # Auto-select the most recent resume (last in list)
-            # But first, clear the session state if the selected resume no longer exists
+            # Clear session state if selected resume no longer exists
             if st.session_state.selected_resume and st.session_state.selected_resume not in resumes:
                 st.session_state.selected_resume = None
-                st.session_state.job_suggestions = None  # Clear suggestions too
+                st.session_state.job_suggestions = None
 
+            # Set default if none selected
             if not st.session_state.selected_resume:
                 st.session_state.selected_resume = resumes[-1]
 
-            # Show current resume with a clean indicator
-            st.success(f"✅ **Active:** {st.session_state.selected_resume}")
+            # Resume selector dropdown
+            current_index = resumes.index(st.session_state.selected_resume) if st.session_state.selected_resume in resumes else 0
+
+            selected = st.selectbox(
+                "Select Resume",
+                options=resumes,
+                index=current_index,
+                key="resume_selector",
+                help="Choose which resume to use for job matching and optimization"
+            )
+
+            # Check if resume changed
+            if selected != st.session_state.selected_resume:
+                st.session_state.selected_resume = selected
+                st.session_state.job_suggestions = None  # Clear suggestions for new resume
+                st.session_state.optimization_results = None  # Clear optimization results
+                st.session_state.similarity_needs_update = True  # Flag for similarity update
+                st.rerun()
+
+            # Show update similarity button if jobs exist and resume changed
+            stats = get_database_stats()
+            job_count = stats.get("total_jobs", 0)
+
+            if job_count > 0:
+                # Check if similarity scores need updating
+                needs_update = (
+                    st.session_state.similarity_needs_update or
+                    st.session_state.last_similarity_resume != st.session_state.selected_resume
+                )
+
+                if needs_update:
+                    st.warning(f"⚠️ Similarity scores need updating for **{selected}**")
+                    if st.button("🔄 Update Job Matches", use_container_width=True, type="primary"):
+                        with st.spinner("Recalculating similarity scores... This may take a moment."):
+                            result = update_similarity_scores(st.session_state.selected_resume)
+                            if result.get("success"):
+                                st.session_state.similarity_needs_update = False
+                                st.session_state.last_similarity_resume = st.session_state.selected_resume
+                                st.success(f"✅ Updated {result.get('jobs_updated', 0)} jobs!")
+                                st.rerun()
+                            else:
+                                st.error("Failed to update similarity scores")
+                else:
+                    st.success(f"✅ **Active:** {selected}")
+            else:
+                st.success(f"✅ **Active:** {selected}")
 
             # Upload new resume (collapsed by default)
             with st.expander("📤 Upload New Resume"):
@@ -595,6 +644,9 @@ def main():
                                 if success:
                                     st.session_state.last_uploaded_file = file_key
                                     st.session_state.selected_resume = uploaded_file.name
+                                    st.session_state.job_suggestions = None
+                                    st.session_state.optimization_results = None
+                                    st.session_state.similarity_needs_update = True
                                     st.success(f"✅ Uploaded and activated!")
                                     st.rerun()
                                 else:
@@ -620,6 +672,7 @@ def main():
                             if success:
                                 st.session_state.last_uploaded_file = file_key
                                 st.session_state.selected_resume = uploaded_file.name
+                                st.session_state.similarity_needs_update = True
                                 st.success(f"✅ Resume uploaded!")
                                 st.rerun()
                             else:
