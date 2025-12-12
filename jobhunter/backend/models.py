@@ -204,6 +204,7 @@ class TrackedJobData(BaseModel):
     highlights: Optional[str] = None
     # Tracking fields
     tracking_id: Optional[int] = None
+    job_id: Optional[int] = None  # The actual job ID from jobs_new table
     status: Optional[str] = None
     date_added: Optional[str] = None
     date_updated: Optional[str] = None

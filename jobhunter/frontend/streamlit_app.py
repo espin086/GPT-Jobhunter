@@ -874,7 +874,12 @@ def main():
                     job_title = html.escape(job.get("title", "Unknown"))
                     company = html.escape(job.get("company", "Unknown"))
                     similarity = job.get("resume_similarity", 0)
-                    job_id = job.get("id")
+                    job_id = job.get("job_id")  # Fixed: use 'job_id' not 'id'
+
+                    # Skip jobs with invalid job_id
+                    if job_id is None:
+                        st.error(f"⚠️ Invalid job data for '{job_title}'. Please refresh the page.")
+                        continue
 
                     # Job card HTML
                     st.markdown(f"""

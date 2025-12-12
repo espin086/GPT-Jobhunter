@@ -204,7 +204,7 @@ class JobDataService:
         try:
             conn = sqlite3.connect(config.DATABASE)
             
-            # Build the base query - exclude hidden jobs
+            # Build the base query - exclude hidden jobs and already-tracked jobs
             base_query = """
                 SELECT
                     id, primary_key, date,
@@ -217,6 +217,7 @@ class JobDataService:
                     description, highlights
                 FROM jobs_new
                 WHERE (hidden IS NULL OR hidden = 0)
+                AND id NOT IN (SELECT job_id FROM job_tracking)
             """
             
             params = []
@@ -641,12 +642,23 @@ class JobTrackingService:
             df = pd.read_sql(query, conn)
             conn.close()
 
+            # Replace NaN/Infinity with None for JSON serialization
+            import math
+            df = df.replace([float('inf'), float('-inf')], None)
+            df = df.where(pd.notna(df), None)
+
             # Organize by status
             statuses = ['apply', 'hr_screen', 'round_1', 'round_2', 'rejected']
             result = {status: [] for status in statuses}
 
             for _, row in df.iterrows():
                 job_dict = row.to_dict()
+
+                # Double-check: replace any remaining NaN values with None
+                for key, value in job_dict.items():
+                    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                        job_dict[key] = None
+
                 status = job_dict.get('status', 'apply')
                 if status in result:
                     result[status].append(job_dict)

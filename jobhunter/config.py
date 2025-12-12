@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 # === General Configs ===
-LOGGING_LEVEL = logging.INFO
+LOGGING_LEVEL = logging.DEBUG
 
 
 # === Data Configs ===
@@ -100,7 +100,7 @@ SELECTED_KEYS = [
     "job_highlights",
 ]
 # Pagination for API calls
-PAGES = 10
+PAGES = 3
 
 # === Model Configs ===
 VECTOR_SIZE = 50
