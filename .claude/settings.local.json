@@ -21,7 +21,9 @@
       "Bash(timeout 10 make:*)",
       "Bash(poetry run pip:*)",
       "Bash(sqlite3:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(poetry run pytest:*)",
+      "Bash(timeout 10 poetry run python:*)"
     ]
   }
 }

@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Requirements
+
+- Python 3.11+ (but < 3.13)
+- Poetry for dependency management
+- Docker (optional, for production deployment)
+
 ## Essential Commands
 
 ### Development Workflow
@@ -35,7 +41,7 @@ make docker-clean    # Remove containers and images
 
 ### Other Common Commands
 ```bash
-# Code formatting
+# Code formatting (uses black and isort)
 make format
 
 # Test coverage
@@ -49,6 +55,9 @@ make rebuild-embeddings
 
 # Generate OpenAPI specification
 make openapi
+
+# Install dependencies
+poetry install
 ```
 
 ## Architecture Overview
@@ -147,6 +156,8 @@ Required for full functionality:
 - `OPENAI_API_KEY`: For embeddings and similarity scoring
 - `RAPID_API_KEY`: For job search API (JSearch)
 - `BACKEND_URL`: Frontend's backend connection (default: http://localhost:8000)
+
+Create a `.env` file from `.env.example` with these keys before running.
 
 ### Testing Strategy
 

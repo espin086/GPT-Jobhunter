@@ -1,8 +1,8 @@
 # 🔍 GPT Job Hunter
 
-> **AI-powered job search that actually understands your resume**
+> **AI-powered job search with ATS optimization that actually understands your resume**
 
-Stop manually searching through hundreds of job postings. GPT Job Hunter uses advanced AI to find jobs that match your skills, experience, and career goals - automatically scoring each opportunity based on your resume.
+Stop manually searching through hundreds of job postings and wondering why you're not getting interviews. GPT Job Hunter uses advanced AI to optimize your resume for ATS systems, find jobs that match your skills, and automatically score each opportunity - so you can focus on jobs where you'll succeed.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -15,9 +15,9 @@ Stop manually searching through hundreds of job postings. GPT Job Hunter uses ad
 
 See GPT Job Hunter in action! This demo shows the complete workflow from resume upload to job matching:
 
-[![GPT Job Hunter Demo](https://img.youtube.com/vi/6mVBPadGAsU/maxresdefault.jpg)](https://youtu.be/6mVBPadGAsU)
+[![GPT Job Hunter Demo](https://img.youtube.com/vi/g0I2rGRjEgA/maxresdefault.jpg)](https://youtu.be/g0I2rGRjEgA)
 
-**[▶️ Watch the demo on YouTube](https://youtu.be/6mVBPadGAsU)**
+**[▶️ Watch the demo on YouTube](https://youtu.be/g0I2rGRjEgA)**
 
 ---
 
@@ -31,6 +31,16 @@ Upload your resume once, and our AI instantly generates **personalized job searc
 
 Every job gets an **AI-powered similarity score** (0-100%) showing how well it matches your resume. Focus on the opportunities where you'll actually succeed, not just any job posting.
 
+### 🎨 **ATS Resume Optimizer** - Beat The Bots
+
+Get your resume past Applicant Tracking Systems with AI-powered optimization. Our analyzer provides:
+- **ATS Compatibility Score** (0-100) showing how well your resume performs with automated systems
+- **Missing Keywords** that appear in target jobs but not in your resume
+- **Keyword Improvements** suggesting better alternatives for existing terms
+- **Actionable ATS Tips** for formatting, structure, and content optimization
+
+Analyze against your actual job searches or use AI's general knowledge - either way, you'll know exactly what to fix.
+
 ### 📊 **Visual Job Application Tracker**
 
 Manage your entire job search pipeline with a beautiful **Kanban-style board**. Track applications from "Apply" → "HR Screen" → "1st Round" → "2nd Round" → "Offer" - all in one place.
@@ -38,6 +48,13 @@ Manage your entire job search pipeline with a beautiful **Kanban-style board**. 
 ---
 
 ## 🖼️ Screenshots
+
+### ATS Resume Optimizer - Beat The Bots
+![ATS Score](images/jobhunter_ats_score.png)
+*Get an instant ATS compatibility score and see how your resume stacks up against automated screening systems*
+
+![ATS Optimization Tips](images/jobhunter_ats_optimization_tips.png)
+*Receive personalized recommendations including missing keywords, keyword improvements, and actionable ATS tips*
 
 ### Job Matches - Find Your Perfect Role
 ![Job Matches](images/jobhunter_jobmatches.png)
@@ -55,11 +72,13 @@ Manage your entire job search pipeline with a beautiful **Kanban-style board**. 
 
 - **🤖 AI Job Suggestions** - Get personalized job title recommendations based on your resume
 - **📈 Smart Ranking** - Every job scored 0-100% based on resume match quality
+- **🎨 ATS Resume Optimizer** - Get AI-powered analysis with compatibility scores, missing keywords, and optimization tips
+- **🔑 Keyword Analysis** - Discover what keywords ATS systems are looking for in your target jobs
 - **🔍 Advanced Filters** - Filter by location, salary, remote work, job type, and more
 - **📋 Application Tracking** - Kanban board to manage your entire job search pipeline
 - **📄 Multi-Resume Support** - Store multiple resumes for different roles
 - **⚡ Batch Actions** - Open multiple job applications at once
-- **🎨 Clean, Modern UI** - Beautiful interface that makes job searching less painful
+- **💡 Real-time Insights** - Analyze against your actual job searches for targeted recommendations
 
 ### Technical Highlights
 
@@ -74,11 +93,12 @@ Manage your entire job search pipeline with a beautiful **Kanban-style board**. 
 
 ## 🎯 Perfect For
 
-- 📊 **Data Analysts** searching for roles matching their tech stack
-- 💼 **Recent Graduates** exploring what jobs fit their degree
-- 🔄 **Career Switchers** finding relevant opportunities in new industries
-- 🚀 **Professionals** managing multiple job applications efficiently
-- 🎓 **Students** tracking internship and entry-level opportunities
+- 📊 **Data Analysts** searching for roles matching their tech stack and optimizing resumes for ATS
+- 💼 **Recent Graduates** exploring what jobs fit their degree and learning what keywords employers want
+- 🔄 **Career Switchers** finding relevant opportunities and ensuring resumes pass ATS screening
+- 🚀 **Professionals** managing multiple job applications efficiently with optimized resumes
+- 🎓 **Students** tracking internship opportunities and building ATS-friendly resumes early
+- 📝 **Anyone** tired of submitting applications into the void and never hearing back
 
 ---
 
@@ -112,17 +132,20 @@ make dev
 ### 1️⃣ **Upload Your Resume**
 Simply drag-and-drop your resume (PDF or TXT). GPT Job Hunter extracts your skills, experience, and qualifications.
 
-### 2️⃣ **Get AI-Powered Suggestions**
+### 2️⃣ **Optimize for ATS**
+Use the Resume Optimizer to get an instant ATS compatibility score (0-100), discover missing keywords, and receive actionable tips to beat automated screening systems.
+
+### 3️⃣ **Get AI-Powered Suggestions**
 Click "SmartSearch AI ✨" and instantly receive job title recommendations that match your background.
 
-### 3️⃣ **Browse Ranked Results**
+### 4️⃣ **Browse Ranked Results**
 Every job is scored 0-100% based on how well it matches your resume. Focus on high-scoring opportunities first.
 
-### 4️⃣ **Track Your Applications**
+### 5️⃣ **Track Your Applications**
 Save promising jobs to your Kanban board and move them through your application pipeline as you progress.
 
-### 5️⃣ **Land Interviews Faster**
-Apply to the right jobs, stay organized, and spend less time searching.
+### 6️⃣ **Land Interviews Faster**
+Apply to the right jobs with an optimized resume, stay organized, and spend less time searching.
 
 ---
 
@@ -130,9 +153,9 @@ Apply to the right jobs, stay organized, and spend less time searching.
 
 GPT Job Hunter needs two API keys to function:
 
-- **OpenAI API Key** - For AI-powered resume matching ([Get it here](https://platform.openai.com/api-keys))
+- **OpenAI API Key** - For AI-powered features ([Get it here](https://platform.openai.com/api-keys))
   - Cost: ~$0.02 per 1,000 jobs analyzed
-  - Used for: Resume similarity scoring and SmartSearch suggestions
+  - Used for: Resume similarity scoring, SmartSearch suggestions, and ATS optimization analysis
 
 - **RapidAPI Key** - For job search ([Get it here](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch))
   - Free tier: 1,000 searches/month
@@ -176,6 +199,10 @@ We welcome contributions! Here's how to get started:
 
 ## 📈 Roadmap
 
+### ✅ Recently Completed
+- [x] **ATS Resume Optimizer** - AI-powered resume analysis with compatibility scores and keyword suggestions
+
+### 🚀 Coming Soon
 - [ ] **Browser Extension** - Apply directly from LinkedIn/Indeed
 - [ ] **Email Alerts** - Get notified of new high-match jobs
 - [ ] **Cover Letter Generator** - AI-powered cover letters for each application
