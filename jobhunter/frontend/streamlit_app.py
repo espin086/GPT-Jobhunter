@@ -490,7 +490,7 @@ def render_job_card(job: Dict[str, Any], index: int):
             job_id = job.get("id")
             if job_id and save_job_to_tracking(job_id):
                 st.toast("💾 Job saved to tracker!")
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.toast("❌ Failed to save job")
     with col3:
@@ -504,7 +504,7 @@ def render_job_card(job: Dict[str, Any], index: int):
             job_id = job.get("id")
             if job_id and pass_job(job_id):
                 st.toast("❌ Job hidden")
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.toast("❌ Failed to hide job")
 
@@ -599,7 +599,7 @@ def main():
                 st.session_state.job_suggestions = None  # Clear suggestions for new resume
                 st.session_state.optimization_results = None  # Clear optimization results
                 st.session_state.similarity_needs_update = True  # Flag for similarity update
-                st.rerun()
+                st.experimental_rerun()
 
             # Show update similarity button if jobs exist and resume changed
             stats = get_database_stats()
@@ -621,7 +621,7 @@ def main():
                                 st.session_state.similarity_needs_update = False
                                 st.session_state.last_similarity_resume = st.session_state.selected_resume
                                 st.success(f"✅ Updated {result.get('jobs_updated', 0)} jobs!")
-                                st.rerun()
+                                st.experimental_rerun()
                             else:
                                 st.error("Failed to update similarity scores")
                 else:
@@ -648,7 +648,7 @@ def main():
                                     st.session_state.optimization_results = None
                                     st.session_state.similarity_needs_update = True
                                     st.success(f"✅ Uploaded and activated!")
-                                    st.rerun()
+                                    st.experimental_rerun()
                                 else:
                                     st.error("Upload failed. Please try again.")
                             except Exception as e:
@@ -674,7 +674,7 @@ def main():
                                 st.session_state.selected_resume = uploaded_file.name
                                 st.session_state.similarity_needs_update = True
                                 st.success(f"✅ Resume uploaded!")
-                                st.rerun()
+                                st.experimental_rerun()
                             else:
                                 st.error("Upload failed. Please try again.")
                         except Exception as e:
@@ -931,7 +931,7 @@ def main():
                     with col1:
                         if st.button("🔄 Re-analyze", use_container_width=True):
                             st.session_state.optimization_results = None
-                            st.rerun()
+                            st.experimental_rerun()
                     with col2:
                         if job_count == 0:
                             st.info("💡 Search for jobs to get more targeted recommendations!")
@@ -1132,31 +1132,31 @@ def main():
                         if st.button("→ HR Screen", key=f"move_{job_id}_hr", use_container_width=True):
                             if update_job_status(job_id, "hr_screen"):
                                 st.toast("✅ Moved to HR Screen!")
-                                st.rerun()
+                                st.experimental_rerun()
                     elif col_info["key"] == "hr_screen":
                         col_a, col_b = st.columns(2)
                         with col_a:
                             if st.button("→ Round 1", key=f"move_{job_id}_r1", use_container_width=True):
                                 if update_job_status(job_id, "round_1"):
                                     st.toast("✅ Moved to Round 1!")
-                                    st.rerun()
+                                    st.experimental_rerun()
                         with col_b:
                             if st.button("❌ Reject", key=f"move_{job_id}_rej_hr", use_container_width=True):
                                 if update_job_status(job_id, "rejected"):
                                     st.toast("Moved to Rejected")
-                                    st.rerun()
+                                    st.experimental_rerun()
                     elif col_info["key"] == "round_1":
                         col_a, col_b = st.columns(2)
                         with col_a:
                             if st.button("→ Round 2", key=f"move_{job_id}_r2", use_container_width=True):
                                 if update_job_status(job_id, "round_2"):
                                     st.toast("✅ Moved to Round 2!")
-                                    st.rerun()
+                                    st.experimental_rerun()
                         with col_b:
                             if st.button("❌ Reject", key=f"move_{job_id}_rej_r1", use_container_width=True):
                                 if update_job_status(job_id, "rejected"):
                                     st.toast("Moved to Rejected")
-                                    st.rerun()
+                                    st.experimental_rerun()
                     elif col_info["key"] == "round_2":
                         col_a, col_b = st.columns(2)
                         with col_a:
@@ -1167,7 +1167,7 @@ def main():
                             if st.button("❌ Reject", key=f"move_{job_id}_rej_r2", use_container_width=True):
                                 if update_job_status(job_id, "rejected"):
                                     st.toast("Moved to Rejected")
-                                    st.rerun()
+                                    st.experimental_rerun()
 
                     st.divider()
 

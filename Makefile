@@ -69,7 +69,7 @@ dev:
 	@echo ""
 	@# Clean database for fresh testing
 	@echo "🗑️  Cleaning database for fresh start..."
-	@rm -f all_jobs.db
+	@rm -f jobhunter/all_jobs.db 
 	@rm -rf jobhunter/temp/data/raw/* jobhunter/temp/data/processed/* 2>/dev/null || true
 	@echo "✅ Database cleaned"
 	@echo ""

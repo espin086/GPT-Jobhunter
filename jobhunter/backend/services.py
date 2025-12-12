@@ -938,11 +938,14 @@ Guidelines:
    - Recommend adding context or specificity to vague terms
    - Each suggestion should include the current word, suggested improvement, and reason
 
-3. ATS_TIPS: Provide 4-6 specific, actionable tips for optimizing this resume for ATS systems:
-   - Formatting recommendations
-   - Section organization
-   - Keyword placement strategies
-   - Quantification opportunities
+3. ATS_TIPS: Provide 4-6 specific, actionable tips that are DIRECTLY based on THIS resume's actual content:
+   - First, identify what sections ALREADY EXIST in this resume (e.g., if there's a Skills section, don't recommend adding one)
+   - Provide SPECIFIC examples from the resume text when making recommendations
+   - For quantification: Point to SPECIFIC bullet points that lack metrics and show examples of ones that do it well
+   - For formatting: Reference actual formatting issues you observe, not generic advice
+   - For keywords: Reference specific job descriptions from the target jobs and where in the resume to add them
+   - Each tip must include a concrete example or reference to specific resume content
+   - Focus on actionable improvements, not generic best practices that may already be followed
 
 4. OVERALL_SCORE: Rate the resume's current ATS compatibility from 0-100 based on:
    - Keyword match percentage with target jobs
@@ -982,7 +985,14 @@ Guidelines:
 
 2. KEYWORD_SUGGESTIONS: Provide 5-8 suggestions for improving existing keywords with more ATS-friendly or industry-standard alternatives.
 
-3. ATS_TIPS: Provide 4-6 specific, actionable tips for ATS optimization, including a tip to search for specific jobs to get more targeted recommendations.
+3. ATS_TIPS: Provide 4-6 specific, actionable tips that are DIRECTLY based on THIS resume's actual content:
+   - First, identify what sections ALREADY EXIST in this resume (e.g., if there's a Skills section, don't recommend adding one)
+   - Provide SPECIFIC examples from the resume text when making recommendations
+   - For quantification: Point to SPECIFIC bullet points that lack metrics and show examples of ones that do it well
+   - For formatting: Reference actual formatting issues you observe, not generic advice
+   - Each tip must include a concrete example or reference to specific resume content
+   - Focus on actionable improvements, not generic best practices that may already be followed
+   - Include one tip suggesting they search for specific jobs to get more targeted keyword recommendations
 
 4. OVERALL_SCORE: Rate the resume's current ATS compatibility from 0-100.
 
