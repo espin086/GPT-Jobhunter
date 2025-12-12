@@ -15,9 +15,9 @@ Stop manually searching through hundreds of job postings and wondering why you'r
 
 See GPT Job Hunter in action! This demo shows the complete workflow from resume upload to job matching:
 
-[![GPT Job Hunter Demo](https://img.youtube.com/vi/6mVBPadGAsU/maxresdefault.jpg)](https://youtu.be/6mVBPadGAsU)
+[![GPT Job Hunter Demo](https://img.youtube.com/vi/g0I2rGRjEgA/maxresdefault.jpg)](https://youtu.be/g0I2rGRjEgA)
 
-**[▶️ Watch the demo on YouTube](https://youtu.be/6mVBPadGAsU)**
+**[▶️ Watch the demo on YouTube](https://youtu.be/g0I2rGRjEgA)**
 
 ---
 
