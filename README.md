@@ -11,6 +11,16 @@ Stop manually searching through hundreds of job postings. GPT Job Hunter uses ad
 
 ---
 
+## 🎥 Watch It In Action
+
+See GPT Job Hunter in action! This demo shows the complete workflow from resume upload to job matching:
+
+[![GPT Job Hunter Demo](https://img.youtube.com/vi/6mVBPadGAsU/maxresdefault.jpg)](https://youtu.be/6mVBPadGAsU)
+
+**[▶️ Watch the demo on YouTube](https://youtu.be/6mVBPadGAsU)**
+
+---
+
 ## ✨ What Makes GPT Job Hunter Different?
 
 ### 🎯 **SmartSearch AI** - Your Personal Job Scout
