@@ -224,3 +224,29 @@ class UpdateJobStatusRequest(BaseModel):
     """Request model for updating job status."""
     job_id: int = Field(..., description="ID of the job to update")
     new_status: str = Field(..., description="New status (apply, hr_screen, round_1, round_2, rejected)")
+
+
+# Resume Optimizer Models
+class ResumeOptimizeRequest(BaseModel):
+    """Request model for resume optimization analysis."""
+    resume_name: str = Field(..., description="Name of the resume to analyze")
+    num_jobs: Optional[int] = Field(default=20, description="Number of top similar jobs to analyze (default: 20)")
+
+
+class KeywordSuggestion(BaseModel):
+    """Model for a keyword synonym suggestion."""
+    current: str = Field(..., description="Current keyword in resume")
+    suggested: str = Field(..., description="Suggested alternative or addition")
+    reason: str = Field(..., description="Reason for the suggestion")
+
+
+class ResumeOptimizeResponse(BaseModel):
+    """Response model for resume optimization analysis."""
+    success: bool = Field(..., description="Whether the analysis was successful")
+    missing_keywords: List[str] = Field(default=[], description="Keywords present in jobs but missing from resume")
+    keyword_suggestions: List[KeywordSuggestion] = Field(default=[], description="Suggestions for keyword improvements")
+    ats_tips: List[str] = Field(default=[], description="ATS optimization tips")
+    overall_score: int = Field(default=0, description="Overall ATS compatibility score (0-100)")
+    message: str = Field(..., description="Status message or explanation")
+    jobs_analyzed: int = Field(default=0, description="Number of jobs analyzed")
+    analysis_source: str = Field(default="ai_general", description="Source of analysis: 'job_database' or 'ai_general'")

@@ -325,6 +325,16 @@ def update_job_status(job_id: int, new_status: str) -> bool:
         return False
 
 
+def optimize_resume(resume_name: str, num_jobs: int = 20) -> Dict[str, Any]:
+    """Get resume optimization suggestions from backend."""
+    try:
+        data = {"resume_name": resume_name, "num_jobs": num_jobs}
+        # Use longer timeout for AI processing
+        return make_api_request("POST", "/resumes/optimize", timeout=120, json=data)
+    except:
+        return {"success": False, "message": "Optimization request failed"}
+
+
 def format_relative_time(date_str: str) -> str:
     """Convert date string to relative time (e.g., '2d ago')."""
     if not date_str:
@@ -698,7 +708,187 @@ def main():
                         st.error(f"❌ Search failed: {result['error']}")
     
     # Main content area with tabs
-    tab1, tab2 = st.tabs(["📊 Job Matches", "📋 Job Tracker"])
+    tab0, tab1, tab2 = st.tabs(["🎯 Resume Optimizer", "📊 Job Matches", "📋 Job Tracker"])
+
+    # TAB 0: Resume Optimizer
+    with tab0:
+        st.header("🎯 Resume Optimizer")
+        st.caption("Get AI-powered recommendations to improve your resume for ATS systems")
+
+        # Check if resume is uploaded
+        if not st.session_state.selected_resume:
+            st.info("👋 Please upload a resume in the sidebar first to get started.")
+        else:
+            st.success(f"📄 Analyzing: **{st.session_state.selected_resume}**")
+
+            # Get database stats to show context
+            stats = get_database_stats()
+            job_count = stats.get("jobs_with_similarity_scores", 0)
+
+            if job_count > 0:
+                st.info(f"📊 Found **{job_count} jobs** in your search history. Analysis will use the top matching jobs.")
+            else:
+                st.warning("💡 No job searches yet. Analysis will use AI's general knowledge. For better results, search for jobs first!")
+
+            # Analysis button
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                num_jobs_to_analyze = st.slider(
+                    "Number of top jobs to analyze",
+                    min_value=5,
+                    max_value=30,
+                    value=20,
+                    help="Analyze against your top N most similar jobs"
+                )
+            with col2:
+                analyze_button = st.button("🔍 Analyze My Resume", type="primary", use_container_width=True)
+
+            # Store optimization results in session state
+            if "optimization_results" not in st.session_state:
+                st.session_state.optimization_results = None
+
+            if analyze_button:
+                with st.spinner("🤖 AI is analyzing your resume... This may take 30-60 seconds."):
+                    result = optimize_resume(st.session_state.selected_resume, num_jobs_to_analyze)
+                    st.session_state.optimization_results = result
+
+            # Display results
+            if st.session_state.optimization_results:
+                result = st.session_state.optimization_results
+
+                if not result.get("success"):
+                    st.error(f"❌ {result.get('message', 'Analysis failed')}")
+                else:
+                    # Success - display results
+                    st.divider()
+
+                    # Overall Score Section
+                    score = result.get("overall_score", 0)
+                    jobs_analyzed = result.get("jobs_analyzed", 0)
+                    analysis_source = result.get("analysis_source", "ai_general")
+
+                    # Score visualization
+                    col1, col2, col3 = st.columns([1, 2, 1])
+                    with col2:
+                        # Determine score color
+                        if score >= 80:
+                            score_color = "#28a745"  # Green
+                            score_emoji = "🌟"
+                            score_label = "Excellent"
+                        elif score >= 60:
+                            score_color = "#ffc107"  # Yellow
+                            score_emoji = "👍"
+                            score_label = "Good"
+                        elif score >= 40:
+                            score_color = "#fd7e14"  # Orange
+                            score_emoji = "📈"
+                            score_label = "Needs Improvement"
+                        else:
+                            score_color = "#dc3545"  # Red
+                            score_emoji = "⚠️"
+                            score_label = "Needs Work"
+
+                        st.markdown(f"""
+                        <div style="text-align: center; padding: 2rem; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 16px; margin-bottom: 1rem;">
+                            <div style="font-size: 4rem; font-weight: 700; color: {score_color};">{score}</div>
+                            <div style="font-size: 1.2rem; color: #666;">ATS Compatibility Score</div>
+                            <div style="font-size: 1.5rem; margin-top: 0.5rem;">{score_emoji} {score_label}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        if analysis_source == "job_database":
+                            st.caption(f"📊 Based on analysis of {jobs_analyzed} jobs from your searches")
+                        else:
+                            st.caption("🤖 Based on AI's general knowledge of job market trends")
+
+                    st.divider()
+
+                    # Missing Keywords Section
+                    st.subheader("🔑 Missing Keywords")
+                    st.markdown("*Add these keywords to your resume - they appear in your target jobs but are missing from your resume:*")
+
+                    missing_keywords = result.get("missing_keywords", [])
+                    if missing_keywords:
+                        # Display as styled chips
+                        keyword_html = '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0;">'
+                        for keyword in missing_keywords:
+                            keyword_html += f'''
+                            <span style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                padding: 0.5rem 1rem;
+                                border-radius: 20px;
+                                font-weight: 600;
+                                font-size: 0.9rem;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            ">{keyword}</span>
+                            '''
+                        keyword_html += '</div>'
+                        st.markdown(keyword_html, unsafe_allow_html=True)
+                    else:
+                        st.success("✅ Great! No critical keywords missing.")
+
+                    st.divider()
+
+                    # Keyword Suggestions Section
+                    st.subheader("💡 Keyword Improvements")
+                    st.markdown("*Consider these alternative or enhanced keywords for better ATS matching:*")
+
+                    keyword_suggestions = result.get("keyword_suggestions", [])
+                    if keyword_suggestions:
+                        for i, suggestion in enumerate(keyword_suggestions):
+                            # Handle both dict and Pydantic model formats
+                            if hasattr(suggestion, 'current'):
+                                current = suggestion.current
+                                suggested = suggestion.suggested
+                                reason = suggestion.reason
+                            else:
+                                current = suggestion.get("current", "")
+                                suggested = suggestion.get("suggested", "")
+                                reason = suggestion.get("reason", "")
+
+                            with st.container():
+                                col1, col2 = st.columns([3, 2])
+                                with col1:
+                                    st.markdown(f"""
+                                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 4px solid #1e88e5;">
+                                        <span style="color: #dc3545; text-decoration: line-through;">{current}</span>
+                                        <span style="margin: 0 0.5rem;">→</span>
+                                        <span style="color: #28a745; font-weight: 600;">{suggested}</span>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                with col2:
+                                    st.caption(f"💡 {reason}")
+                    else:
+                        st.info("No specific keyword improvements suggested.")
+
+                    st.divider()
+
+                    # ATS Tips Section
+                    st.subheader("📝 ATS Optimization Tips")
+                    st.markdown("*Actionable recommendations to improve your resume's ATS compatibility:*")
+
+                    ats_tips = result.get("ats_tips", [])
+                    if ats_tips:
+                        for i, tip in enumerate(ats_tips, 1):
+                            st.markdown(f"""
+                            <div style="background: #e8f5e9; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid #28a745;">
+                                <strong>{i}.</strong> {tip}
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        st.info("No additional tips at this time.")
+
+                    # Action Buttons
+                    st.divider()
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("🔄 Re-analyze", use_container_width=True):
+                            st.session_state.optimization_results = None
+                            st.rerun()
+                    with col2:
+                        if job_count == 0:
+                            st.info("💡 Search for jobs to get more targeted recommendations!")
 
     # TAB 1: Job Matches
     with tab1:

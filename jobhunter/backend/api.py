@@ -19,10 +19,12 @@ from jobhunter.backend.models import (
     SimilarityUpdateRequest, SimilarityUpdateResponse,
     JobTitleSuggestionsRequest, JobTitleSuggestionsResponse,
     SaveJobRequest, PassJobRequest, JobTrackingResponse, TrackedJobsResponse, UpdateJobStatusRequest,
+    ResumeOptimizeRequest, ResumeOptimizeResponse,
     ErrorResponse, HealthResponse
 )
 from jobhunter.backend.services import (
-    JobSearchService, ResumeService, JobDataService, DatabaseService, AIService, JobTrackingService
+    JobSearchService, ResumeService, JobDataService, DatabaseService, AIService, JobTrackingService,
+    ResumeOptimizerService
 )
 
 # Set up logging
@@ -54,6 +56,7 @@ job_data_service = JobDataService()
 database_service = DatabaseService()
 ai_service = AIService()
 job_tracking_service = JobTrackingService()
+resume_optimizer_service = ResumeOptimizerService()
 
 
 # Startup event handler
@@ -429,6 +432,51 @@ async def suggest_job_titles(request: JobTitleSuggestionsRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate job title suggestions: {str(e)}"
+        )
+
+
+@app.post("/resumes/optimize", response_model=ResumeOptimizeResponse)
+async def optimize_resume(request: ResumeOptimizeRequest):
+    """
+    Analyze resume against job postings and provide ATS optimization recommendations.
+
+    This endpoint analyzes the resume against the top similar jobs from your searches
+    (if available) or uses AI's general knowledge of job market trends.
+
+    Returns:
+    - missing_keywords: Keywords present in target jobs but missing from resume
+    - keyword_suggestions: Suggestions for improving existing keywords
+    - ats_tips: Actionable tips for ATS optimization
+    - overall_score: ATS compatibility score (0-100)
+    - jobs_analyzed: Number of jobs used for analysis
+    - analysis_source: 'job_database' or 'ai_general'
+    """
+    try:
+        logger.info(f"Optimizing resume: {request.resume_name} against top {request.num_jobs} jobs")
+
+        result = resume_optimizer_service.optimize_resume(
+            resume_name=request.resume_name,
+            num_jobs=request.num_jobs
+        )
+
+        return ResumeOptimizeResponse(
+            success=result.get("success", False),
+            missing_keywords=result.get("missing_keywords", []),
+            keyword_suggestions=result.get("keyword_suggestions", []),
+            ats_tips=result.get("ats_tips", []),
+            overall_score=result.get("overall_score", 0),
+            message=result.get("message", ""),
+            jobs_analyzed=result.get("jobs_analyzed", 0),
+            analysis_source=result.get("analysis_source", "none")
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Resume optimization failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to optimize resume: {str(e)}"
         )
 
 

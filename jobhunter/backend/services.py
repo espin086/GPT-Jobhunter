@@ -27,7 +27,8 @@ from jobhunter.backend.models import (
     JobData,
     JobFilterRequest,
     JobSearchRequest,
-    ResumeUploadRequest
+    ResumeUploadRequest,
+    KeywordSuggestion
 )
 
 logger = logging.getLogger(__name__)
@@ -734,3 +735,313 @@ class JobTrackingService:
         except Exception as e:
             logger.error(f"Error removing job from tracking: {e}", exc_info=True)
             return False, f"Failed to remove job: {str(e)}"
+
+
+class ResumeOptimizerService:
+    """Service for resume optimization and ATS keyword analysis."""
+
+    def get_top_similar_jobs(self, num_jobs: int = 20) -> List[Dict]:
+        """
+        Get top N jobs by similarity score.
+
+        Args:
+            num_jobs: Number of jobs to retrieve
+
+        Returns:
+            List of job dictionaries with descriptions and required skills
+        """
+        try:
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
+            cursor.execute('''
+                SELECT title, company, resume_similarity, description, required_skills
+                FROM jobs_new
+                WHERE resume_similarity > 0
+                AND description IS NOT NULL
+                AND description != ''
+                ORDER BY resume_similarity DESC
+                LIMIT ?
+            ''', (num_jobs,))
+
+            jobs = cursor.fetchall()
+            conn.close()
+
+            return [
+                {
+                    "title": job[0],
+                    "company": job[1],
+                    "similarity": job[2],
+                    "description": job[3] or "",
+                    "required_skills": job[4] or ""
+                }
+                for job in jobs
+            ]
+
+        except Exception as e:
+            logger.error(f"Error fetching top similar jobs: {e}", exc_info=True)
+            return []
+
+    def get_job_count(self) -> int:
+        """Get total count of jobs with similarity scores."""
+        try:
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM jobs_new WHERE resume_similarity > 0")
+            count = cursor.fetchone()[0]
+            conn.close()
+            return count
+        except Exception as e:
+            logger.error(f"Error getting job count: {e}", exc_info=True)
+            return 0
+
+    def optimize_resume(self, resume_name: str, num_jobs: int = 20) -> Dict:
+        """
+        Analyze resume against top similar jobs and provide optimization suggestions.
+
+        If jobs exist in the database, analyzes against those jobs.
+        If no jobs exist, uses AI's general knowledge for optimization.
+
+        Args:
+            resume_name: Name of the resume to analyze
+            num_jobs: Number of top similar jobs to analyze
+
+        Returns:
+            Dictionary with optimization results
+        """
+        try:
+            # Get resume text
+            resume_text = get_resume_text(resume_name)
+            if not resume_text:
+                return {
+                    "success": False,
+                    "missing_keywords": [],
+                    "keyword_suggestions": [],
+                    "ats_tips": [],
+                    "overall_score": 0,
+                    "message": f"Resume '{resume_name}' not found",
+                    "jobs_analyzed": 0,
+                    "analysis_source": "none"
+                }
+
+            # Check if OpenAI API key is available
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                logger.warning("OpenAI API key not found, cannot perform optimization")
+                return {
+                    "success": False,
+                    "missing_keywords": [],
+                    "keyword_suggestions": [],
+                    "ats_tips": [],
+                    "overall_score": 0,
+                    "message": "OpenAI API key not configured",
+                    "jobs_analyzed": 0,
+                    "analysis_source": "none"
+                }
+
+            # Get top similar jobs
+            top_jobs = self.get_top_similar_jobs(num_jobs)
+            jobs_analyzed = len(top_jobs)
+
+            # Determine analysis source
+            if jobs_analyzed > 0:
+                analysis_source = "job_database"
+                # Build job context from database
+                job_context = self._build_job_context(top_jobs)
+                prompt = self._build_job_based_prompt(resume_text, job_context, jobs_analyzed)
+            else:
+                analysis_source = "ai_general"
+                prompt = self._build_general_prompt(resume_text)
+
+            # Call OpenAI for analysis
+            result = self._call_openai_for_analysis(prompt, api_key)
+
+            if result:
+                result["success"] = True
+                result["jobs_analyzed"] = jobs_analyzed
+                result["analysis_source"] = analysis_source
+                result["message"] = (
+                    f"Analyzed resume against {jobs_analyzed} similar jobs from your search"
+                    if jobs_analyzed > 0
+                    else "Analyzed resume using AI's general knowledge of job market trends"
+                )
+                return result
+            else:
+                return {
+                    "success": False,
+                    "missing_keywords": [],
+                    "keyword_suggestions": [],
+                    "ats_tips": [],
+                    "overall_score": 0,
+                    "message": "Failed to generate optimization suggestions",
+                    "jobs_analyzed": jobs_analyzed,
+                    "analysis_source": analysis_source
+                }
+
+        except Exception as e:
+            logger.error(f"Error optimizing resume: {e}", exc_info=True)
+            return {
+                "success": False,
+                "missing_keywords": [],
+                "keyword_suggestions": [],
+                "ats_tips": [],
+                "overall_score": 0,
+                "message": f"Error during optimization: {str(e)}",
+                "jobs_analyzed": 0,
+                "analysis_source": "none"
+            }
+
+    def _build_job_context(self, jobs: List[Dict]) -> str:
+        """Build a context string from job descriptions and skills."""
+        context_parts = []
+        for i, job in enumerate(jobs[:10], 1):  # Limit to top 10 for context
+            context_parts.append(f"""
+Job {i}: {job['title']} at {job['company']} (Match: {int(job['similarity'] * 100)}%)
+Required Skills: {job['required_skills']}
+Description excerpt: {job['description'][:500]}...
+""")
+        return "\n".join(context_parts)
+
+    def _build_job_based_prompt(self, resume_text: str, job_context: str, num_jobs: int) -> str:
+        """Build the prompt for job-based analysis."""
+        return f"""You are an expert ATS (Applicant Tracking System) optimization specialist and career coach.
+
+Analyze this resume against the following {num_jobs} job postings that the candidate is most likely to apply to.
+
+RESUME:
+{resume_text[:4000]}
+
+TARGET JOBS:
+{job_context}
+
+Based on this analysis, provide optimization recommendations in the following JSON format:
+{{
+    "missing_keywords": ["keyword1", "keyword2", ...],
+    "keyword_suggestions": [
+        {{"current": "word in resume", "suggested": "better alternative", "reason": "explanation"}},
+        ...
+    ],
+    "ats_tips": ["tip1", "tip2", ...],
+    "overall_score": 75
+}}
+
+Guidelines:
+1. MISSING_KEYWORDS: List 8-12 important technical keywords/skills that appear frequently in the target jobs but are completely missing from the resume. Focus on:
+   - Technical skills (programming languages, frameworks, tools)
+   - Industry-specific terms
+   - Certifications or methodologies
+   - Prioritize keywords that appear in multiple job listings
+
+2. KEYWORD_SUGGESTIONS: Provide 5-8 suggestions for improving existing keywords:
+   - Identify words in the resume that could be replaced with more ATS-friendly synonyms
+   - Suggest industry-standard terminology instead of informal terms
+   - Recommend adding context or specificity to vague terms
+   - Each suggestion should include the current word, suggested improvement, and reason
+
+3. ATS_TIPS: Provide 4-6 specific, actionable tips for optimizing this resume for ATS systems:
+   - Formatting recommendations
+   - Section organization
+   - Keyword placement strategies
+   - Quantification opportunities
+
+4. OVERALL_SCORE: Rate the resume's current ATS compatibility from 0-100 based on:
+   - Keyword match percentage with target jobs
+   - Formatting compatibility
+   - Content structure
+
+Return ONLY valid JSON, no additional text."""
+
+    def _build_general_prompt(self, resume_text: str) -> str:
+        """Build the prompt for general AI-based analysis (when no jobs in database)."""
+        return f"""You are an expert ATS (Applicant Tracking System) optimization specialist and career coach.
+
+Analyze this resume and provide optimization recommendations based on current job market trends and best practices.
+
+RESUME:
+{resume_text[:4000]}
+
+Since the user hasn't searched for specific jobs yet, analyze based on:
+1. The apparent career field/industry from the resume
+2. Current job market trends for similar roles
+3. Common ATS requirements and best practices
+4. Industry-standard terminology and keywords
+
+Provide recommendations in the following JSON format:
+{{
+    "missing_keywords": ["keyword1", "keyword2", ...],
+    "keyword_suggestions": [
+        {{"current": "word in resume", "suggested": "better alternative", "reason": "explanation"}},
+        ...
+    ],
+    "ats_tips": ["tip1", "tip2", ...],
+    "overall_score": 75
+}}
+
+Guidelines:
+1. MISSING_KEYWORDS: List 8-12 important keywords commonly expected in the candidate's apparent field that are missing from the resume.
+
+2. KEYWORD_SUGGESTIONS: Provide 5-8 suggestions for improving existing keywords with more ATS-friendly or industry-standard alternatives.
+
+3. ATS_TIPS: Provide 4-6 specific, actionable tips for ATS optimization, including a tip to search for specific jobs to get more targeted recommendations.
+
+4. OVERALL_SCORE: Rate the resume's current ATS compatibility from 0-100.
+
+Return ONLY valid JSON, no additional text."""
+
+    def _call_openai_for_analysis(self, prompt: str, api_key: str) -> Optional[Dict]:
+        """Call OpenAI API for resume analysis."""
+        try:
+            from openai import OpenAI
+            import json
+
+            client = OpenAI(api_key=api_key)
+
+            logger.info("Requesting resume optimization analysis from OpenAI")
+
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert ATS optimization specialist. Always respond with valid JSON only."
+                    },
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=2000
+            )
+
+            response_text = response.choices[0].message.content.strip()
+
+            # Clean up response if it contains markdown code blocks
+            if response_text.startswith("```"):
+                lines = response_text.split("\n")
+                # Remove first and last lines (```json and ```)
+                response_text = "\n".join(lines[1:-1])
+
+            # Parse JSON response
+            result = json.loads(response_text)
+
+            # Validate and convert keyword_suggestions to proper format
+            keyword_suggestions = []
+            for suggestion in result.get("keyword_suggestions", []):
+                if isinstance(suggestion, dict):
+                    keyword_suggestions.append(KeywordSuggestion(
+                        current=suggestion.get("current", ""),
+                        suggested=suggestion.get("suggested", ""),
+                        reason=suggestion.get("reason", "")
+                    ))
+
+            return {
+                "missing_keywords": result.get("missing_keywords", []),
+                "keyword_suggestions": keyword_suggestions,
+                "ats_tips": result.get("ats_tips", []),
+                "overall_score": result.get("overall_score", 50)
+            }
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse OpenAI response as JSON: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error calling OpenAI for analysis: {e}", exc_info=True)
+            return None
