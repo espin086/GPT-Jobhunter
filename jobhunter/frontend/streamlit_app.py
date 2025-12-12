@@ -804,6 +804,8 @@ def main():
                 with st.spinner("🤖 AI is analyzing your resume... This may take 30-60 seconds."):
                     result = optimize_resume(st.session_state.selected_resume, num_jobs_to_analyze)
                     st.session_state.optimization_results = result
+                    # Store the number of jobs used for re-analysis
+                    st.session_state.num_jobs_analyzed = num_jobs_to_analyze
 
             # Display results
             if st.session_state.optimization_results:
@@ -930,7 +932,11 @@ def main():
                     col1, col2 = st.columns(2)
                     with col1:
                         if st.button("🔄 Re-analyze", use_container_width=True):
-                            st.session_state.optimization_results = None
+                            # Re-run the analysis with the same parameters
+                            num_jobs_param = st.session_state.get("num_jobs_analyzed", 20)
+                            with st.spinner("🤖 AI is re-analyzing your resume... This may take 30-60 seconds."):
+                                result = optimize_resume(st.session_state.selected_resume, num_jobs_param)
+                                st.session_state.optimization_results = result
                             st.experimental_rerun()
                     with col2:
                         if job_count == 0:
