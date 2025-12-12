@@ -809,22 +809,15 @@ def main():
 
                     missing_keywords = result.get("missing_keywords", [])
                     if missing_keywords:
-                        # Display as styled chips
-                        keyword_html = '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0;">'
-                        for keyword in missing_keywords:
-                            keyword_html += f'''
-                            <span style="
-                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                color: white;
-                                padding: 0.5rem 1rem;
-                                border-radius: 20px;
-                                font-weight: 600;
-                                font-size: 0.9rem;
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                            ">{keyword}</span>
-                            '''
-                        keyword_html += '</div>'
-                        st.markdown(keyword_html, unsafe_allow_html=True)
+                        # Display keywords in columns using Streamlit native components
+                        cols = st.columns(4)
+                        for i, keyword in enumerate(missing_keywords):
+                            with cols[i % 4]:
+                                st.markdown(f"""
+                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 0.75rem; border-radius: 16px; font-weight: 600; font-size: 0.85rem; text-align: center; margin-bottom: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+                                    {keyword}
+                                </div>
+                                """, unsafe_allow_html=True)
                     else:
                         st.success("✅ Great! No critical keywords missing.")
 
