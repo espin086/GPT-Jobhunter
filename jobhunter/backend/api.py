@@ -17,10 +17,12 @@ from jobhunter.backend.models import (
     ResumeUploadRequest, ResumeResponse, ResumeListResponse, ResumeContentResponse,
     JobFilterRequest, JobListResponse,
     SimilarityUpdateRequest, SimilarityUpdateResponse,
+    JobTitleSuggestionsRequest, JobTitleSuggestionsResponse,
+    SaveJobRequest, PassJobRequest, JobTrackingResponse, TrackedJobsResponse, UpdateJobStatusRequest,
     ErrorResponse, HealthResponse
 )
 from jobhunter.backend.services import (
-    JobSearchService, ResumeService, JobDataService, DatabaseService
+    JobSearchService, ResumeService, JobDataService, DatabaseService, AIService, JobTrackingService
 )
 
 # Set up logging
@@ -50,6 +52,19 @@ job_search_service = JobSearchService()
 resume_service = ResumeService()
 job_data_service = JobDataService()
 database_service = DatabaseService()
+ai_service = AIService()
+job_tracking_service = JobTrackingService()
+
+
+# Startup event handler
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on application startup."""
+    try:
+        database_service.initialize_database()
+        logger.info("Database initialized successfully on startup")
+    except Exception as e:
+        logger.error(f"Failed to initialize database on startup: {e}")
 
 
 # Global exception handler
@@ -225,12 +240,15 @@ async def upload_resume(request: ResumeUploadRequest):
 async def upload_resume_file(file: UploadFile = File(...)):
     """
     Upload a resume file (PDF or TXT).
-    
+
     Accepts PDF and TXT files and extracts text content.
     """
     try:
+        logger.info(f"Received file upload: {file.filename}, content_type: {file.content_type}")
+
         # Validate file type
         if file.content_type not in ["application/pdf", "text/plain"]:
+            logger.warning(f"Rejected file with content_type: {file.content_type}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Only PDF and TXT files are supported"
@@ -239,39 +257,47 @@ async def upload_resume_file(file: UploadFile = File(...)):
         # Extract text content
         content = ""
         if file.content_type == "text/plain":
+            logger.info("Processing text file...")
             content_bytes = await file.read()
             content = content_bytes.decode("utf-8")
         elif file.content_type == "application/pdf":
+            logger.info("Processing PDF file...")
             # Handle PDF extraction
             try:
                 import pdfplumber
                 import io
                 content_bytes = await file.read()
-                
+
                 # Convert bytes to file-like object
                 pdf_file = io.BytesIO(content_bytes)
-                
+
                 with pdfplumber.open(pdf_file) as pdf:
                     for page in pdf.pages:
                         page_text = page.extract_text()
                         if page_text:
                             content += page_text + "\n"
-                            
-            except ImportError:
+
+            except ImportError as ie:
+                logger.error(f"PDF library not available: {ie}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="PDF processing not available - pdfplumber not installed"
                 )
-        
+
+        logger.info(f"Extracted {len(content)} characters from file")
+
         if not content.strip():
+            logger.warning("No text content extracted from file")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No text content could be extracted from the file"
             )
-        
+
         # Upload to database
+        logger.info(f"Uploading resume to database: {file.filename}")
         request = ResumeUploadRequest(filename=file.filename, content=content)
         success = resume_service.upload_resume(request)
+        logger.info(f"Resume upload {'succeeded' if success else 'failed'}")
         
         return ResumeResponse(
             resume_name=file.filename,
@@ -282,7 +308,7 @@ async def upload_resume_file(file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"File upload failed: {e}")
+        logger.error(f"File upload failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"File upload failed: {str(e)}"
@@ -366,18 +392,58 @@ async def delete_resume(resume_name: str):
         )
 
 
+@app.post("/resumes/suggest-job-titles", response_model=JobTitleSuggestionsResponse)
+async def suggest_job_titles(request: JobTitleSuggestionsRequest):
+    """
+    Analyze resume using AI and suggest 3 optimal job titles.
+
+    This endpoint uses OpenAI to analyze the resume content and suggest
+    job titles that:
+    - Match the candidate's experience and skills
+    - Are high-paying roles (typically $100K+)
+    - Are in-demand positions with high job posting volume
+    - Use standard job market terminology
+
+    Returns 3 job title suggestions.
+    """
+    try:
+        logger.info(f"Generating job title suggestions for: {request.resume_name}")
+        success, suggestions, message = ai_service.suggest_job_titles(request.resume_name)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND if "not found" in message.lower() else status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=message
+            )
+
+        return JobTitleSuggestionsResponse(
+            suggestions=suggestions,
+            success=True,
+            message=message
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Job title suggestion failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate job title suggestions: {str(e)}"
+        )
+
+
 # Similarity scoring endpoints
 @app.post("/similarity/update", response_model=SimilarityUpdateResponse)
 async def update_similarity_scores(request: SimilarityUpdateRequest):
     """
     Update similarity scores for all jobs against a specific resume.
-    
+
     This calculates embeddings and similarity scores between the specified
     resume and all jobs in the database.
     """
     try:
         success, jobs_updated = job_data_service.update_similarity_scores(request.resume_name)
-        
+
         return SimilarityUpdateResponse(
             success=success,
             message=f"Successfully updated similarity scores for {jobs_updated} jobs" if success else "Failed to update similarity scores",
@@ -388,6 +454,113 @@ async def update_similarity_scores(request: SimilarityUpdateRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Similarity update failed: {str(e)}"
+        )
+
+
+# Job tracking endpoints
+@app.post("/jobs/save", response_model=JobTrackingResponse)
+async def save_job(request: SaveJobRequest):
+    """
+    Save a job to the tracking board.
+
+    Adds the job to job_tracking table with 'apply' status.
+    """
+    try:
+        success, message = job_tracking_service.save_job(request.job_id)
+
+        return JobTrackingResponse(
+            success=success,
+            message=message
+        )
+    except Exception as e:
+        logger.error(f"Failed to save job: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save job: {str(e)}"
+        )
+
+
+@app.post("/jobs/pass", response_model=JobTrackingResponse)
+async def pass_job(request: PassJobRequest):
+    """
+    Pass/hide a job.
+
+    Marks the job as hidden (hidden = 1) so it won't appear in main job list.
+    """
+    try:
+        success, message = job_tracking_service.pass_job(request.job_id)
+
+        return JobTrackingResponse(
+            success=success,
+            message=message
+        )
+    except Exception as e:
+        logger.error(f"Failed to pass job: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to pass job: {str(e)}"
+        )
+
+
+@app.get("/jobs/tracked", response_model=TrackedJobsResponse)
+async def get_tracked_jobs():
+    """
+    Get all tracked jobs organized by status for Kanban board.
+
+    Returns jobs grouped into columns:
+    - apply: Jobs to apply to
+    - hr_screen: HR phone screen stage
+    - round_1: First round interviews
+    - round_2: Second round interviews
+    - rejected: Rejected or ghosted applications
+    """
+    try:
+        jobs_by_status = job_tracking_service.get_tracked_jobs()
+
+        return TrackedJobsResponse(
+            apply=jobs_by_status.get("apply", []),
+            hr_screen=jobs_by_status.get("hr_screen", []),
+            round_1=jobs_by_status.get("round_1", []),
+            round_2=jobs_by_status.get("round_2", []),
+            rejected=jobs_by_status.get("rejected", [])
+        )
+    except Exception as e:
+        logger.error(f"Failed to get tracked jobs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get tracked jobs: {str(e)}"
+        )
+
+
+@app.put("/jobs/tracked/{job_id}/status", response_model=JobTrackingResponse)
+async def update_job_status(job_id: int, request: UpdateJobStatusRequest):
+    """
+    Update the status of a tracked job.
+
+    Moves the job between Kanban columns by updating its status.
+    Valid statuses: apply, hr_screen, round_1, round_2, rejected
+    """
+    try:
+        # Validate that job_id in path matches request body
+        if job_id != request.job_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Job ID in path must match job ID in request body"
+            )
+
+        success, message = job_tracking_service.update_job_status(request.job_id, request.new_status)
+
+        return JobTrackingResponse(
+            success=success,
+            message=message
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update job status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update job status: {str(e)}"
         )
 
 

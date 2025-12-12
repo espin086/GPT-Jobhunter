@@ -233,8 +233,8 @@ def save_text_to_db(filename, text):
     conn = sqlite3.connect("all_jobs.db")
     cursor = conn.cursor()
 
-    # Create the table with a primary key and filename
     try:
+        # Create the table with a primary key and filename
         cursor.execute(
             """
         CREATE TABLE IF NOT EXISTS resumes (
@@ -244,10 +244,7 @@ def save_text_to_db(filename, text):
         )
         """
         )
-    except Exception as e:
-        logging.error("Failed to create table: %s", e)
 
-    try:
         # Check if a record with the given filename already exists
         cursor.execute(
             "SELECT id FROM resumes WHERE resume_name = ?",
@@ -267,11 +264,14 @@ def save_text_to_db(filename, text):
                 "INSERT INTO resumes (resume_name, resume_text) VALUES (?, ?)",
                 (filename, text),
             )
-    except Exception as e:
-        logging.error("Failed to insert or update record: %s", e)
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+    except Exception as e:
+        logging.error("Failed to save resume to database: %s", e, exc_info=True)
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def update_resume_in_db(filename, new_text):

@@ -232,7 +232,7 @@ def generate_gpt_embeddings_batch(texts: List[str]) -> List[Union[List[float], N
 
     api_key = get_openai_api_key()
     if not api_key:
-        error_msg = "OpenAI API key not found or invalid. Cannot generate embeddings."
+        error_msg = "❌ EMBEDDING FAILURE: OpenAI API key not found or invalid. Please check your .env file or settings."
         logger.error(error_msg)
         # Return a list of Nones matching the input size to signal failure for all
         return [None] * len(texts) 
@@ -276,7 +276,8 @@ def generate_gpt_embeddings_batch(texts: List[str]) -> List[Union[List[float], N
         except RateLimitError as e:
             retry_count += 1
             if retry_count > MAX_RETRIES:
-                logger.error(f"Maximum retries reached for batch. Rate limit exceeded: {e}")
+                logger.error(f"❌ EMBEDDING FAILURE: Maximum retries reached for batch. Rate limit exceeded: {e}")
+                logger.error("💡 Solution: Wait a few minutes before trying again, or upgrade your OpenAI plan for higher rate limits.")
                 break
             jitter = random.uniform(0, 0.1 * retry_delay)
             wait_time = min(retry_delay + jitter, MAX_RETRY_DELAY)
@@ -289,7 +290,8 @@ def generate_gpt_embeddings_batch(texts: List[str]) -> List[Union[List[float], N
             if "429" in str(e) or "rate limit" in str(e).lower() or "too many requests" in str(e).lower():
                 retry_count += 1
                 if retry_count > MAX_RETRIES:
-                    logger.error(f"Maximum retries reached for batch. API rate limit error: {e}")
+                    logger.error(f"❌ EMBEDDING FAILURE: Maximum retries reached for batch. API rate limit error: {e}")
+                    logger.error("💡 Solution: Wait a few minutes before trying again, or upgrade your OpenAI plan for higher rate limits.")
                     break
                 jitter = random.uniform(0, 0.1 * retry_delay)
                 wait_time = min(retry_delay + jitter, MAX_RETRY_DELAY)
@@ -297,15 +299,18 @@ def generate_gpt_embeddings_batch(texts: List[str]) -> List[Union[List[float], N
                 time.sleep(wait_time)
                 retry_delay *= 2
             else:
-                logger.error(f"API error during batch embedding: {e}")
+                logger.error(f"❌ EMBEDDING FAILURE: API error during batch embedding: {e}")
+                logger.error(f"💡 Full error details: {str(e)}")
                 break # Non-retriable API error for the batch
 
         except Exception as e:
-            logger.error(f"Unexpected error during batch embedding: {e}", exc_info=True)
+            logger.error(f"❌ EMBEDDING FAILURE: Unexpected error during batch embedding: {e}", exc_info=True)
+            logger.error("💡 This is usually a network issue, invalid API key, or OpenAI service problem.")
             break # Non-retriable unexpected error
 
     # If loop finishes without returning, it means failure after retries or non-retriable error
-    logger.error(f"Failed to generate embeddings for batch after {retry_count} retries.")
+    logger.error(f"❌ EMBEDDING BATCH FAILED: Failed to generate embeddings for batch of {len(texts)} items after {retry_count} retries.")
+    logger.error("💡 Check the error messages above for the specific cause.")
     # Return a list of Nones matching the input size to indicate failure for all items in this batch
     return [None] * len(texts)
 

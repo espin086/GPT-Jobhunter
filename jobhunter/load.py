@@ -2,9 +2,9 @@ import json
 import logging
 import pprint
 
-import config
-from FileHandler import FileHandler
-from SQLiteHandler import check_and_upload_to_db, create_db_if_not_there
+from jobhunter import config
+from jobhunter.FileHandler import FileHandler
+from jobhunter.SQLiteHandler import check_and_upload_to_db, create_db_if_not_there
 
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(

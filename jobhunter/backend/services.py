@@ -4,9 +4,10 @@ Service layer for FastAPI backend that wraps existing business logic.
 
 import logging
 import sqlite3
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 import pandas as pd
 from pathlib import Path
+import os
 
 from jobhunter import config
 from jobhunter.extract import extract
@@ -44,16 +45,16 @@ class JobSearchService:
     def search_jobs(self, request: JobSearchRequest) -> int:
         """
         Search for jobs and return total count found.
-        
+
         Args:
             request: Job search request parameters
-            
+
         Returns:
             Total number of jobs found
         """
         try:
             logger.info(f"Starting job search for: {request.job_titles}")
-            
+
             # Run the extract pipeline
             total_jobs = extract(
                 POSITIONS=request.job_titles,
@@ -61,7 +62,7 @@ class JobSearchService:
                 date_posted=request.date_posted,
                 location=request.location
             )
-            
+
             if total_jobs > 0:
                 # Transform the data
                 logger.info("Transforming job data...")
@@ -72,15 +73,28 @@ class JobSearchService:
                     data=self.file_handler.import_job_data_from_dir(dirpath=config.RAW_DATA_PATH),
                 )
                 transformer.transform()
-                
+
                 # Load to database
                 logger.info("Loading job data to database...")
                 load()
-                
+
+                # Auto-calculate similarity scores if a resume exists
+                try:
+                    resumes = fetch_resumes_from_db()
+                    if resumes:
+                        # Use the first resume for similarity calculation
+                        resume_name = resumes[0]
+                        logger.info(f"Auto-calculating similarity scores using resume: {resume_name}")
+                        update_similarity_in_db(resume_name)
+                        logger.info("Similarity scores calculated successfully")
+                except Exception as similarity_error:
+                    logger.warning(f"Could not auto-calculate similarity scores: {similarity_error}")
+                    # Don't fail the job search if similarity calculation fails
+
                 logger.info(f"Job search completed successfully. Found {total_jobs} jobs.")
-            
+
             return total_jobs
-            
+
         except Exception as e:
             logger.error(f"Error in job search: {e}", exc_info=True)
             raise
@@ -190,19 +204,20 @@ class JobDataService:
         try:
             conn = sqlite3.connect(config.DATABASE)
             
-            # Build the base query
+            # Build the base query - exclude hidden jobs and already-tracked jobs
             base_query = """
-                SELECT 
-                    id, primary_key, date, 
+                SELECT
+                    id, primary_key, date,
                     CAST(resume_similarity AS REAL) AS resume_similarity,
-                    title, company, company_url, company_type, job_type, 
-                    job_is_remote, job_apply_link, job_offer_expiration_date, 
-                    salary_low, salary_high, salary_currency, salary_period, 
-                    job_benefits, city, state, country, apply_options, 
-                    required_skills, required_experience, required_education, 
+                    title, company, company_url, company_type, job_type,
+                    job_is_remote, job_apply_link, job_offer_expiration_date,
+                    salary_low, salary_high, salary_currency, salary_period,
+                    job_benefits, city, state, country, apply_options,
+                    required_skills, required_experience, required_education,
                     description, highlights
-                FROM jobs_new 
-                WHERE 1=1
+                FROM jobs_new
+                WHERE (hidden IS NULL OR hidden = 0)
+                AND id NOT IN (SELECT job_id FROM job_tracking)
             """
             
             params = []
@@ -241,15 +256,21 @@ class JobDataService:
                 base_query += " AND salary_high <= ?"
                 params.append(filter_request.max_salary)
             
-            # Get total count
-            count_query = base_query.replace(
-                "SELECT id, primary_key, date, CAST(resume_similarity AS REAL) AS resume_similarity, title, company, company_url, company_type, job_type, job_is_remote, job_apply_link, job_offer_expiration_date, salary_low, salary_high, salary_currency, salary_period, job_benefits, city, state, country, apply_options, required_skills, required_experience, required_education, description, highlights FROM jobs_new",
-                "SELECT COUNT(*) FROM jobs_new"
-            )
-            
+            # Get total count - build a proper count query
+            # Extract the WHERE clause from base_query
+            where_clause_start = base_query.find("WHERE")
+            if where_clause_start != -1:
+                where_clause = base_query[where_clause_start:]
+                # Remove any ORDER BY or LIMIT if present (shouldn't be at this point though)
+                where_clause = where_clause.split("ORDER BY")[0].split("LIMIT")[0].strip()
+                count_query = f"SELECT COUNT(*) FROM jobs_new {where_clause}"
+            else:
+                count_query = "SELECT COUNT(*) FROM jobs_new"
+
             cursor = conn.cursor()
             cursor.execute(count_query, params)
-            total_count = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            total_count = result[0] if result else 0
             
             # Add ordering and pagination
             base_query += " ORDER BY resume_similarity DESC, date DESC"
@@ -373,7 +394,27 @@ class DatabaseService:
                     resume_text TEXT
                 )
             ''')
-            
+
+            # Create job_tracking table for Kanban board
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS job_tracking (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    job_id INTEGER NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'apply',
+                    date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    notes TEXT,
+                    FOREIGN KEY (job_id) REFERENCES jobs_new(id),
+                    UNIQUE(job_id)
+                )
+            ''')
+
+            # Add hidden column to jobs_new if it doesn't exist
+            try:
+                cursor.execute("ALTER TABLE jobs_new ADD COLUMN hidden INTEGER DEFAULT 0")
+            except:
+                pass  # Column already exists
+
             conn.commit()
             conn.close()
             logger.info("Database initialized successfully")
@@ -419,7 +460,277 @@ class DatabaseService:
                 "jobs_with_similarity_scores": jobs_with_similarity,
                 "database_path": str(Path(config.DATABASE).absolute())
             }
-            
+
         except Exception as e:
             logger.error(f"Error getting database stats: {e}", exc_info=True)
             raise
+
+
+class AIService:
+    """Service for AI-powered features."""
+
+    def suggest_job_titles(self, resume_name: str) -> Tuple[bool, List[str], str]:
+        """
+        Analyze resume and suggest 3 optimal job titles using OpenAI.
+
+        Args:
+            resume_name: Name of the resume to analyze
+
+        Returns:
+            Tuple of (success, list of job titles, message)
+        """
+        try:
+            # Get resume text
+            resume_text = get_resume_text(resume_name)
+            if not resume_text:
+                return False, [], f"Resume '{resume_name}' not found"
+
+            # Check if OpenAI API key is available
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                logger.warning("OpenAI API key not found, cannot generate suggestions")
+                return False, [], "OpenAI API key not configured"
+
+            # Use OpenAI to analyze resume and suggest job titles
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+
+            prompt = f"""Analyze this resume and suggest exactly 3 job titles that:
+1. Match the candidate's experience and skills
+2. Are high-paying roles (typically $100K+)
+3. Are in-demand positions with high job posting volume
+4. Use standard job market terminology (e.g., "Senior Software Engineer" not "Code Ninja")
+
+Resume:
+{resume_text[:3000]}
+
+Return ONLY the 3 job titles, one per line, with no numbering, bullets, or explanations.
+Example format:
+Senior Software Engineer
+Machine Learning Engineer
+Technical Lead"""
+
+            logger.info(f"Requesting job title suggestions for resume: {resume_name}")
+
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are an expert career advisor and recruiter who understands job market trends and compensation."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=150
+            )
+
+            suggestions_text = response.choices[0].message.content.strip()
+            suggestions = [title.strip() for title in suggestions_text.split('\n') if title.strip()]
+
+            # Ensure we have exactly 3 suggestions
+            if len(suggestions) < 3:
+                logger.warning(f"Only got {len(suggestions)} suggestions, padding with defaults")
+                defaults = ["Senior Software Engineer", "Data Scientist", "Product Manager"]
+                suggestions.extend(defaults[len(suggestions):3])
+            suggestions = suggestions[:3]
+
+            logger.info(f"Generated suggestions: {suggestions}")
+            return True, suggestions, f"Generated {len(suggestions)} job title suggestions"
+
+        except Exception as e:
+            logger.error(f"Error generating job title suggestions: {e}", exc_info=True)
+            return False, [], f"Failed to generate suggestions: {str(e)}"
+
+
+class JobTrackingService:
+    """Service for job application tracking (Kanban board)."""
+
+    def save_job(self, job_id: int) -> Tuple[bool, str]:
+        """
+        Save a job to tracking board (starts in 'apply' status).
+
+        Args:
+            job_id: ID of the job to save
+
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
+            # Check if job exists
+            cursor.execute("SELECT id FROM jobs_new WHERE id = ?", (job_id,))
+            if not cursor.fetchone():
+                conn.close()
+                return False, "Job not found"
+
+            # Insert or ignore if already tracked
+            cursor.execute('''
+                INSERT OR IGNORE INTO job_tracking (job_id, status)
+                VALUES (?, 'apply')
+            ''', (job_id,))
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"Job {job_id} saved to tracking board")
+            return True, "Job saved successfully"
+
+        except Exception as e:
+            logger.error(f"Error saving job: {e}", exc_info=True)
+            return False, f"Failed to save job: {str(e)}"
+
+    def pass_job(self, job_id: int) -> Tuple[bool, str]:
+        """
+        Mark a job as hidden/passed.
+
+        Args:
+            job_id: ID of the job to hide
+
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
+            # Update hidden flag
+            cursor.execute("UPDATE jobs_new SET hidden = 1 WHERE id = ?", (job_id,))
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"Job {job_id} marked as hidden")
+            return True, "Job marked as not interested"
+
+        except Exception as e:
+            logger.error(f"Error marking job as hidden: {e}", exc_info=True)
+            return False, f"Failed to hide job: {str(e)}"
+
+    def get_tracked_jobs(self) -> Dict[str, List[Dict]]:
+        """
+        Get all tracked jobs organized by status (for Kanban board).
+
+        Returns:
+            Dictionary with status as keys and lists of jobs as values
+        """
+        try:
+            conn = sqlite3.connect(config.DATABASE)
+
+            query = '''
+                SELECT
+                    jt.id as tracking_id,
+                    jt.job_id,
+                    jt.status,
+                    jt.date_added,
+                    jt.date_updated,
+                    jt.notes,
+                    j.title,
+                    j.company,
+                    j.city,
+                    j.state,
+                    j.job_is_remote,
+                    j.salary_low,
+                    j.salary_high,
+                    j.job_apply_link,
+                    j.resume_similarity,
+                    j.date as posted_date
+                FROM job_tracking jt
+                JOIN jobs_new j ON jt.job_id = j.id
+                ORDER BY jt.date_updated DESC
+            '''
+
+            df = pd.read_sql(query, conn)
+            conn.close()
+
+            # Replace NaN/Infinity with None for JSON serialization
+            import math
+            df = df.replace([float('inf'), float('-inf')], None)
+            df = df.where(pd.notna(df), None)
+
+            # Organize by status
+            statuses = ['apply', 'hr_screen', 'round_1', 'round_2', 'rejected']
+            result = {status: [] for status in statuses}
+
+            for _, row in df.iterrows():
+                job_dict = row.to_dict()
+
+                # Double-check: replace any remaining NaN values with None
+                for key, value in job_dict.items():
+                    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                        job_dict[key] = None
+
+                status = job_dict.get('status', 'apply')
+                if status in result:
+                    result[status].append(job_dict)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error getting tracked jobs: {e}", exc_info=True)
+            return {status: [] for status in ['apply', 'hr_screen', 'round_1', 'round_2', 'rejected']}
+
+    def update_job_status(self, job_id: int, new_status: str) -> Tuple[bool, str]:
+        """
+        Update the status of a tracked job (for moving between Kanban columns).
+
+        Args:
+            job_id: ID of the job
+            new_status: New status (apply, hr_screen, round_1, round_2, rejected)
+
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            valid_statuses = ['apply', 'hr_screen', 'round_1', 'round_2', 'rejected']
+            if new_status not in valid_statuses:
+                return False, f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
+            # Update status and timestamp
+            cursor.execute('''
+                UPDATE job_tracking
+                SET status = ?, date_updated = CURRENT_TIMESTAMP
+                WHERE job_id = ?
+            ''', (new_status, job_id))
+
+            if cursor.rowcount == 0:
+                conn.close()
+                return False, "Job not found in tracking"
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"Job {job_id} status updated to {new_status}")
+            return True, f"Job moved to {new_status}"
+
+        except Exception as e:
+            logger.error(f"Error updating job status: {e}", exc_info=True)
+            return False, f"Failed to update status: {str(e)}"
+
+    def remove_from_tracking(self, job_id: int) -> Tuple[bool, str]:
+        """
+        Remove a job from tracking board.
+
+        Args:
+            job_id: ID of the job to remove
+
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
+            cursor.execute("DELETE FROM job_tracking WHERE job_id = ?", (job_id,))
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"Job {job_id} removed from tracking")
+            return True, "Job removed from tracking"
+
+        except Exception as e:
+            logger.error(f"Error removing job from tracking: {e}", exc_info=True)
+            return False, f"Failed to remove job: {str(e)}"

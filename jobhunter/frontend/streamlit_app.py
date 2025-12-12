@@ -27,36 +27,144 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS for a cleaner, more modern look with job cards
 st.markdown("""
 <style>
 .main-header {
-    font-size: 2.5rem;
-    color: #1e88e5;
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #1e88e5 0%, #7b1fa2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+.subtitle {
+    font-size: 1.2rem;
+    color: #666;
     text-align: center;
     margin-bottom: 2rem;
 }
-.metric-container {
-    background-color: #f0f2f6;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin: 0.5rem 0;
+/* Cleaner spacing */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
 }
-.success-message {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
+/* Make buttons more prominent */
+.stButton>button {
+    width: 100%;
+    background: linear-gradient(90deg, #1e88e5 0%, #1976d2 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.stButton>button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 136, 229, 0.4);
+}
+/* Cleaner dataframe styling */
+.dataframe {
+    font-size: 0.9rem;
+}
+/* Better expander styling */
+.streamlit-expanderHeader {
+    font-weight: 600;
+    color: #1e88e5;
+}
+
+/* Job Card Styling */
+.job-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    position: relative;
+}
+.job-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+    border-color: #1e88e5;
+}
+.match-score {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+.match-high {
+    background: #d4edda;
     color: #155724;
-    padding: 0.75rem;
-    border-radius: 0.25rem;
-    margin: 1rem 0;
 }
-.error-message {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-    padding: 0.75rem;
-    border-radius: 0.25rem;
-    margin: 1rem 0;
+.match-medium {
+    background: #fff3cd;
+    color: #856404;
+}
+.match-low {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+.job-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1e88e5;
+    margin: 0.5rem 0;
+    line-height: 1.3;
+}
+.job-company {
+    font-size: 1.1rem;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.job-meta {
+    color: #666;
+    font-size: 0.95rem;
+    margin: 0.5rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+.job-badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.badge-remote {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+.badge-hybrid {
+    background: #fff3e0;
+    color: #f57c00;
+}
+.badge-onsite {
+    background: #f5f5f5;
+    color: #616161;
+}
+.badge-salary {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 700;
+}
+.job-date {
+    color: #999;
+    font-size: 0.85rem;
+}
+.job-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -169,6 +277,256 @@ def update_similarity_scores(resume_name: str) -> Dict[str, Any]:
         return {"error": "Update failed"}
 
 
+def get_job_title_suggestions(resume_name: str) -> Dict[str, Any]:
+    """Get AI-generated job title suggestions based on resume."""
+    try:
+        data = {"resume_name": resume_name}
+        # Use longer timeout for AI processing
+        return make_api_request("POST", "/resumes/suggest-job-titles", timeout=60, json=data)
+    except:
+        return {"error": "Suggestion failed"}
+
+
+def save_job_to_tracking(job_id: int) -> bool:
+    """Save a job to the tracking board."""
+    try:
+        data = {"job_id": job_id}
+        response = make_api_request("POST", "/jobs/save", json=data)
+        return response.get("success", False)
+    except:
+        return False
+
+
+def pass_job(job_id: int) -> bool:
+    """Pass/hide a job from the main list."""
+    try:
+        data = {"job_id": job_id}
+        response = make_api_request("POST", "/jobs/pass", json=data)
+        return response.get("success", False)
+    except:
+        return False
+
+
+def get_tracked_jobs() -> Dict[str, List[Dict]]:
+    """Get all tracked jobs organized by status."""
+    try:
+        return make_api_request("GET", "/jobs/tracked")
+    except:
+        return {"apply": [], "hr_screen": [], "round_1": [], "round_2": [], "rejected": []}
+
+
+def update_job_status(job_id: int, new_status: str) -> bool:
+    """Update the status of a tracked job."""
+    try:
+        data = {"job_id": job_id, "new_status": new_status}
+        response = make_api_request("PUT", f"/jobs/tracked/{job_id}/status", json=data)
+        return response.get("success", False)
+    except:
+        return False
+
+
+def format_relative_time(date_str: str) -> str:
+    """Convert date string to relative time (e.g., '2d ago')."""
+    if not date_str:
+        return "Unknown"
+    try:
+        from datetime import datetime
+
+        # Try different date formats
+        job_date = None
+
+        # Try ISO format with timezone (e.g., 2025-12-08T00:00:00.000Z)
+        try:
+            if 'T' in date_str:
+                # Remove timezone and milliseconds for easier parsing
+                clean_date = date_str.split('T')[0]
+                job_date = datetime.strptime(clean_date, "%Y-%m-%d")
+        except:
+            pass
+
+        # Try simple date format (e.g., 2025-12-08)
+        if not job_date:
+            try:
+                job_date = datetime.strptime(date_str.split()[0], "%Y-%m-%d")
+            except:
+                pass
+
+        # If we couldn't parse it, return a safe default
+        if not job_date:
+            return "Recently"
+
+        now = datetime.now()
+        diff = now - job_date
+
+        if diff.days == 0:
+            return "Today"
+        elif diff.days == 1:
+            return "Yesterday"
+        elif diff.days < 0:
+            return "Recently"  # Future date, shouldn't happen but handle it
+        elif diff.days < 7:
+            return f"{diff.days}d ago"
+        elif diff.days < 30:
+            weeks = diff.days // 7
+            return f"{weeks}w ago"
+        elif diff.days < 365:
+            months = diff.days // 30
+            return f"{months}mo ago"
+        else:
+            years = diff.days // 365
+            return f"{years}y ago"
+    except Exception as e:
+        # Fail gracefully - don't let date parsing break the whole card
+        return "Recently"
+
+
+def format_salary(salary_low: Optional[float], salary_high: Optional[float], currency: Optional[str] = "USD") -> str:
+    """Format salary range for display."""
+    if not salary_low and not salary_high:
+        return None
+
+    def format_amount(amount):
+        if amount >= 1000:
+            return f"${int(amount/1000)}K"
+        return f"${int(amount)}"
+
+    if salary_low and salary_high:
+        return f"{format_amount(salary_low)}-{format_amount(salary_high)}"
+    elif salary_low:
+        return f"{format_amount(salary_low)}+"
+    elif salary_high:
+        return f"Up to {format_amount(salary_high)}"
+    return None
+
+
+def render_job_card(job: Dict[str, Any], index: int):
+    """Render a single job as a card."""
+    import html
+
+    # Calculate match score styling
+    similarity = job.get("resume_similarity", 0)
+    if similarity >= 0.9:
+        match_class = "match-high"
+        match_emoji = "🟢"
+    elif similarity >= 0.7:
+        match_class = "match-medium"
+        match_emoji = "🟡"
+    else:
+        match_class = "match-low"
+        match_emoji = "⚪"
+
+    # Format salary
+    salary_str = format_salary(job.get("salary_low"), job.get("salary_high"))
+
+    # Determine remote status
+    is_remote = job.get("job_is_remote", "").lower()
+    if "yes" in is_remote or "remote" in is_remote:
+        remote_badge = '<span class="job-badge badge-remote">🏠 Remote</span>'
+    elif "hybrid" in is_remote:
+        remote_badge = '<span class="job-badge badge-hybrid">🔀 Hybrid</span>'
+    else:
+        remote_badge = '<span class="job-badge badge-onsite">🏢 On-site</span>'
+
+    # Format location - escape HTML
+    city = job.get("city", "")
+    state = job.get("state", "")
+    location = f"{city}, {state}".strip(", ") or "Location not specified"
+    location = html.escape(location)
+
+    # Format date
+    date_posted = format_relative_time(job.get("date", ""))
+
+    # Escape user content to prevent HTML injection
+    job_title = html.escape(job.get("title", "Unknown Title"))
+    company_name = html.escape(job.get("company", "Unknown Company"))
+    salary_display = html.escape(salary_str) if salary_str else ""
+
+    # Build salary badge HTML (always include, even if empty, to maintain structure)
+    salary_badge_html = f'<span class="job-badge badge-salary">💰 {salary_display}</span>' if salary_str else '<span></span>'
+
+    # Build card HTML - ensure it's always valid with no conditional structure
+    card_html = f"""<div class="job-card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+        <span class="match-score {match_class}">{match_emoji} {int(similarity * 100)}% Match</span>
+        {salary_badge_html}
+    </div>
+    <h3 class="job-title">{job_title}</h3>
+    <div class="job-company">{company_name}</div>
+    <div class="job-meta">
+        <span>{location}</span>
+        <span>•</span>
+        {remote_badge}
+        <span>•</span>
+        <span class="job-date">Posted {date_posted}</span>
+    </div>
+</div>"""
+
+    st.markdown(card_html, unsafe_allow_html=True)
+
+    # Action buttons below the card
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+    with col1:
+        apply_link = job.get("job_apply_link", "")
+        if apply_link:
+            # Use markdown link styled as button for older Streamlit versions
+            st.markdown(
+                f'<a href="{apply_link}" target="_blank" style="display: inline-block; padding: 0.5rem 1rem; background: linear-gradient(90deg, #1e88e5 0%, #1976d2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; text-align: center; width: 100%;">🚀 Apply Now</a>',
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown('<div style="padding: 0.5rem; text-align: center; color: #999;">No link</div>', unsafe_allow_html=True)
+    with col2:
+        if st.button("🔖 Save", key=f"save_{index}", use_container_width=True):
+            job_id = job.get("id")
+            if job_id and save_job_to_tracking(job_id):
+                st.toast("💾 Job saved to tracker!")
+                st.rerun()
+            else:
+                st.toast("❌ Failed to save job")
+    with col3:
+        if st.button("👁️ View", key=f"view_{index}", use_container_width=True):
+            # Store the expanded state in session
+            if f"expanded_{index}" not in st.session_state:
+                st.session_state[f"expanded_{index}"] = False
+            st.session_state[f"expanded_{index}"] = not st.session_state.get(f"expanded_{index}", False)
+    with col4:
+        if st.button("👎 Pass", key=f"pass_{index}", use_container_width=True):
+            job_id = job.get("id")
+            if job_id and pass_job(job_id):
+                st.toast("❌ Job hidden")
+                st.rerun()
+            else:
+                st.toast("❌ Failed to hide job")
+
+    # Show details if expanded
+    if st.session_state.get(f"expanded_{index}", False):
+        with st.container():
+            st.markdown("---")
+            st.write("**📋 Full Job Details**")
+
+            if job.get("description"):
+                st.write("**Description:**")
+                st.write(job.get("description"))
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if job.get("required_skills"):
+                    st.write("**Required Skills:**")
+                    st.write(job.get("required_skills"))
+                if job.get("required_experience"):
+                    st.write("**Experience:**")
+                    st.write(job.get("required_experience"))
+            with col_b:
+                if job.get("required_education"):
+                    st.write("**Education:**")
+                    st.write(job.get("required_education"))
+                if job.get("job_benefits"):
+                    st.write("**Benefits:**")
+                    st.write(job.get("job_benefits"))
+
+            st.markdown("---")
+
+
 def main():
     """Main Streamlit application."""
     
@@ -178,233 +536,408 @@ def main():
         st.info("Run: `python -m jobhunter.backend.api` or `uvicorn jobhunter.backend.api:app --host 0.0.0.0 --port 8000`")
         return
     
-    # Main header
+    # Main header with improved styling
     st.markdown('<h1 class="main-header">🔍 GPT Job Hunter</h1>', unsafe_allow_html=True)
-    st.markdown("### AI-powered job search with resume matching")
+    st.markdown('<p class="subtitle">AI-powered job search with intelligent resume matching</p>', unsafe_allow_html=True)
     
     # Initialize session state
     if "selected_resume" not in st.session_state:
         st.session_state.selected_resume = None
     if "last_search_results" not in st.session_state:
         st.session_state.last_search_results = None
+    if "job_suggestions" not in st.session_state:
+        st.session_state.job_suggestions = None
     
     # Sidebar
     with st.sidebar:
-        st.header("📋 Control Panel")
-        
-        # Database stats
-        with st.expander("📊 Database Statistics", expanded=True):
-            stats = get_database_stats()
-            if stats and "error" not in stats:
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Jobs", stats.get("total_jobs", 0))
-                    st.metric("Jobs w/ Embeddings", stats.get("jobs_with_embeddings", 0))
-                with col2:
-                    st.metric("Resumes", stats.get("total_resumes", 0))
-                    st.metric("Jobs w/ Similarity", stats.get("jobs_with_similarity_scores", 0))
-            else:
-                st.error("Failed to load database statistics")
-        
+        st.header("📋 Quick Start")
+
         # Resume Management
-        st.header("📄 Resume Management")
+        st.subheader("📄 Your Resume")
         
-        # Upload resume
-        with st.expander("Upload Resume", expanded=False):
-            uploaded_file = st.file_uploader("Choose a file", type=['txt', 'pdf'])
-            if uploaded_file is not None:
-                if st.button("Upload Resume"):
-                    with st.spinner("Uploading and processing..."):
-                        try:
-                            # Use the file upload endpoint for both PDF and TXT files
-                            success = upload_resume_file(uploaded_file)
-                            if success:
-                                st.success(f"✅ Resume '{uploaded_file.name}' uploaded successfully!")
-                                st.rerun()
-                            else:
-                                st.error("Failed to upload resume. Please check the file format and try again.")
-                        except Exception as e:
-                            st.error(f"Error uploading file: {e}")
-                
-                # Show file info
-                st.info(f"📄 **File:** {uploaded_file.name}")
-                st.info(f"📏 **Size:** {uploaded_file.size:,} bytes")
-                st.info(f"🔧 **Type:** {uploaded_file.type}")
-                
-                if uploaded_file.type == "application/pdf":
-                    st.info("💡 **PDF files will be processed to extract text content**")
-                elif uploaded_file.type == "text/plain":
-                    st.info("💡 **Text file will be uploaded directly**")
-        
-        # Select resume
+        # Get existing resumes and auto-select the latest one
         resumes = get_resumes()
         if resumes:
-            # Calculate the correct index safely
-            current_index = 0
-            if st.session_state.selected_resume and st.session_state.selected_resume in resumes:
-                current_index = resumes.index(st.session_state.selected_resume) + 1
-            
-            selected_resume = st.selectbox(
-                "Select Active Resume",
-                ["None"] + resumes,
-                index=current_index
-            )
-            
-            if selected_resume != "None":
-                st.session_state.selected_resume = selected_resume
-            else:
+            # Auto-select the most recent resume (last in list)
+            # But first, clear the session state if the selected resume no longer exists
+            if st.session_state.selected_resume and st.session_state.selected_resume not in resumes:
                 st.session_state.selected_resume = None
-            
-            # Update similarity scores
-            if st.session_state.selected_resume:
-                if st.button("🔄 Update Similarity Scores"):
-                    with st.spinner("Updating similarity scores..."):
-                        result = update_similarity_scores(st.session_state.selected_resume)
-                        if result.get("success"):
-                            st.success(f"✅ Updated {result.get('jobs_updated', 0)} jobs")
-                        else:
-                            st.error("Failed to update similarity scores")
+                st.session_state.job_suggestions = None  # Clear suggestions too
+
+            if not st.session_state.selected_resume:
+                st.session_state.selected_resume = resumes[-1]
+
+            # Show current resume with a clean indicator
+            st.success(f"✅ **Active:** {st.session_state.selected_resume}")
+
+            # Upload new resume (collapsed by default)
+            with st.expander("📤 Upload New Resume"):
+                uploaded_file = st.file_uploader("Choose a file", type=['txt', 'pdf'], key="resume_uploader")
+
+                # Auto-upload when file is selected
+                if uploaded_file is not None:
+                    # Use session state to track if this file has been processed
+                    file_key = f"{uploaded_file.name}_{uploaded_file.size}"
+                    if 'last_uploaded_file' not in st.session_state or st.session_state.last_uploaded_file != file_key:
+                        with st.spinner("Uploading and processing resume..."):
+                            try:
+                                success = upload_resume_file(uploaded_file)
+                                if success:
+                                    st.session_state.last_uploaded_file = file_key
+                                    st.session_state.selected_resume = uploaded_file.name
+                                    st.success(f"✅ Uploaded and activated!")
+                                    st.rerun()
+                                else:
+                                    st.error("Upload failed. Please try again.")
+                            except Exception as e:
+                                st.error(f"Error: {e}")
         else:
-            st.info("No resumes found. Upload one first.")
-        
+            # No resumes yet - clear session state and show uploader prominently
+            if st.session_state.selected_resume:
+                st.session_state.selected_resume = None
+                st.session_state.job_suggestions = None
+
+            st.info("👋 Start by uploading your resume")
+            uploaded_file = st.file_uploader("Choose a file", type=['txt', 'pdf'], key="first_resume_uploader")
+
+            # Auto-upload when file is selected
+            if uploaded_file is not None:
+                file_key = f"{uploaded_file.name}_{uploaded_file.size}"
+                if 'last_uploaded_file' not in st.session_state or st.session_state.last_uploaded_file != file_key:
+                    with st.spinner("Uploading and processing resume..."):
+                        try:
+                            success = upload_resume_file(uploaded_file)
+                            if success:
+                                st.session_state.last_uploaded_file = file_key
+                                st.session_state.selected_resume = uploaded_file.name
+                                st.success(f"✅ Resume uploaded!")
+                                st.rerun()
+                            else:
+                                st.error("Upload failed. Please try again.")
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+
+        # AI-Powered Job Suggestions
+        if st.session_state.selected_resume:
+            st.divider()
+            st.subheader("🎯 AI Suggestions")
+
+            # Get or generate suggestions
+            if st.session_state.job_suggestions is None:
+                with st.spinner("🤖 Analyzing your resume..."):
+                    result = get_job_title_suggestions(st.session_state.selected_resume)
+                    if result.get("success"):
+                        st.session_state.job_suggestions = result.get("suggestions", [])
+
+            # Display suggestions
+            if st.session_state.job_suggestions:
+                st.write("**Recommended for you:**")
+                # Display as clickable chips
+                cols = st.columns(len(st.session_state.job_suggestions))
+                for i, suggestion in enumerate(st.session_state.job_suggestions):
+                    with cols[i]:
+                        if st.button(f"💼 {suggestion}", key=f"suggestion_{i}", use_container_width=True):
+                            # Pre-fill the job search form with this suggestion
+                            st.session_state.pre_fill_job_title = suggestion
+
+                # Smart Search button
+                if st.button("🚀 Smart Search All 3", use_container_width=True, type="primary"):
+                    with st.spinner("🔄 Searching for jobs and calculating matches..."):
+                        result = search_jobs(st.session_state.job_suggestions, "us", "all", "")
+                        if "error" not in result:
+                            st.session_state.last_search_results = result
+                            if result.get("success"):
+                                st.success(f"✅ Found {result.get('total_jobs_found', 0)} jobs!")
+                            else:
+                                st.warning("⚠️ No jobs found. Try different titles or locations.")
+                        else:
+                            st.error(f"❌ Search failed: {result['error']}")
+
         # Job Search
-        st.header("🔍 Job Search")
+        st.divider()
+        st.subheader("🔍 Manual Search")
+
         with st.form("job_search_form"):
+            # Pre-fill if suggestion was clicked
+            default_value = ""
+            if "pre_fill_job_title" in st.session_state:
+                default_value = st.session_state.pre_fill_job_title
+                del st.session_state.pre_fill_job_title
+
             job_titles_input = st.text_area(
-                "Job Titles (one per line)",
+                "Job Titles",
+                value=default_value,
                 placeholder="Software Engineer\nData Scientist\nProduct Manager",
-                height=100
+                height=100,
+                help="Enter one job title per line"
             )
+
+            location = st.text_input("📍 Location (optional)", placeholder="San Francisco, CA")
+
             col1, col2 = st.columns(2)
             with col1:
                 country = st.selectbox("Country", ["us", "uk", "ca", "au", "de"], index=0)
-                date_posted = st.selectbox("Date Posted", ["all", "today", "week", "month"], index=0)
             with col2:
-                location = st.text_input("Location", placeholder="San Francisco, CA")
-            
-            search_submitted = st.form_submit_button("🚀 Search Jobs")
-            
+                date_posted = st.selectbox("Recency", ["all", "today", "week", "month"], index=0)
+
+            search_submitted = st.form_submit_button("🚀 Search Jobs", use_container_width=True)
+
             if search_submitted and job_titles_input.strip():
                 job_titles = [title.strip() for title in job_titles_input.strip().split('\n') if title.strip()]
-                
-                with st.spinner("Searching for jobs..."):
+
+                with st.spinner("🔄 Searching for jobs and calculating matches..."):
                     result = search_jobs(job_titles, country, date_posted, location)
-                    
+
                     if "error" not in result:
                         st.session_state.last_search_results = result
                         if result.get("success"):
                             st.success(f"✅ Found {result.get('total_jobs_found', 0)} jobs!")
                         else:
-                            st.warning("Search completed but no jobs found")
+                            st.warning("⚠️ No jobs found. Try different titles or locations.")
                     else:
-                        st.error(f"Search failed: {result['error']}")
+                        st.error(f"❌ Search failed: {result['error']}")
     
-    # Main content area
-    st.header("📊 Job Results")
-    
-    # Job filters
-    with st.expander("🔍 Filter Jobs", expanded=True):
-        col1, col2, col3, col4 = st.columns(4)
+    # Main content area with tabs
+    tab1, tab2 = st.tabs(["📊 Job Matches", "📋 Job Tracker"])
+
+    # TAB 1: Job Matches
+    with tab1:
+        st.header("📊 Job Matches")
+
+        # Essential filters only - clean and simple
+        col1, col2, col3 = st.columns(3)
         with col1:
-            min_similarity = st.slider("Min Similarity", 0.0, 1.0, 0.0, 0.01)
-            company_filter = st.text_input("Company", placeholder="Google, Apple...")
+            min_similarity = st.slider("🎯 Min Match Score", 0.0, 1.0, 0.0, 0.05, help="Filter jobs by resume similarity")
         with col2:
-            title_filter = st.text_input("Job Title", placeholder="Engineer, Manager...")
-            location_filter = st.text_input("Location", placeholder="New York, Remote...")
+            location_filter = st.text_input("📍 Location", placeholder="San Francisco, Remote...")
         with col3:
-            job_type_filter = st.selectbox("Job Type", ["All", "Full-time", "Part-time", "Contract", "Temporary"], index=0)
-            remote_filter = st.selectbox("Remote", ["All", "Remote", "On-site"], index=0)
-        with col4:
-            min_salary = st.number_input("Min Salary", min_value=0, value=0, step=1000)
-            max_salary = st.number_input("Max Salary", min_value=0, value=0, step=1000)
-    
-    # Apply filters and get jobs
-    filters = {}
-    if st.session_state.selected_resume:
-        filters["resume_name"] = st.session_state.selected_resume
-    if min_similarity > 0:
-        filters["min_similarity"] = min_similarity
-    if company_filter:
-        filters["company"] = company_filter
-    if title_filter:
-        filters["title"] = title_filter
-    if location_filter:
-        filters["location"] = location_filter
-    if job_type_filter != "All":
-        filters["job_type"] = job_type_filter
-    if remote_filter == "Remote":
-        filters["is_remote"] = True
-    elif remote_filter == "On-site":
-        filters["is_remote"] = False
-    if min_salary > 0:
-        filters["min_salary"] = min_salary
-    if max_salary > 0:
-        filters["max_salary"] = max_salary
-    
-    # Get and display jobs
-    jobs_data = get_jobs(filters)
-    jobs = jobs_data.get("jobs", [])
-    total_count = jobs_data.get("total_count", 0)
-    
-    if jobs:
-        st.info(f"Showing {len(jobs)} of {total_count} jobs matching your criteria")
-        
-        # Convert to DataFrame for display
-        df_data = []
-        for job in jobs:
-            df_data.append({
-                "Similarity": round(job.get("resume_similarity", 0), 3),
-                "Title": job.get("title", ""),
-                "Company": job.get("company", ""),
-                "Location": f"{job.get('city', '')}, {job.get('state', '')}".strip(", "),
-                "Type": job.get("job_type", ""),
-                "Remote": job.get("job_is_remote", ""),
-                "Salary Low": job.get("salary_low", ""),
-                "Salary High": job.get("salary_high", ""),
-                "Apply Link": job.get("job_apply_link", ""),
-                "Date": job.get("date", "")
-            })
-        
-        df = pd.DataFrame(df_data)
-        
-        # Display the dataframe
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "Apply Link": st.column_config.LinkColumn("Apply Link"),
-                "Similarity": st.column_config.NumberColumn("Similarity", format="%.3f")
-            }
-        )
-        
-        # Bulk actions
-        st.subheader("🔗 Bulk Actions")
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            num_links = st.number_input("Number of links to open", min_value=1, max_value=len(jobs), value=min(5, len(jobs)))
-        with col2:
-            if st.button(f"🔗 Open Top {num_links} Job Links"):
-                links_opened = 0
-                for i, job in enumerate(jobs[:num_links]):
-                    link = job.get("job_apply_link")
-                    if link and link.startswith("http"):
-                        st.markdown(f"[Open Job {i+1}: {job.get('title', 'Unknown')}]({link})")
-                        links_opened += 1
-                st.success(f"Prepared {links_opened} job links for opening")
-    
-    else:
-        st.info("No jobs found. Try adjusting your filters or running a new search.")
-        
-        # Show helpful suggestions
-        if total_count == 0:
-            st.markdown("""
-            ### 💡 Suggestions:
-            - Upload a resume to get similarity scores
-            - Run a job search from the sidebar
-            - Try broader search terms
-            - Check different locations
-            """)
+            remote_filter = st.selectbox("🏠 Work Style", ["All", "Remote Only", "Hybrid", "On-site"], index=0)
+
+        # Advanced filters collapsed by default
+        with st.expander("⚙️ Advanced Filters"):
+            col1, col2 = st.columns(2)
+            with col1:
+                company_filter = st.text_input("Company", placeholder="Google, Apple...")
+                title_filter = st.text_input("Job Title", placeholder="Engineer, Manager...")
+                job_type_filter = st.selectbox("Job Type", ["All", "Full-time", "Part-time", "Contract", "Temporary"], index=0)
+            with col2:
+                min_salary = st.number_input("Min Salary ($)", min_value=0, value=0, step=10000)
+                max_salary = st.number_input("Max Salary ($)", min_value=0, value=0, step=10000)
+                st.info("💡 Leave salary at 0 to show all")
+
+        # Apply filters and get jobs
+        filters = {}
+        if st.session_state.selected_resume:
+            filters["resume_name"] = st.session_state.selected_resume
+        if min_similarity > 0:
+            filters["min_similarity"] = min_similarity
+        if location_filter:
+            filters["location"] = location_filter
+        if remote_filter == "Remote Only":
+            filters["is_remote"] = True
+        elif remote_filter == "On-site":
+            filters["is_remote"] = False
+        # Note: "Hybrid" and "All" don't set is_remote filter
+
+        # Advanced filters
+        if company_filter:
+            filters["company"] = company_filter
+        if title_filter:
+            filters["title"] = title_filter
+        if job_type_filter != "All":
+            filters["job_type"] = job_type_filter
+        if min_salary > 0:
+            filters["min_salary"] = min_salary
+        if max_salary > 0:
+            filters["max_salary"] = max_salary
+
+        # Get and display jobs
+        jobs_data = get_jobs(filters)
+        jobs = jobs_data.get("jobs", [])
+        total_count = jobs_data.get("total_count", 0)
+
+        if jobs:
+            # Header with view toggle
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.info(f"📊 Showing {len(jobs)} of {total_count} jobs matching your criteria")
+            with col2:
+                view_mode = st.selectbox("View", ["🎴 Cards", "📊 Table"], label_visibility="collapsed")
+
+            st.divider()
+
+            # Display jobs based on view mode
+            if view_mode == "🎴 Cards":
+                # Card-based view (DEFAULT)
+                for i, job in enumerate(jobs):
+                    render_job_card(job, i)
+
+            else:
+                # Table view (legacy)
+                df_data = []
+                for job in jobs:
+                    df_data.append({
+                        "Similarity": round(job.get("resume_similarity", 0), 3),
+                        "Title": job.get("title", ""),
+                        "Company": job.get("company", ""),
+                        "Location": f"{job.get('city', '')}, {job.get('state', '')}".strip(", "),
+                        "Type": job.get("job_type", ""),
+                        "Remote": job.get("job_is_remote", ""),
+                        "Salary Low": job.get("salary_low", ""),
+                        "Salary High": job.get("salary_high", ""),
+                        "Apply Link": job.get("job_apply_link", ""),
+                        "Date": job.get("date", "")
+                    })
+
+                df = pd.DataFrame(df_data)
+
+                st.dataframe(
+                    df,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Apply Link": st.column_config.LinkColumn("Apply Link"),
+                        "Similarity": st.column_config.NumberColumn("Similarity", format="%.3f")
+                    }
+                )
+
+                # Bulk actions (only in table view)
+                st.subheader("🔗 Bulk Actions")
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    num_links = st.number_input("Number of links to open", min_value=1, max_value=len(jobs), value=min(5, len(jobs)))
+                with col2:
+                    if st.button(f"🔗 Open Top {num_links} Job Links"):
+                        links_opened = 0
+                        for i, job in enumerate(jobs[:num_links]):
+                            link = job.get("job_apply_link")
+                            if link and link.startswith("http"):
+                                st.markdown(f"[Open Job {i+1}: {job.get('title', 'Unknown')}]({link})")
+                                links_opened += 1
+                        st.success(f"Prepared {links_opened} job links for opening")
+
+        else:
+            # Show helpful onboarding message
+            if total_count == 0:
+                st.info("👋 Welcome! Get started in 2 easy steps:")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("""
+                    ### 1️⃣ Upload Resume
+                    - Go to the sidebar
+                    - Upload your PDF or TXT resume
+                    - It will be processed automatically
+                    """)
+                with col2:
+                    st.markdown("""
+                    ### 2️⃣ Search Jobs
+                    - Enter job titles you're interested in
+                    - Click "Search Jobs"
+                    - We'll find matches and calculate similarity scores
+                    """)
+            else:
+                st.info(f"💡 {total_count} jobs in database, but none match your current filters. Try adjusting the filters above.")
+
+    # TAB 2: Job Tracker (Kanban Board)
+    with tab2:
+        st.header("📋 Job Application Tracker")
+        st.caption("Track your job applications from initial application to final outcome")
+
+        # Get tracked jobs
+        tracked_data = get_tracked_jobs()
+
+        # Define columns
+        columns = [
+            {"key": "apply", "title": "📝 Apply", "color": "#e3f2fd"},
+            {"key": "hr_screen", "title": "📞 HR Screen", "color": "#fff3e0"},
+            {"key": "round_1", "title": "💼 1st Round", "color": "#f3e5f5"},
+            {"key": "round_2", "title": "🎯 2nd Round", "color": "#e8f5e9"},
+            {"key": "rejected", "title": "❌ Rejected/Ghosted", "color": "#ffebee"}
+        ]
+
+        # Create columns for Kanban board
+        cols = st.columns(len(columns))
+
+        for idx, col_info in enumerate(columns):
+            with cols[idx]:
+                jobs = tracked_data.get(col_info["key"], [])
+                st.markdown(f"""
+                <div style="background: {col_info['color']}; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h4 style="margin: 0; color: #333;">{col_info['title']}</h4>
+                    <p style="margin: 0; color: #666; font-size: 0.9rem;">{len(jobs)} jobs</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Display jobs in this column
+                for job in jobs:
+                    import html
+                    job_title = html.escape(job.get("title", "Unknown"))
+                    company = html.escape(job.get("company", "Unknown"))
+                    similarity = job.get("resume_similarity", 0)
+                    job_id = job.get("job_id")  # Fixed: use 'job_id' not 'id'
+
+                    # Skip jobs with invalid job_id
+                    if job_id is None:
+                        st.error(f"⚠️ Invalid job data for '{job_title}'. Please refresh the page.")
+                        continue
+
+                    # Job card HTML
+                    st.markdown(f"""
+                    <div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="font-weight: 600; color: #333; margin-bottom: 0.25rem;">{job_title}</div>
+                        <div style="color: #666; font-size: 0.85rem; margin-bottom: 0.5rem;">{company}</div>
+                        <div style="font-size: 0.8rem; color: #999;">Match: {int(similarity * 100)}%</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    # Status update buttons
+                    # Show move buttons based on current column
+                    if col_info["key"] == "apply":
+                        if st.button("→ HR Screen", key=f"move_{job_id}_hr", use_container_width=True):
+                            if update_job_status(job_id, "hr_screen"):
+                                st.toast("✅ Moved to HR Screen!")
+                                st.rerun()
+                    elif col_info["key"] == "hr_screen":
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            if st.button("→ Round 1", key=f"move_{job_id}_r1", use_container_width=True):
+                                if update_job_status(job_id, "round_1"):
+                                    st.toast("✅ Moved to Round 1!")
+                                    st.rerun()
+                        with col_b:
+                            if st.button("❌ Reject", key=f"move_{job_id}_rej_hr", use_container_width=True):
+                                if update_job_status(job_id, "rejected"):
+                                    st.toast("Moved to Rejected")
+                                    st.rerun()
+                    elif col_info["key"] == "round_1":
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            if st.button("→ Round 2", key=f"move_{job_id}_r2", use_container_width=True):
+                                if update_job_status(job_id, "round_2"):
+                                    st.toast("✅ Moved to Round 2!")
+                                    st.rerun()
+                        with col_b:
+                            if st.button("❌ Reject", key=f"move_{job_id}_rej_r1", use_container_width=True):
+                                if update_job_status(job_id, "rejected"):
+                                    st.toast("Moved to Rejected")
+                                    st.rerun()
+                    elif col_info["key"] == "round_2":
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            if st.button("✅ Offer!", key=f"move_{job_id}_offer", use_container_width=True):
+                                st.balloons()
+                                st.toast("🎉 Congratulations!")
+                        with col_b:
+                            if st.button("❌ Reject", key=f"move_{job_id}_rej_r2", use_container_width=True):
+                                if update_job_status(job_id, "rejected"):
+                                    st.toast("Moved to Rejected")
+                                    st.rerun()
+
+                    st.divider()
+
+        # Show empty state if no tracked jobs
+        if all(len(tracked_data.get(col["key"], [])) == 0 for col in columns):
+            st.info("📌 No jobs in your tracker yet. Go to the 'Job Matches' tab and click 'Save' on any job to start tracking!")
 
 
 if __name__ == "__main__":

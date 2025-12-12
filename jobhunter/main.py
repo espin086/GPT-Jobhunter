@@ -394,7 +394,7 @@ with api_key_container:
         # Optionally add a button to change/clear the key if needed
         if st.button("Change API Key", key="change_api_key"):
             st.session_state.openai_api_key = "" # Clear session state key
-            st.experimental_rerun() # Use experimental_rerun instead of rerun
+            st.rerun() # Use experimental_rerun instead of rerun
     else:
         # Key not set, show input section
         st.markdown("""
@@ -419,7 +419,7 @@ with api_key_container:
                 os.environ["OPENAI_API_KEY"] = entered_key # Set for current run if needed by backend
                 st.success("✅ API key accepted for this session!")
                 time.sleep(1) # Brief pause before rerun
-                st.experimental_rerun() # Use experimental_rerun instead of rerun
+                st.rerun() # Use experimental_rerun instead of rerun
     st.markdown('</div>', unsafe_allow_html=True) # Close the CSS container
 
 # --- Resume Selection and Upload ---
@@ -486,7 +486,7 @@ with resume_container:
 
                     # Use a flag to indicate we need to rerun instead
                     st.session_state["trigger_rerun_after_upload"] = True
-                    st.experimental_rerun()
+                    st.rerun()
 
                 except Exception as e:
                     st.error(f"Error processing file '{uploaded_file.name}': {e}")
@@ -549,14 +549,14 @@ with resume_container:
                 else:
                     st.error(f"Failed to analyze resume '{selected_resume}'.")
                     
-            st.experimental_rerun() # Use experimental_rerun instead of rerun
+            st.rerun() # Use experimental_rerun instead of rerun
 
         # Delete button (only enabled if a resume is selected/available)
         delete_disabled = not bool(selected_resume)
         if st.button("Delete Selected Resume", key="delete_selected", disabled=delete_disabled):
             if selected_resume:
                 st.session_state.confirming_delete = selected_resume
-                st.experimental_rerun() # Use experimental_rerun instead of rerun
+                st.rerun() # Use experimental_rerun instead of rerun
     st.markdown('</div>', unsafe_allow_html=True) # Close the CSS container
 
 # --- Deletion Confirmation Logic ---
@@ -575,10 +575,10 @@ if st.session_state.get("confirming_delete"):
             st.session_state.confirming_delete = None
             st.sidebar.success(f"🗑️ Resume '{resume_to_delete}' deleted.")
             time.sleep(1)
-            st.experimental_rerun()
+            st.rerun()
     if del_col2.button("Cancel", key="confirm_delete_cancel"):
         st.session_state.confirming_delete = None
-        st.experimental_rerun()
+        st.rerun()
 
 # --- Sidebar: Job Search Parameters ---
 st.sidebar.header("Job Search")
@@ -741,7 +741,7 @@ else:
                 st.session_state["last_opened_index"] = 0
                 logger.info(f"Successfully queried and updated results for {len(st.session_state['query_result'])} jobs.")
                 # Force rerun to display results immediately after search
-                st.experimental_rerun()
+                st.rerun()
             except Exception as query_e:
                 st.sidebar.error(f"An error occurred while querying the database after search: {query_e}")
                 logger.error(f"DB Query Error after search: {query_e}", exc_info=True)
@@ -799,7 +799,7 @@ if refresh_col1.button("🔄 Refresh Scores", help="Click to refresh similarity 
             # Display success message using refresh_col2 to show it inline with the button
             refresh_col2.success("✅ Scores refreshed successfully!")
             time.sleep(1.5)  # Let the success message be visible briefly
-            st.experimental_rerun()  # Rerun to update the display
+            st.rerun()  # Rerun to update the display
         except Exception as e:
             refresh_col2.error(f"Error refreshing scores: {e}")
             logger.error(f"Error during refresh: {e}", exc_info=True)
@@ -1021,7 +1021,7 @@ if st.button("🔄 Refresh Scores", key="refresh_scores_button"):
                 # --- END FIX ---
                 
                 # Optional: Force a rerun to ensure UI elements depending on the data update
-                # st.experimental_rerun() # Use st.rerun() in newer Streamlit versions
+                # st.rerun() # Use st.rerun() in newer Streamlit versions
 
             except Exception as e:
                 logger.error(f"Failed to refresh scores for {selected_resume}: {e}")

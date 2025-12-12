@@ -1,227 +1,233 @@
-# GPT Job Hunter
+# 🔍 GPT Job Hunter
 
-AI-powered job search application with resume matching capabilities. The application features a **FastAPI backend** for robust API services and a **Streamlit frontend** for an intuitive user interface.
+> **AI-powered job search that actually understands your resume**
 
-## 🏗️ Architecture
+Stop manually searching through hundreds of job postings. GPT Job Hunter uses advanced AI to find jobs that match your skills, experience, and career goals - automatically scoring each opportunity based on your resume.
 
-The application is now decoupled into two main components:
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.52+-red.svg)](https://streamlit.io)
 
-### 🔧 Backend (FastAPI)
-- **Location**: `jobhunter/backend/`
-- **Port**: 8000
-- **Features**:
-  - RESTful API endpoints
-  - Job search and data extraction
-  - Resume management
-  - Similarity scoring using AI embeddings
-  - Database operations
-  - OpenAPI/Swagger documentation at `/docs`
+---
 
-### 🎨 Frontend (Streamlit)
-- **Location**: `jobhunter/frontend/`
-- **Port**: 8501
-- **Features**:
-  - Interactive web interface
-  - Job search and filtering
-  - Resume upload and management
-  - Real-time similarity scoring
-  - Job application link management
+## ✨ What Makes GPT Job Hunter Different?
 
-## 🚀 Quick Start
+### 🎯 **SmartSearch AI** - Your Personal Job Scout
 
-### Using Docker (Recommended)
+Upload your resume once, and our AI instantly generates **personalized job search suggestions** tailored to your background. No more guessing which job titles to search for - GPT Job Hunter knows what you're qualified for.
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd GPT-Jobhunter
-   ```
+### 🧠 **Intelligent Resume Matching**
 
-2. **Set up environment variables**:
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your API keys:
-   # OPENAI_API_KEY=your_openai_key
-   # RAPID_API_KEY=your_rapid_api_key
-   ```
+Every job gets an **AI-powered similarity score** (0-100%) showing how well it matches your resume. Focus on the opportunities where you'll actually succeed, not just any job posting.
 
-3. **Run with Docker Compose**:
-   ```bash
-   docker-compose up -d
-   ```
+### 📊 **Visual Job Application Tracker**
 
-4. **Access the application**:
-   - **Frontend (Streamlit)**: http://localhost:8501
-   - **Backend API (FastAPI)**: http://localhost:8000
-   - **API Documentation**: http://localhost:8000/docs
+Manage your entire job search pipeline with a beautiful **Kanban-style board**. Track applications from "Apply" → "HR Screen" → "1st Round" → "2nd Round" → "Offer" - all in one place.
 
-### Manual Setup
+---
 
-1. **Install dependencies**:
-   ```bash
-   pip install poetry
-   poetry install
-   ```
+## 🖼️ Screenshots
 
-2. **Start the backend**:
-   ```bash
-   cd jobhunter
-   python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000
-   ```
+### Job Matches - Find Your Perfect Role
+![Job Matches](images/jobhunter_jobmatches.png)
+*SmartSearch AI suggests relevant job titles, then ranks every opportunity by match score*
 
-3. **Start the frontend** (in a new terminal):
-   ```bash
-   cd jobhunter
-   streamlit run frontend/streamlit_app.py --server.port 8501
-   ```
+### Job Application Tracker - Stay Organized
+![Job Tracker](images/jobhunter_jobtracker.png)
+*Kanban board to track your applications through every interview stage*
 
-## 📚 API Documentation
+---
 
-The FastAPI backend provides comprehensive API documentation:
+## 🚀 Key Features
 
-- **Interactive Docs**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+### For Job Seekers
 
-### Key API Endpoints
+- **🤖 AI Job Suggestions** - Get personalized job title recommendations based on your resume
+- **📈 Smart Ranking** - Every job scored 0-100% based on resume match quality
+- **🔍 Advanced Filters** - Filter by location, salary, remote work, job type, and more
+- **📋 Application Tracking** - Kanban board to manage your entire job search pipeline
+- **📄 Multi-Resume Support** - Store multiple resumes for different roles
+- **⚡ Batch Actions** - Open multiple job applications at once
+- **🎨 Clean, Modern UI** - Beautiful interface that makes job searching less painful
 
-#### Job Search
-- `POST /jobs/search` - Search for jobs
-- `GET /jobs` - Get jobs with filtering options
+### Technical Highlights
 
-#### Resume Management
-- `POST /resumes/upload` - Upload resume
-- `POST /resumes/upload-file` - Upload resume file (PDF/TXT)
-- `GET /resumes` - List all resumes
-- `GET /resumes/{resume_name}` - Get resume content
-- `PUT /resumes/{resume_name}` - Update resume
-- `DELETE /resumes/{resume_name}` - Delete resume
+- **🏗️ Decoupled Architecture** - FastAPI backend + Streamlit frontend for scalability
+- **🧬 OpenAI Embeddings** - State-of-the-art text similarity using GPT models
+- **📡 RESTful API** - Full API access with OpenAPI/Swagger docs
+- **💾 Efficient Storage** - SQLite database with optimized batch operations
+- **🐳 Docker Ready** - One-command deployment with Docker Compose
+- **🧪 Tested** - Comprehensive test suite included
 
-#### Similarity Scoring
-- `POST /similarity/update` - Update similarity scores
+---
 
-#### System
-- `GET /health` - Health check
-- `GET /stats` - Database statistics
-- `POST /initialize` - Initialize database
+## 🎯 Perfect For
 
-## 🛠️ Development
+- 📊 **Data Analysts** searching for roles matching their tech stack
+- 💼 **Recent Graduates** exploring what jobs fit their degree
+- 🔄 **Career Switchers** finding relevant opportunities in new industries
+- 🚀 **Professionals** managing multiple job applications efficiently
+- 🎓 **Students** tracking internship and entry-level opportunities
 
-### Running Services Separately
+---
 
-**Backend only**:
+## ⚡ Quick Start
+
 ```bash
-./start-backend.sh
-# or
-python -m uvicorn jobhunter.backend.api:app --host 0.0.0.0 --port 8000 --reload
+# 1. Clone the repository
+git clone https://github.com/yourusername/GPT-Jobhunter.git
+cd GPT-Jobhunter
+
+# 2. Set up your API keys
+cp .env.example .env
+# Edit .env and add:
+#   OPENAI_API_KEY=your_key
+#   RAPID_API_KEY=your_key
+
+# 3. Start the application
+make dev
+
+# 4. Open your browser
+# Frontend: http://localhost:8501
+# API Docs: http://localhost:8000/docs
 ```
 
-**Frontend only**:
-```bash
-export BACKEND_URL=http://localhost:8000
-./start-frontend.sh
-# or
-streamlit run jobhunter/frontend/streamlit_app.py
-```
+**Full installation guide:** See [INSTALLATION.md](INSTALLATION.md)
 
-### Project Structure
-```
-GPT-Jobhunter/
-├── jobhunter/
-│   ├── backend/          # FastAPI backend
-│   │   ├── api.py        # Main FastAPI application
-│   │   ├── models.py     # Pydantic models
-│   │   └── services.py   # Business logic services
-│   ├── frontend/         # Streamlit frontend
-│   │   └── streamlit_app.py
-│   ├── config.py         # Configuration
-│   ├── extract.py        # Job extraction logic
-│   ├── dataTransformer.py # Data transformation
-│   ├── SQLiteHandler.py  # Database operations
-│   ├── textAnalysis.py   # AI/ML text analysis
-│   └── ... (other modules)
-├── tests/               # Test suite
-├── Dockerfile          # Multi-service Docker setup
-├── docker-compose.yml  # Docker Compose configuration
-└── README.md
-```
+---
 
-## 🔧 Configuration
+## 🎬 How It Works
 
-### Environment Variables
-- `OPENAI_API_KEY` - Required for AI embeddings and similarity scoring
-- `RAPID_API_KEY` - Required for job search API
-- `BACKEND_URL` - Backend URL for frontend (default: http://localhost:8000)
+### 1️⃣ **Upload Your Resume**
+Simply drag-and-drop your resume (PDF or TXT). GPT Job Hunter extracts your skills, experience, and qualifications.
 
-### API Keys Setup
-1. **OpenAI API Key**: Get from [OpenAI Platform](https://platform.openai.com/account/api-keys)
-2. **RapidAPI Key**: Get from [RapidAPI JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch)
+### 2️⃣ **Get AI-Powered Suggestions**
+Click "SmartSearch AI ✨" and instantly receive job title recommendations that match your background.
 
-## 🧪 Testing
+### 3️⃣ **Browse Ranked Results**
+Every job is scored 0-100% based on how well it matches your resume. Focus on high-scoring opportunities first.
 
-Run the test suite:
-```bash
-pytest tests/
-```
+### 4️⃣ **Track Your Applications**
+Save promising jobs to your Kanban board and move them through your application pipeline as you progress.
 
-## 📝 Features
+### 5️⃣ **Land Interviews Faster**
+Apply to the right jobs, stay organized, and spend less time searching.
 
-- **AI-Powered Matching**: Uses OpenAI embeddings for resume-job similarity
-- **Comprehensive Job Search**: Searches multiple job boards via API
-- **Resume Management**: Upload, store, and manage multiple resumes
-- **Advanced Filtering**: Filter jobs by similarity, location, salary, type, etc.
-- **Batch Operations**: Open multiple job applications efficiently
-- **Real-time Updates**: Live similarity score calculations
-- **Clean Architecture**: Decoupled backend and frontend for scalability
+---
 
-## 🏃‍♂️ Migration from Previous Version
+## 🔑 API Keys Required
 
-If upgrading from the monolithic Streamlit version:
+GPT Job Hunter needs two API keys to function:
 
-1. **Backup your data**: 
-   ```bash
-   cp all_jobs.db all_jobs.db.backup
-   ```
+- **OpenAI API Key** - For AI-powered resume matching ([Get it here](https://platform.openai.com/api-keys))
+  - Cost: ~$0.02 per 1,000 jobs analyzed
+  - Used for: Resume similarity scoring and SmartSearch suggestions
 
-2. **Update dependencies**:
-   ```bash
-   poetry install
-   ```
+- **RapidAPI Key** - For job search ([Get it here](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch))
+  - Free tier: 1,000 searches/month
+  - Used for: Fetching job listings from multiple sources
 
-3. **Initialize the new backend**:
-   ```bash
-   python -c "from jobhunter.backend.services import DatabaseService; DatabaseService().initialize_database()"
-   ```
+---
 
-4. **Start both services** as described above
+## 🛠️ Built With
+
+- **[FastAPI](https://fastapi.tiangolo.com/)** - High-performance Python API framework
+- **[Streamlit](https://streamlit.io/)** - Beautiful frontend framework
+- **[OpenAI](https://openai.com/)** - GPT-powered embeddings for resume matching
+- **[SQLite](https://www.sqlite.org/)** - Lightweight, serverless database
+- **[Pandas](https://pandas.pydata.org/)** - Data manipulation and analysis
+- **[Poetry](https://python-poetry.org/)** - Modern Python dependency management
+
+---
+
+## 📚 Documentation
+
+- **[Installation Guide](INSTALLATION.md)** - Detailed setup instructions
+- **[API Documentation](http://localhost:8000/docs)** - Interactive API reference (when running)
+- **[Architecture Guide](CLAUDE.md)** - Technical architecture and development guide
+
+---
 
 ## 🤝 Contributing
 
+We welcome contributions! Here's how to get started:
+
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
 3. Make your changes
 4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+5. Ensure all tests pass (`pytest tests/`)
+6. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+7. Push to the branch (`git push origin feature/AmazingFeature`)
+8. Open a Pull Request
+
+---
+
+## 📈 Roadmap
+
+- [ ] **Browser Extension** - Apply directly from LinkedIn/Indeed
+- [ ] **Email Alerts** - Get notified of new high-match jobs
+- [ ] **Cover Letter Generator** - AI-powered cover letters for each application
+- [ ] **Interview Prep** - AI-generated interview questions for each job
+- [ ] **Salary Insights** - Market data for each position
+- [ ] **Multi-User Support** - Team job hunting for bootcamps/universities
+- [ ] **Mobile App** - Track applications on the go
+
+---
+
+## 💡 Use Cases
+
+### For Individuals
+- **Active Job Seekers** - Apply to 3x more relevant jobs in the same time
+- **Passive Candidates** - Keep an eye on opportunities that match your skills
+- **Career Explorers** - Discover what roles you're qualified for
+
+### For Organizations
+- **Bootcamp Students** - Help graduates find their first tech role
+- **University Career Centers** - Support students in their job search
+- **Recruiting Agencies** - Match candidates to opportunities faster
+
+---
+
+## 🐛 Known Limitations
+
+- Currently searches US-based job listings only
+- Requires paid OpenAI API access for resume matching
+- Best results with tech/professional roles
+- Job data freshness depends on RapidAPI provider
+
+---
 
 ## 📄 License
 
-See LICENSE.md for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Troubleshooting
+---
 
-### Common Issues
+## 🙏 Acknowledgments
 
-1. **Backend connection errors**: Ensure the FastAPI backend is running on port 8000
-2. **API key errors**: Verify your OpenAI and RapidAPI keys are set correctly
-3. **Database errors**: Try reinitializing with `/initialize` endpoint
-4. **Port conflicts**: Ensure ports 8000 and 8501 are available
+- OpenAI for their incredible embedding models
+- The Streamlit team for making beautiful UIs easy
+- FastAPI for the blazing-fast backend framework
+- All the open-source contributors who made this possible
 
-### Logs
-- Backend logs: `docker logs <container_name>`
-- Frontend logs: Check Streamlit interface for error messages
-- Supervisor logs: `/var/log/supervisor/` (in Docker)
+---
 
-For more help, check the API documentation at http://localhost:8000/docs or create an issue in the repository.
+## 📞 Support
 
+- **Issues**: [GitHub Issues](https://github.com/yourusername/GPT-Jobhunter/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/GPT-Jobhunter/discussions)
+- **Email**: support@gptjobhunter.com *(if applicable)*
 
-   
+---
+
+<div align="center">
+
+**⭐ Star this repo if GPT Job Hunter helped you land your dream job! ⭐**
+
+Made with ❤️ by job seekers, for job seekers
+
+[Get Started](INSTALLATION.md) • [Report Bug](https://github.com/yourusername/GPT-Jobhunter/issues) • [Request Feature](https://github.com/yourusername/GPT-Jobhunter/issues)
+
+</div>
