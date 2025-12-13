@@ -20,12 +20,15 @@ from jobhunter.backend.models import (
     JobTitleSuggestionsRequest, JobTitleSuggestionsResponse,
     SaveJobRequest, PassJobRequest, JobTrackingResponse, TrackedJobsResponse, UpdateJobStatusRequest,
     ResumeOptimizeRequest, ResumeOptimizeResponse,
-    ErrorResponse, HealthResponse
+    ErrorResponse, HealthResponse,
+    UserRegisterRequest, UserLoginRequest, UserResponse, TokenResponse,
+    PasswordResetRequest, PasswordResetConfirm, LogoutResponse
 )
 from jobhunter.backend.services import (
     JobSearchService, ResumeService, JobDataService, DatabaseService, AIService, JobTrackingService,
-    ResumeOptimizerService
+    ResumeOptimizerService, AuthService
 )
+from jobhunter.backend.auth_service import get_current_user
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -57,6 +60,7 @@ database_service = DatabaseService()
 ai_service = AIService()
 job_tracking_service = JobTrackingService()
 resume_optimizer_service = ResumeOptimizerService()
+auth_service = AuthService()
 
 
 # Startup event handler
@@ -66,6 +70,11 @@ async def startup_event():
     try:
         database_service.initialize_database()
         logger.info("Database initialized successfully on startup")
+
+        # Initialize auth tables
+        from jobhunter.AuthHandler import create_auth_tables
+        create_auth_tables()
+        logger.info("Auth tables initialized successfully on startup")
     except Exception as e:
         logger.error(f"Failed to initialize database on startup: {e}")
 
@@ -79,6 +88,165 @@ async def global_exception_handler(request, exc):
         content={"error": "Internal server error", "detail": str(exc)}
     )
 
+
+# ============================================================================
+# Authentication Endpoints
+# ============================================================================
+
+@app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register(request: UserRegisterRequest):
+    """
+    Register a new user account.
+
+    - **email**: Valid email address (must be unique)
+    - **username**: Username (3-50 characters, must be unique)
+    - **password**: Password (minimum 8 characters)
+    - **full_name**: Optional full name
+    """
+    try:
+        success, message, user_response = auth_service.register_user(request)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=message
+            )
+
+        return user_response
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
+        )
+
+
+@app.post("/auth/login", response_model=TokenResponse)
+async def login(request: UserLoginRequest):
+    """
+    Login with username/email and password to receive JWT token.
+
+    - **username_or_email**: Username or email address
+    - **password**: User password
+
+    Returns a JWT access token that should be included in the Authorization header
+    for all protected endpoints as: `Authorization: Bearer <token>`
+    """
+    try:
+        success, message, token_response = auth_service.login_user(request)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=message,
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+
+        return token_response
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Login failed: {str(e)}"
+        )
+
+
+@app.post("/auth/logout", response_model=LogoutResponse)
+async def logout(current_user: dict = Depends(get_current_user)):
+    """
+    Logout the current user.
+
+    Note: Since we're using JWT tokens, logout is handled client-side
+    by removing the token. This endpoint confirms the user was authenticated.
+    """
+    logger.info(f"User logged out: {current_user['username']}")
+    return LogoutResponse(
+        success=True,
+        message="Logged out successfully"
+    )
+
+
+@app.post("/auth/password-reset-request")
+async def request_password_reset(request: PasswordResetRequest):
+    """
+    Request a password reset token.
+
+    - **email**: Email address of the account
+
+    If the email exists, a reset token will be generated.
+    In production, this token would be sent via email.
+    For development/testing, check the server logs.
+    """
+    try:
+        success, message = auth_service.request_password_reset(request.email)
+        return {"success": success, "message": message}
+
+    except Exception as e:
+        logger.error(f"Password reset request error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Password reset request failed: {str(e)}"
+        )
+
+
+@app.post("/auth/password-reset-confirm")
+async def confirm_password_reset(request: PasswordResetConfirm):
+    """
+    Confirm password reset using token.
+
+    - **token**: Password reset token (from email or logs)
+    - **new_password**: New password (minimum 8 characters)
+    """
+    try:
+        success, message = auth_service.reset_password(request.token, request.new_password)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=message
+            )
+
+        return {"success": success, "message": message}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Password reset confirmation error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Password reset failed: {str(e)}"
+        )
+
+
+@app.get("/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """
+    Get current authenticated user information.
+
+    Requires: Valid JWT token in Authorization header.
+    """
+    from datetime import datetime
+
+    return UserResponse(
+        id=current_user['id'],
+        email=current_user['email'],
+        username=current_user['username'],
+        full_name=current_user.get('full_name'),
+        is_active=bool(current_user['is_active']),
+        created_at=datetime.fromisoformat(current_user['created_at']) if current_user.get('created_at') else datetime.now(),
+        last_login=datetime.fromisoformat(current_user['last_login']) if current_user.get('last_login') else None
+    )
+
+
+# ============================================================================
+# Health & Database Endpoints
+# ============================================================================
 
 # Health check endpoint
 @app.get("/health", response_model=HealthResponse)

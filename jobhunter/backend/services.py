@@ -28,7 +28,11 @@ from jobhunter.backend.models import (
     JobFilterRequest,
     JobSearchRequest,
     ResumeUploadRequest,
-    KeywordSuggestion
+    KeywordSuggestion,
+    UserRegisterRequest,
+    UserLoginRequest,
+    UserResponse,
+    TokenResponse
 )
 
 logger = logging.getLogger(__name__)
@@ -1055,3 +1059,208 @@ Return ONLY valid JSON, no additional text."""
         except Exception as e:
             logger.error(f"Error calling OpenAI for analysis: {e}", exc_info=True)
             return None
+
+class AuthService:
+    """Service for authentication operations."""
+    
+    def register_user(self, request: UserRegisterRequest) -> Tuple[bool, str, Optional[UserResponse]]:
+        """
+        Register a new user.
+        
+        Args:
+            request: User registration request
+            
+        Returns:
+            Tuple of (success, message, user_response)
+        """
+        try:
+            from jobhunter.AuthHandler import create_user, get_user_by_email, get_user_by_username
+            
+            # Check if email already exists
+            existing_email = get_user_by_email(email=request.email)
+            if existing_email:
+                logger.warning(f"Registration failed - email already exists: {request.email}")
+                return False, "Email already registered", None
+            
+            # Check if username already exists
+            existing_username = get_user_by_username(username=request.username)
+            if existing_username:
+                logger.warning(f"Registration failed - username already exists: {request.username}")
+                return False, "Username already taken", None
+            
+            # Create user
+            user_id = create_user(
+                email=request.email,
+                username=request.username,
+                password=request.password,
+                full_name=request.full_name
+            )
+            
+            # Get the created user
+            from jobhunter.AuthHandler import get_user_by_id
+            user_data = get_user_by_id(user_id=user_id)
+            
+            if not user_data:
+                logger.error(f"User created but not found: {user_id}")
+                return False, "User created but could not retrieve details", None
+            
+            # Convert to UserResponse
+            from datetime import datetime
+            user_response = UserResponse(
+                id=user_data['id'],
+                email=user_data['email'],
+                username=user_data['username'],
+                full_name=user_data.get('full_name'),
+                is_active=bool(user_data['is_active']),
+                created_at=datetime.fromisoformat(user_data['created_at']) if user_data.get('created_at') else datetime.now(),
+                last_login=datetime.fromisoformat(user_data['last_login']) if user_data.get('last_login') else None
+            )
+            
+            logger.info(f"User registered successfully: {request.username}")
+            return True, "User registered successfully", user_response
+            
+        except Exception as e:
+            logger.error(f"Error registering user: {e}", exc_info=True)
+            return False, f"Registration failed: {str(e)}", None
+    
+    def login_user(self, request: UserLoginRequest) -> Tuple[bool, str, Optional[TokenResponse]]:
+        """
+        Authenticate user and return JWT token.
+        
+        Args:
+            request: User login request
+            
+        Returns:
+            Tuple of (success, message, token_response)
+        """
+        try:
+            from jobhunter.AuthHandler import (
+                get_user_by_email,
+                get_user_by_username,
+                verify_password,
+                update_last_login
+            )
+            from jobhunter.backend.auth_service import create_access_token
+            from datetime import datetime
+            
+            # Try to find user by email or username
+            user_data = None
+            if "@" in request.username_or_email:
+                # Looks like an email
+                user_data = get_user_by_email(email=request.username_or_email)
+            else:
+                # Looks like a username
+                user_data = get_user_by_username(username=request.username_or_email)
+            
+            # If not found, try the other way
+            if not user_data:
+                if "@" in request.username_or_email:
+                    user_data = get_user_by_username(username=request.username_or_email)
+                else:
+                    user_data = get_user_by_email(email=request.username_or_email)
+            
+            if not user_data:
+                logger.warning(f"Login failed - user not found: {request.username_or_email}")
+                return False, "Invalid credentials", None
+            
+            # Check if user is active
+            if not user_data.get('is_active'):
+                logger.warning(f"Login failed - inactive account: {user_data['username']}")
+                return False, "Account is inactive", None
+            
+            # Verify password
+            if not verify_password(request.password, user_data['hashed_password']):
+                logger.warning(f"Login failed - incorrect password for: {user_data['username']}")
+                return False, "Invalid credentials", None
+            
+            # Update last login
+            update_last_login(user_id=user_data['id'])
+            
+            # Create JWT token
+            access_token = create_access_token(data={"sub": user_data['id']})
+            
+            # Convert to UserResponse
+            user_response = UserResponse(
+                id=user_data['id'],
+                email=user_data['email'],
+                username=user_data['username'],
+                full_name=user_data.get('full_name'),
+                is_active=bool(user_data['is_active']),
+                created_at=datetime.fromisoformat(user_data['created_at']) if user_data.get('created_at') else datetime.now(),
+                last_login=datetime.now()  # Just updated
+            )
+            
+            token_response = TokenResponse(
+                access_token=access_token,
+                token_type="bearer",
+                user=user_response
+            )
+            
+            logger.info(f"User logged in successfully: {user_data['username']}")
+            return True, "Login successful", token_response
+            
+        except Exception as e:
+            logger.error(f"Error during login: {e}", exc_info=True)
+            return False, f"Login failed: {str(e)}", None
+    
+    def request_password_reset(self, email: str) -> Tuple[bool, str]:
+        """
+        Generate password reset token for user.
+        
+        Args:
+            email: User's email address
+            
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            from jobhunter.AuthHandler import get_user_by_email, create_password_reset_token
+            
+            # Find user by email
+            user_data = get_user_by_email(email=email)
+            
+            if not user_data:
+                # For security, don't reveal if email exists
+                logger.info(f"Password reset requested for non-existent email: {email}")
+                return True, "If the email exists, a reset link has been sent"
+            
+            # Generate reset token
+            token = create_password_reset_token(user_id=user_data['id'])
+            
+            # In a real application, you would send this token via email
+            # For now, we'll just log it (for development/testing)
+            logger.info(f"Password reset token generated for {email}: {token}")
+            logger.warning("NOTE: In production, this token should be sent via email, not logged!")
+            
+            return True, "If the email exists, a reset link has been sent"
+            
+        except Exception as e:
+            logger.error(f"Error requesting password reset: {e}", exc_info=True)
+            return False, f"Failed to process password reset request: {str(e)}"
+    
+    def reset_password(self, token: str, new_password: str) -> Tuple[bool, str]:
+        """
+        Reset user password using reset token.
+        
+        Args:
+            token: Password reset token
+            new_password: New password to set
+            
+        Returns:
+            Tuple of (success, message)
+        """
+        try:
+            from jobhunter.AuthHandler import reset_password as reset_pwd
+            
+            success = reset_pwd(token=token, new_password=new_password)
+            
+            if success:
+                logger.info("Password reset successful")
+                return True, "Password reset successful"
+            else:
+                logger.warning("Password reset failed - invalid or expired token")
+                return False, "Invalid or expired reset token"
+                
+        except Exception as e:
+            logger.error(f"Error resetting password: {e}", exc_info=True)
+            return False, f"Failed to reset password: {str(e)}"
