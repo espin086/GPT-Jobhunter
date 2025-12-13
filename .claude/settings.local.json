@@ -23,7 +23,8 @@
       "Bash(sqlite3:*)",
       "Bash(ls:*)",
       "Bash(poetry run pytest:*)",
-      "Bash(timeout 10 poetry run python:*)"
+      "Bash(timeout 10 poetry run python:*)",
+      "Bash(openssl rand:*)"
     ]
   }
 }
