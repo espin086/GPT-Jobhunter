@@ -383,17 +383,26 @@ async def get_jobs(
         )
 
 
-# Resume management endpoints
+# ============================================================================
+# Resume Management Endpoints (Protected)
+# ============================================================================
+
 @app.post("/resumes/upload", response_model=ResumeResponse)
-async def upload_resume(request: ResumeUploadRequest):
+async def upload_resume(
+    request: ResumeUploadRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Upload a resume to the database.
-    
+
     The resume content should be provided as plain text.
+
+    **Requires authentication.**
     """
     try:
-        success = resume_service.upload_resume(request)
-        
+        user_id = current_user['id']
+        success = resume_service.upload_resume(request, user_id=user_id)
+
         return ResumeResponse(
             resume_name=request.filename,
             success=success,
@@ -408,11 +417,16 @@ async def upload_resume(request: ResumeUploadRequest):
 
 
 @app.post("/resumes/upload-file")
-async def upload_resume_file(file: UploadFile = File(...)):
+async def upload_resume_file(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
     """
     Upload a resume file (PDF or TXT).
 
     Accepts PDF and TXT files and extracts text content.
+
+    **Requires authentication.**
     """
     try:
         logger.info(f"Received file upload: {file.filename}, content_type: {file.content_type}")
@@ -466,8 +480,9 @@ async def upload_resume_file(file: UploadFile = File(...)):
 
         # Upload to database
         logger.info(f"Uploading resume to database: {file.filename}")
+        user_id = current_user['id']
         request = ResumeUploadRequest(filename=file.filename, content=content)
-        success = resume_service.upload_resume(request)
+        success = resume_service.upload_resume(request, user_id=user_id)
         logger.info(f"Resume upload {'succeeded' if success else 'failed'}")
         
         return ResumeResponse(
@@ -487,10 +502,15 @@ async def upload_resume_file(file: UploadFile = File(...)):
 
 
 @app.get("/resumes", response_model=ResumeListResponse)
-async def get_resumes():
-    """Get list of all uploaded resumes."""
+async def get_resumes(current_user: dict = Depends(get_current_user)):
+    """
+    Get list of all uploaded resumes for the current user.
+
+    **Requires authentication.**
+    """
     try:
-        resumes = resume_service.get_resumes()
+        user_id = current_user['id']
+        resumes = resume_service.get_resumes(user_id=user_id)
         return ResumeListResponse(resumes=resumes)
     except Exception as e:
         logger.error(f"Failed to get resumes: {e}")
@@ -501,10 +521,18 @@ async def get_resumes():
 
 
 @app.get("/resumes/{resume_name}", response_model=ResumeContentResponse)
-async def get_resume_content(resume_name: str):
-    """Get content of a specific resume."""
+async def get_resume_content(
+    resume_name: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get content of a specific resume owned by the current user.
+
+    **Requires authentication.**
+    """
     try:
-        content = resume_service.get_resume_content(resume_name)
+        user_id = current_user['id']
+        content = resume_service.get_resume_content(resume_name, user_id=user_id)
         if content is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -526,10 +554,19 @@ async def get_resume_content(resume_name: str):
 
 
 @app.put("/resumes/{resume_name}", response_model=ResumeResponse)
-async def update_resume(resume_name: str, request: ResumeUploadRequest):
-    """Update content of an existing resume."""
+async def update_resume(
+    resume_name: str,
+    request: ResumeUploadRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update content of an existing resume owned by the current user.
+
+    **Requires authentication.**
+    """
     try:
-        success = resume_service.update_resume(resume_name, request.content)
+        user_id = current_user['id']
+        success = resume_service.update_resume(resume_name, request.content, user_id=user_id)
         
         return ResumeResponse(
             resume_name=resume_name,
@@ -545,10 +582,18 @@ async def update_resume(resume_name: str, request: ResumeUploadRequest):
 
 
 @app.delete("/resumes/{resume_name}", response_model=ResumeResponse)
-async def delete_resume(resume_name: str):
-    """Delete a resume."""
+async def delete_resume(
+    resume_name: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete a resume owned by the current user.
+
+    **Requires authentication.**
+    """
     try:
-        success = resume_service.delete_resume(resume_name)
+        user_id = current_user['id']
+        success = resume_service.delete_resume(resume_name, user_id=user_id)
         
         return ResumeResponse(
             resume_name=resume_name,
@@ -564,7 +609,10 @@ async def delete_resume(resume_name: str):
 
 
 @app.post("/resumes/suggest-job-titles", response_model=JobTitleSuggestionsResponse)
-async def suggest_job_titles(request: JobTitleSuggestionsRequest):
+async def suggest_job_titles(
+    request: JobTitleSuggestionsRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Analyze resume using AI and suggest 3 optimal job titles.
 
@@ -576,10 +624,13 @@ async def suggest_job_titles(request: JobTitleSuggestionsRequest):
     - Use standard job market terminology
 
     Returns 3 job title suggestions.
+
+    **Requires authentication.**
     """
     try:
+        user_id = current_user['id']
         logger.info(f"Generating job title suggestions for: {request.resume_name}")
-        success, suggestions, message = ai_service.suggest_job_titles(request.resume_name)
+        success, suggestions, message = ai_service.suggest_job_titles(request.resume_name, user_id=user_id)
 
         if not success:
             raise HTTPException(
@@ -604,7 +655,10 @@ async def suggest_job_titles(request: JobTitleSuggestionsRequest):
 
 
 @app.post("/resumes/optimize", response_model=ResumeOptimizeResponse)
-async def optimize_resume(request: ResumeOptimizeRequest):
+async def optimize_resume(
+    request: ResumeOptimizeRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Analyze resume against job postings and provide ATS optimization recommendations.
 
@@ -618,13 +672,17 @@ async def optimize_resume(request: ResumeOptimizeRequest):
     - overall_score: ATS compatibility score (0-100)
     - jobs_analyzed: Number of jobs used for analysis
     - analysis_source: 'job_database' or 'ai_general'
+
+    **Requires authentication.**
     """
     try:
+        user_id = current_user['id']
         logger.info(f"Optimizing resume: {request.resume_name} against top {request.num_jobs} jobs")
 
         result = resume_optimizer_service.optimize_resume(
             resume_name=request.resume_name,
-            num_jobs=request.num_jobs
+            num_jobs=request.num_jobs,
+            user_id=user_id
         )
 
         return ResumeOptimizeResponse(
@@ -648,17 +706,26 @@ async def optimize_resume(request: ResumeOptimizeRequest):
         )
 
 
-# Similarity scoring endpoints
+# ============================================================================
+# Similarity Scoring Endpoints (Protected)
+# ============================================================================
+
 @app.post("/similarity/update", response_model=SimilarityUpdateResponse)
-async def update_similarity_scores(request: SimilarityUpdateRequest):
+async def update_similarity_scores(
+    request: SimilarityUpdateRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Update similarity scores for all jobs against a specific resume.
+    Update similarity scores for all jobs against a specific resume owned by the current user.
 
     This calculates embeddings and similarity scores between the specified
     resume and all jobs in the database.
+
+    **Requires authentication.**
     """
     try:
-        success, jobs_updated = job_data_service.update_similarity_scores(request.resume_name)
+        user_id = current_user['id']
+        success, jobs_updated = job_data_service.update_similarity_scores(request.resume_name, user_id=user_id)
 
         return SimilarityUpdateResponse(
             success=success,
@@ -673,16 +740,25 @@ async def update_similarity_scores(request: SimilarityUpdateRequest):
         )
 
 
-# Job tracking endpoints
+# ============================================================================
+# Job Tracking Endpoints (Protected)
+# ============================================================================
+
 @app.post("/jobs/save", response_model=JobTrackingResponse)
-async def save_job(request: SaveJobRequest):
+async def save_job(
+    request: SaveJobRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Save a job to the tracking board.
+    Save a job to the user's tracking board.
 
     Adds the job to job_tracking table with 'apply' status.
+
+    **Requires authentication.**
     """
     try:
-        success, message = job_tracking_service.save_job(request.job_id)
+        user_id = current_user['id']
+        success, message = job_tracking_service.save_job(request.job_id, user_id=user_id)
 
         return JobTrackingResponse(
             success=success,
@@ -697,14 +773,20 @@ async def save_job(request: SaveJobRequest):
 
 
 @app.post("/jobs/pass", response_model=JobTrackingResponse)
-async def pass_job(request: PassJobRequest):
+async def pass_job(
+    request: PassJobRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Pass/hide a job.
+    Pass/hide a job for the current user.
 
     Marks the job as hidden (hidden = 1) so it won't appear in main job list.
+
+    **Requires authentication.**
     """
     try:
-        success, message = job_tracking_service.pass_job(request.job_id)
+        user_id = current_user['id']
+        success, message = job_tracking_service.pass_job(request.job_id, user_id=user_id)
 
         return JobTrackingResponse(
             success=success,
@@ -719,9 +801,9 @@ async def pass_job(request: PassJobRequest):
 
 
 @app.get("/jobs/tracked", response_model=TrackedJobsResponse)
-async def get_tracked_jobs():
+async def get_tracked_jobs(current_user: dict = Depends(get_current_user)):
     """
-    Get all tracked jobs organized by status for Kanban board.
+    Get all tracked jobs for the current user organized by status for Kanban board.
 
     Returns jobs grouped into columns:
     - apply: Jobs to apply to
@@ -729,9 +811,12 @@ async def get_tracked_jobs():
     - round_1: First round interviews
     - round_2: Second round interviews
     - rejected: Rejected or ghosted applications
+
+    **Requires authentication.**
     """
     try:
-        jobs_by_status = job_tracking_service.get_tracked_jobs()
+        user_id = current_user['id']
+        jobs_by_status = job_tracking_service.get_tracked_jobs(user_id=user_id)
 
         return TrackedJobsResponse(
             apply=jobs_by_status.get("apply", []),
@@ -749,14 +834,22 @@ async def get_tracked_jobs():
 
 
 @app.put("/jobs/tracked/{job_id}/status", response_model=JobTrackingResponse)
-async def update_job_status(job_id: int, request: UpdateJobStatusRequest):
+async def update_job_status(
+    job_id: int,
+    request: UpdateJobStatusRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Update the status of a tracked job.
+    Update the status of a tracked job for the current user.
 
     Moves the job between Kanban columns by updating its status.
     Valid statuses: apply, hr_screen, round_1, round_2, rejected
+
+    **Requires authentication.**
     """
     try:
+        user_id = current_user['id']
+
         # Validate that job_id in path matches request body
         if job_id != request.job_id:
             raise HTTPException(
@@ -764,7 +857,7 @@ async def update_job_status(job_id: int, request: UpdateJobStatusRequest):
                 detail="Job ID in path must match job ID in request body"
             )
 
-        success, message = job_tracking_service.update_job_status(request.job_id, request.new_status)
+        success, message = job_tracking_service.update_job_status(request.job_id, request.new_status, user_id=user_id)
 
         return JobTrackingResponse(
             success=success,
