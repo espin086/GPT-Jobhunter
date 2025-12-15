@@ -466,11 +466,16 @@ def _calculate_similarity_for_job(job_data, resume_embedding_np):
         return job_id, 0.0
 
 
-def update_similarity_in_db(resume_name):
-    """Updates the similarity scores concurrently for all jobs against the specified resume."""
+def update_similarity_in_db(resume_name, user_id=None):
+    """Updates the similarity scores concurrently for all jobs against the specified resume.
+
+    Args:
+        resume_name: Name of the resume to use for similarity calculation
+        user_id: ID of the user who owns the resume (required for multi-tenant)
+    """
     try:
         # 1. Get resume text & embedding
-        resume_text = get_resume_text(resume_name)
+        resume_text = get_resume_text(resume_name, user_id)
         if not resume_text:
             logger.error(f"Resume {resume_name} not found.")
             st.error(f"Resume '{resume_name}' not found in database. Please upload it first.")
