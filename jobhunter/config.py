@@ -23,7 +23,8 @@ for path in [RAW_DATA_PATH, PROCESSED_DATA_PATH, Path(RESUME_PATH).parent]:
 
 
 # === Database Configs ===
-DATABASE = "all_jobs.db"
+# Use absolute path to ensure consistent database location regardless of working directory
+DATABASE = str(MODULE_DIR / "all_jobs.db")
 TABLE_JOBS_NEW = "jobs_new"
 TABLE_RESUMES = "resumes"
 TABLE_APPLICATIONS = "applications"

@@ -5,7 +5,7 @@ Pydantic models for FastAPI backend request/response schemas.
 from datetime import datetime
 from typing import List, Optional, Union
 import math
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, EmailStr
 
 
 class JobSearchRequest(BaseModel):
@@ -250,3 +250,56 @@ class ResumeOptimizeResponse(BaseModel):
     message: str = Field(..., description="Status message or explanation")
     jobs_analyzed: int = Field(default=0, description="Number of jobs analyzed")
     analysis_source: str = Field(default="ai_general", description="Source of analysis: 'job_database' or 'ai_general'")
+
+
+# ============================================================================
+# Authentication Models
+# ============================================================================
+
+class UserRegisterRequest(BaseModel):
+    """Request model for user registration."""
+    email: EmailStr = Field(..., description="User's email address")
+    username: str = Field(..., min_length=2, max_length=50, description="Unique username (minimum 2 characters)")
+    password: str = Field(..., min_length=8, description="Password (minimum 8 characters)")
+    full_name: Optional[str] = Field(None, description="User's full name")
+
+
+class UserLoginRequest(BaseModel):
+    """Request model for user login."""
+    username_or_email: str = Field(..., description="Username or email address")
+    password: str = Field(..., description="User's password")
+
+
+class UserResponse(BaseModel):
+    """Response model for user information."""
+    id: int = Field(..., description="User ID")
+    email: str = Field(..., description="User's email")
+    username: str = Field(..., description="Username")
+    full_name: Optional[str] = Field(None, description="Full name")
+    is_active: bool = Field(..., description="Whether the account is active")
+    created_at: datetime = Field(..., description="Account creation timestamp")
+    last_login: Optional[datetime] = Field(None, description="Last login timestamp")
+
+
+class TokenResponse(BaseModel):
+    """Response model for authentication token."""
+    access_token: str = Field(..., description="JWT access token")
+    token_type: str = Field(default="bearer", description="Token type")
+    user: UserResponse = Field(..., description="Authenticated user information")
+
+
+class PasswordResetRequest(BaseModel):
+    """Request model for password reset request."""
+    email: EmailStr = Field(..., description="Email address of the account")
+
+
+class PasswordResetConfirm(BaseModel):
+    """Request model for confirming password reset."""
+    token: str = Field(..., description="Password reset token from email")
+    new_password: str = Field(..., min_length=8, description="New password (minimum 8 characters)")
+
+
+class LogoutResponse(BaseModel):
+    """Response model for logout."""
+    success: bool = Field(..., description="Whether logout was successful")
+    message: str = Field(..., description="Status message")

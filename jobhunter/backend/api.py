@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import List, Optional
 import os
 
-from fastapi import FastAPI, HTTPException, status, Depends, UploadFile, File
+from fastapi import FastAPI, HTTPException, status, Depends, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
@@ -20,12 +20,15 @@ from jobhunter.backend.models import (
     JobTitleSuggestionsRequest, JobTitleSuggestionsResponse,
     SaveJobRequest, PassJobRequest, JobTrackingResponse, TrackedJobsResponse, UpdateJobStatusRequest,
     ResumeOptimizeRequest, ResumeOptimizeResponse,
-    ErrorResponse, HealthResponse
+    ErrorResponse, HealthResponse,
+    UserRegisterRequest, UserLoginRequest, UserResponse, TokenResponse,
+    PasswordResetRequest, PasswordResetConfirm, LogoutResponse
 )
 from jobhunter.backend.services import (
     JobSearchService, ResumeService, JobDataService, DatabaseService, AIService, JobTrackingService,
-    ResumeOptimizerService
+    ResumeOptimizerService, AuthService
 )
+from jobhunter.backend.auth_service import get_current_user
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -57,6 +60,73 @@ database_service = DatabaseService()
 ai_service = AIService()
 job_tracking_service = JobTrackingService()
 resume_optimizer_service = ResumeOptimizerService()
+auth_service = AuthService()
+
+
+# Custom dependency for file uploads that manually extracts token
+async def get_current_user_from_header(request: Request):
+    """
+    Alternative auth dependency that manually extracts token from Authorization header.
+    Useful for file upload endpoints where OAuth2PasswordBearer might have issues.
+    """
+    from jobhunter.backend.auth_service import verify_token
+    from jobhunter.AuthHandler import get_user_by_id
+
+    # Extract Authorization header
+    auth_header = request.headers.get("Authorization")
+    logger.info(f"File upload auth - Authorization header present: {auth_header is not None}")
+
+    if not auth_header:
+        logger.error("File upload auth - No Authorization header found")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Extract token from "Bearer <token>"
+    parts = auth_header.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        logger.error(f"File upload auth - Invalid Authorization header format: {auth_header[:20]}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials format",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = parts[1]
+    logger.info(f"File upload auth - Extracted token: {token[:10]}...{token[-10:]}")
+
+    # Verify token
+    user_id = verify_token(token)
+    if user_id is None:
+        logger.error("File upload auth - Token verification failed")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Get user from database
+    user = get_user_by_id(user_id=user_id)
+    if user is None:
+        logger.error(f"File upload auth - User not found for ID: {user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Check if user is active
+    if not user.get('is_active'):
+        logger.error(f"File upload auth - Inactive user: {user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user account"
+        )
+
+    logger.info(f"File upload auth - SUCCESS for user: {user.get('username')} (ID: {user_id})")
+    return user
 
 
 # Startup event handler
@@ -66,6 +136,11 @@ async def startup_event():
     try:
         database_service.initialize_database()
         logger.info("Database initialized successfully on startup")
+
+        # Initialize auth tables
+        from jobhunter.AuthHandler import create_auth_tables
+        create_auth_tables()
+        logger.info("Auth tables initialized successfully on startup")
     except Exception as e:
         logger.error(f"Failed to initialize database on startup: {e}")
 
@@ -79,6 +154,165 @@ async def global_exception_handler(request, exc):
         content={"error": "Internal server error", "detail": str(exc)}
     )
 
+
+# ============================================================================
+# Authentication Endpoints
+# ============================================================================
+
+@app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register(request: UserRegisterRequest):
+    """
+    Register a new user account.
+
+    - **email**: Valid email address (must be unique)
+    - **username**: Username (3-50 characters, must be unique)
+    - **password**: Password (minimum 8 characters)
+    - **full_name**: Optional full name
+    """
+    try:
+        success, message, user_response = auth_service.register_user(request)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=message
+            )
+
+        return user_response
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
+        )
+
+
+@app.post("/auth/login", response_model=TokenResponse)
+async def login(request: UserLoginRequest):
+    """
+    Login with username/email and password to receive JWT token.
+
+    - **username_or_email**: Username or email address
+    - **password**: User password
+
+    Returns a JWT access token that should be included in the Authorization header
+    for all protected endpoints as: `Authorization: Bearer <token>`
+    """
+    try:
+        success, message, token_response = auth_service.login_user(request)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=message,
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+
+        return token_response
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Login failed: {str(e)}"
+        )
+
+
+@app.post("/auth/logout", response_model=LogoutResponse)
+async def logout(current_user: dict = Depends(get_current_user)):
+    """
+    Logout the current user.
+
+    Note: Since we're using JWT tokens, logout is handled client-side
+    by removing the token. This endpoint confirms the user was authenticated.
+    """
+    logger.info(f"User logged out: {current_user['username']}")
+    return LogoutResponse(
+        success=True,
+        message="Logged out successfully"
+    )
+
+
+@app.post("/auth/password-reset-request")
+async def request_password_reset(request: PasswordResetRequest):
+    """
+    Request a password reset token.
+
+    - **email**: Email address of the account
+
+    If the email exists, a reset token will be generated.
+    In production, this token would be sent via email.
+    For development/testing, check the server logs.
+    """
+    try:
+        success, message = auth_service.request_password_reset(request.email)
+        return {"success": success, "message": message}
+
+    except Exception as e:
+        logger.error(f"Password reset request error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Password reset request failed: {str(e)}"
+        )
+
+
+@app.post("/auth/password-reset-confirm")
+async def confirm_password_reset(request: PasswordResetConfirm):
+    """
+    Confirm password reset using token.
+
+    - **token**: Password reset token (from email or logs)
+    - **new_password**: New password (minimum 8 characters)
+    """
+    try:
+        success, message = auth_service.reset_password(request.token, request.new_password)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=message
+            )
+
+        return {"success": success, "message": message}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Password reset confirmation error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Password reset failed: {str(e)}"
+        )
+
+
+@app.get("/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """
+    Get current authenticated user information.
+
+    Requires: Valid JWT token in Authorization header.
+    """
+    from datetime import datetime
+
+    return UserResponse(
+        id=current_user['id'],
+        email=current_user['email'],
+        username=current_user['username'],
+        full_name=current_user.get('full_name'),
+        is_active=bool(current_user['is_active']),
+        created_at=datetime.fromisoformat(current_user['created_at']) if current_user.get('created_at') else datetime.now(),
+        last_login=datetime.fromisoformat(current_user['last_login']) if current_user.get('last_login') else None
+    )
+
+
+# ============================================================================
+# Health & Database Endpoints
+# ============================================================================
 
 # Health check endpoint
 @app.get("/health", response_model=HealthResponse)
@@ -215,17 +449,26 @@ async def get_jobs(
         )
 
 
-# Resume management endpoints
+# ============================================================================
+# Resume Management Endpoints (Protected)
+# ============================================================================
+
 @app.post("/resumes/upload", response_model=ResumeResponse)
-async def upload_resume(request: ResumeUploadRequest):
+async def upload_resume(
+    request: ResumeUploadRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Upload a resume to the database.
-    
+
     The resume content should be provided as plain text.
+
+    **Requires authentication.**
     """
     try:
-        success = resume_service.upload_resume(request)
-        
+        user_id = current_user['id']
+        success = resume_service.upload_resume(request, user_id=user_id)
+
         return ResumeResponse(
             resume_name=request.filename,
             success=success,
@@ -240,14 +483,22 @@ async def upload_resume(request: ResumeUploadRequest):
 
 
 @app.post("/resumes/upload-file")
-async def upload_resume_file(file: UploadFile = File(...)):
+async def upload_resume_file(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user_from_header)
+):
     """
     Upload a resume file (PDF or TXT).
 
     Accepts PDF and TXT files and extracts text content.
+
+    **Requires authentication.**
     """
     try:
-        logger.info(f"Received file upload: {file.filename}, content_type: {file.content_type}")
+        logger.info(f"=== FILE UPLOAD RECEIVED ===")
+        logger.info(f"User: {current_user.get('username')} (ID: {current_user.get('id')})")
+        logger.info(f"File: {file.filename}, content_type: {file.content_type}")
 
         # Validate file type
         if file.content_type not in ["application/pdf", "text/plain"]:
@@ -298,8 +549,9 @@ async def upload_resume_file(file: UploadFile = File(...)):
 
         # Upload to database
         logger.info(f"Uploading resume to database: {file.filename}")
+        user_id = current_user['id']
         request = ResumeUploadRequest(filename=file.filename, content=content)
-        success = resume_service.upload_resume(request)
+        success = resume_service.upload_resume(request, user_id=user_id)
         logger.info(f"Resume upload {'succeeded' if success else 'failed'}")
         
         return ResumeResponse(
@@ -319,10 +571,15 @@ async def upload_resume_file(file: UploadFile = File(...)):
 
 
 @app.get("/resumes", response_model=ResumeListResponse)
-async def get_resumes():
-    """Get list of all uploaded resumes."""
+async def get_resumes(current_user: dict = Depends(get_current_user)):
+    """
+    Get list of all uploaded resumes for the current user.
+
+    **Requires authentication.**
+    """
     try:
-        resumes = resume_service.get_resumes()
+        user_id = current_user['id']
+        resumes = resume_service.get_resumes(user_id=user_id)
         return ResumeListResponse(resumes=resumes)
     except Exception as e:
         logger.error(f"Failed to get resumes: {e}")
@@ -333,10 +590,18 @@ async def get_resumes():
 
 
 @app.get("/resumes/{resume_name}", response_model=ResumeContentResponse)
-async def get_resume_content(resume_name: str):
-    """Get content of a specific resume."""
+async def get_resume_content(
+    resume_name: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get content of a specific resume owned by the current user.
+
+    **Requires authentication.**
+    """
     try:
-        content = resume_service.get_resume_content(resume_name)
+        user_id = current_user['id']
+        content = resume_service.get_resume_content(resume_name, user_id=user_id)
         if content is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -358,10 +623,19 @@ async def get_resume_content(resume_name: str):
 
 
 @app.put("/resumes/{resume_name}", response_model=ResumeResponse)
-async def update_resume(resume_name: str, request: ResumeUploadRequest):
-    """Update content of an existing resume."""
+async def update_resume(
+    resume_name: str,
+    request: ResumeUploadRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update content of an existing resume owned by the current user.
+
+    **Requires authentication.**
+    """
     try:
-        success = resume_service.update_resume(resume_name, request.content)
+        user_id = current_user['id']
+        success = resume_service.update_resume(resume_name, request.content, user_id=user_id)
         
         return ResumeResponse(
             resume_name=resume_name,
@@ -377,10 +651,18 @@ async def update_resume(resume_name: str, request: ResumeUploadRequest):
 
 
 @app.delete("/resumes/{resume_name}", response_model=ResumeResponse)
-async def delete_resume(resume_name: str):
-    """Delete a resume."""
+async def delete_resume(
+    resume_name: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete a resume owned by the current user.
+
+    **Requires authentication.**
+    """
     try:
-        success = resume_service.delete_resume(resume_name)
+        user_id = current_user['id']
+        success = resume_service.delete_resume(resume_name, user_id=user_id)
         
         return ResumeResponse(
             resume_name=resume_name,
@@ -396,7 +678,10 @@ async def delete_resume(resume_name: str):
 
 
 @app.post("/resumes/suggest-job-titles", response_model=JobTitleSuggestionsResponse)
-async def suggest_job_titles(request: JobTitleSuggestionsRequest):
+async def suggest_job_titles(
+    request: JobTitleSuggestionsRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Analyze resume using AI and suggest 3 optimal job titles.
 
@@ -408,10 +693,13 @@ async def suggest_job_titles(request: JobTitleSuggestionsRequest):
     - Use standard job market terminology
 
     Returns 3 job title suggestions.
+
+    **Requires authentication.**
     """
     try:
+        user_id = current_user['id']
         logger.info(f"Generating job title suggestions for: {request.resume_name}")
-        success, suggestions, message = ai_service.suggest_job_titles(request.resume_name)
+        success, suggestions, message = ai_service.suggest_job_titles(request.resume_name, user_id=user_id)
 
         if not success:
             raise HTTPException(
@@ -436,7 +724,10 @@ async def suggest_job_titles(request: JobTitleSuggestionsRequest):
 
 
 @app.post("/resumes/optimize", response_model=ResumeOptimizeResponse)
-async def optimize_resume(request: ResumeOptimizeRequest):
+async def optimize_resume(
+    request: ResumeOptimizeRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Analyze resume against job postings and provide ATS optimization recommendations.
 
@@ -450,13 +741,17 @@ async def optimize_resume(request: ResumeOptimizeRequest):
     - overall_score: ATS compatibility score (0-100)
     - jobs_analyzed: Number of jobs used for analysis
     - analysis_source: 'job_database' or 'ai_general'
+
+    **Requires authentication.**
     """
     try:
+        user_id = current_user['id']
         logger.info(f"Optimizing resume: {request.resume_name} against top {request.num_jobs} jobs")
 
         result = resume_optimizer_service.optimize_resume(
             resume_name=request.resume_name,
-            num_jobs=request.num_jobs
+            num_jobs=request.num_jobs,
+            user_id=user_id
         )
 
         return ResumeOptimizeResponse(
@@ -480,17 +775,26 @@ async def optimize_resume(request: ResumeOptimizeRequest):
         )
 
 
-# Similarity scoring endpoints
+# ============================================================================
+# Similarity Scoring Endpoints (Protected)
+# ============================================================================
+
 @app.post("/similarity/update", response_model=SimilarityUpdateResponse)
-async def update_similarity_scores(request: SimilarityUpdateRequest):
+async def update_similarity_scores(
+    request: SimilarityUpdateRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Update similarity scores for all jobs against a specific resume.
+    Update similarity scores for all jobs against a specific resume owned by the current user.
 
     This calculates embeddings and similarity scores between the specified
     resume and all jobs in the database.
+
+    **Requires authentication.**
     """
     try:
-        success, jobs_updated = job_data_service.update_similarity_scores(request.resume_name)
+        user_id = current_user['id']
+        success, jobs_updated = job_data_service.update_similarity_scores(request.resume_name, user_id=user_id)
 
         return SimilarityUpdateResponse(
             success=success,
@@ -505,16 +809,25 @@ async def update_similarity_scores(request: SimilarityUpdateRequest):
         )
 
 
-# Job tracking endpoints
+# ============================================================================
+# Job Tracking Endpoints (Protected)
+# ============================================================================
+
 @app.post("/jobs/save", response_model=JobTrackingResponse)
-async def save_job(request: SaveJobRequest):
+async def save_job(
+    request: SaveJobRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Save a job to the tracking board.
+    Save a job to the user's tracking board.
 
     Adds the job to job_tracking table with 'apply' status.
+
+    **Requires authentication.**
     """
     try:
-        success, message = job_tracking_service.save_job(request.job_id)
+        user_id = current_user['id']
+        success, message = job_tracking_service.save_job(request.job_id, user_id=user_id)
 
         return JobTrackingResponse(
             success=success,
@@ -529,14 +842,20 @@ async def save_job(request: SaveJobRequest):
 
 
 @app.post("/jobs/pass", response_model=JobTrackingResponse)
-async def pass_job(request: PassJobRequest):
+async def pass_job(
+    request: PassJobRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Pass/hide a job.
+    Pass/hide a job for the current user.
 
     Marks the job as hidden (hidden = 1) so it won't appear in main job list.
+
+    **Requires authentication.**
     """
     try:
-        success, message = job_tracking_service.pass_job(request.job_id)
+        user_id = current_user['id']
+        success, message = job_tracking_service.pass_job(request.job_id, user_id=user_id)
 
         return JobTrackingResponse(
             success=success,
@@ -551,9 +870,9 @@ async def pass_job(request: PassJobRequest):
 
 
 @app.get("/jobs/tracked", response_model=TrackedJobsResponse)
-async def get_tracked_jobs():
+async def get_tracked_jobs(current_user: dict = Depends(get_current_user)):
     """
-    Get all tracked jobs organized by status for Kanban board.
+    Get all tracked jobs for the current user organized by status for Kanban board.
 
     Returns jobs grouped into columns:
     - apply: Jobs to apply to
@@ -561,9 +880,12 @@ async def get_tracked_jobs():
     - round_1: First round interviews
     - round_2: Second round interviews
     - rejected: Rejected or ghosted applications
+
+    **Requires authentication.**
     """
     try:
-        jobs_by_status = job_tracking_service.get_tracked_jobs()
+        user_id = current_user['id']
+        jobs_by_status = job_tracking_service.get_tracked_jobs(user_id=user_id)
 
         return TrackedJobsResponse(
             apply=jobs_by_status.get("apply", []),
@@ -581,14 +903,22 @@ async def get_tracked_jobs():
 
 
 @app.put("/jobs/tracked/{job_id}/status", response_model=JobTrackingResponse)
-async def update_job_status(job_id: int, request: UpdateJobStatusRequest):
+async def update_job_status(
+    job_id: int,
+    request: UpdateJobStatusRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """
-    Update the status of a tracked job.
+    Update the status of a tracked job for the current user.
 
     Moves the job between Kanban columns by updating its status.
     Valid statuses: apply, hr_screen, round_1, round_2, rejected
+
+    **Requires authentication.**
     """
     try:
+        user_id = current_user['id']
+
         # Validate that job_id in path matches request body
         if job_id != request.job_id:
             raise HTTPException(
@@ -596,7 +926,7 @@ async def update_job_status(job_id: int, request: UpdateJobStatusRequest):
                 detail="Job ID in path must match job ID in request body"
             )
 
-        success, message = job_tracking_service.update_job_status(request.job_id, request.new_status)
+        success, message = job_tracking_service.update_job_status(request.job_id, request.new_status, user_id=user_id)
 
         return JobTrackingResponse(
             success=success,

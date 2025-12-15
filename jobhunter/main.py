@@ -66,7 +66,7 @@ if not os.environ.get("OPENAI_API_KEY") and not st.session_state.get("openai_api
 def initialize_database():
     """Create the SQLite database and necessary tables if they don't exist."""
     try:
-        conn = sqlite3.connect("all_jobs.db")
+        conn = sqlite3.connect(config.DATABASE)
         cursor = conn.cursor()
         
         # Create jobs_new table if it doesn't exist
@@ -279,7 +279,7 @@ def load_initial_data():
         
         conn = None
         try:
-            conn = sqlite3.connect("all_jobs.db")
+            conn = sqlite3.connect(config.DATABASE)
             cursor = conn.cursor()
 
             # --- Load Existing Jobs --- 
@@ -525,7 +525,7 @@ with resume_container:
                 if update_success:
                     # Re-query the database to get updated scores
                     try:
-                        conn = sqlite3.connect("all_jobs.db")
+                        conn = sqlite3.connect(config.DATABASE)
                         query = """
                             SELECT
                                 id, primary_key, date,
@@ -679,7 +679,7 @@ else:
                 with similarity_container.container():
                     with st.spinner("Calculating resume similarities for your jobs..."):
                         # Calculate how many jobs need similarity calculation
-                        conn = sqlite3.connect("all_jobs.db")
+                        conn = sqlite3.connect(config.DATABASE)
                         cursor = conn.cursor()
                         cursor.execute("SELECT COUNT(*) FROM jobs_new WHERE resume_similarity = 0 OR resume_similarity IS NULL")
                         zero_similarity_count = cursor.fetchone()[0]
@@ -721,7 +721,7 @@ else:
 
             # --- Trigger results update AFTER pipeline finishes ---
             try:
-                conn = sqlite3.connect("all_jobs.db")
+                conn = sqlite3.connect(config.DATABASE)
                 query = """
                     SELECT
                         id, primary_key, date,
@@ -778,7 +778,7 @@ if refresh_col1.button("🔄 Refresh Scores", help="Click to refresh similarity 
             progress_bar.empty()
             
             # Now refresh from database
-            conn = sqlite3.connect("all_jobs.db")
+            conn = sqlite3.connect(config.DATABASE)
             query = """
                 SELECT
                     id, primary_key, date,

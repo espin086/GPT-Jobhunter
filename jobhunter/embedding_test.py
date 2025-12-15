@@ -15,6 +15,7 @@ parent_dir = current_dir.parent
 sys.path.append(str(parent_dir))
 
 # Import necessary modules
+from jobhunter import config
 from jobhunter.textAnalysis import generate_gpt_embedding, get_openai_api_key
 from jobhunter.text_similarity import text_similarity
 from jobhunter.SQLiteHandler import get_resume_text, fetch_resumes_from_db
@@ -130,7 +131,7 @@ def test_sqlite_query():
     
     try:
         import sqlite3
-        conn = sqlite3.connect("all_jobs.db")
+        conn = sqlite3.connect(config.DATABASE)
         cursor = conn.cursor()
         
         # Check if there are any rows with non-null embeddings
