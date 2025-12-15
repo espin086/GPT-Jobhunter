@@ -792,18 +792,20 @@ def render_job_card(job: Dict[str, Any], index: int):
 # Onboarding Screen
 # ============================================================================
 
-# Fun facts for the onboarding screen
+# ATS tips and facts for job seekers during onboarding
 ONBOARDING_FACTS = [
-    "The average job search takes 5 months. With AI matching, we cut that down significantly!",
-    "89% of recruiters have hired candidates via LinkedIn in the past year.",
-    "Tailored resumes are 6x more effective than generic ones.",
-    "AI-matched candidates get 3x more interview callbacks.",
-    "Companies using AI for hiring report 35% better candidate fit.",
-    "The best time to apply for a job is Monday morning between 6-10 AM.",
-    "73% of hiring managers say a well-crafted cover letter increases interview chances.",
-    "Jobs posted online receive an average of 250 resumes per opening.",
-    "Networking accounts for 70% of all jobs landed.",
-    "Skills-based hiring is up 63% compared to traditional credential-based hiring.",
+    "ATS Tip: Use standard section headers like 'Experience' and 'Education' - ATS systems look for these exact words.",
+    "ATS Tip: Avoid tables, columns, and graphics in your resume - most ATS systems can't parse them correctly.",
+    "ATS Tip: Include the exact job title from the posting in your resume - ATS matches on keywords.",
+    "ATS Tip: Use a simple, clean font like Arial or Calibri - fancy fonts can confuse ATS parsers.",
+    "ATS Tip: Save your resume as a .docx or .pdf - these formats are most ATS-compatible.",
+    "ATS Tip: Spell out acronyms at least once (e.g., 'Search Engine Optimization (SEO)') for better keyword matching.",
+    "ATS Tip: Put your most relevant skills near the top - ATS systems weight content by position.",
+    "ATS Tip: Use bullet points instead of paragraphs - ATS systems parse them more accurately.",
+    "ATS Tip: Include both hard skills (Python, Excel) and soft skills (leadership, communication) for broader matches.",
+    "ATS Tip: Quantify your achievements with numbers - '30% increase in sales' stands out to both ATS and humans.",
+    "ATS Tip: Remove headers and footers - many ATS systems skip or misread this content.",
+    "ATS Tip: Use standard date formats (Jan 2020 - Present) - ATS systems parse these reliably.",
 ]
 
 STEP_DETAILS = {
@@ -977,23 +979,13 @@ def show_onboarding_screen(resume_name: str):
         st.session_state.similarity_needs_update = False
         st.session_state.last_similarity_resume = resume_name
 
-        # Auto-redirect button
+        # Button to go to main app
         st.markdown("---")
         if st.button("🚀 Start Exploring Your Job Matches!", type="primary", use_container_width=True):
+            # Clear ALL onboarding flags to prevent re-triggering
             st.session_state.show_onboarding = False
+            st.session_state.onboarding_resume = None
             st.rerun()
-
-        # Also auto-redirect after a few seconds (using JavaScript)
-        st.markdown("""
-        <script>
-            setTimeout(function() {
-                window.location.reload();
-            }, 10000);
-        </script>
-        <p style="text-align: center; color: #999; font-size: 0.9rem;">
-            Automatically redirecting in 10 seconds...
-        </p>
-        """, unsafe_allow_html=True)
 
     else:
         # Error state
@@ -1010,7 +1002,9 @@ def show_onboarding_screen(resume_name: str):
         """)
 
         if st.button("Continue Anyway", type="primary"):
+            # Clear ALL onboarding flags to prevent re-triggering
             st.session_state.show_onboarding = False
+            st.session_state.onboarding_resume = None
             st.session_state.onboarding_complete = True
             st.rerun()
 
