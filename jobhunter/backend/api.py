@@ -22,11 +22,12 @@ from jobhunter.backend.models import (
     ResumeOptimizeRequest, ResumeOptimizeResponse,
     ErrorResponse, HealthResponse,
     UserRegisterRequest, UserLoginRequest, UserResponse, TokenResponse,
-    PasswordResetRequest, PasswordResetConfirm, LogoutResponse
+    PasswordResetRequest, PasswordResetConfirm, LogoutResponse,
+    OnboardingRequest, OnboardingResponse
 )
 from jobhunter.backend.services import (
     JobSearchService, ResumeService, JobDataService, DatabaseService, AIService, JobTrackingService,
-    ResumeOptimizerService, AuthService
+    ResumeOptimizerService, AuthService, OnboardingService
 )
 from jobhunter.backend.auth_service import get_current_user
 
@@ -61,6 +62,7 @@ ai_service = AIService()
 job_tracking_service = JobTrackingService()
 resume_optimizer_service = ResumeOptimizerService()
 auth_service = AuthService()
+onboarding_service = OnboardingService()
 
 
 # Custom dependency for file uploads that manually extracts token
@@ -939,6 +941,50 @@ async def update_job_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update job status: {str(e)}"
+        )
+
+
+# ============================================================================
+# Onboarding Endpoints (Protected)
+# ============================================================================
+
+@app.post("/onboarding/process", response_model=OnboardingResponse)
+async def process_onboarding(
+    request: OnboardingRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Run the complete onboarding workflow for a resume.
+
+    This endpoint orchestrates the full automated onboarding process:
+    1. Get AI job title suggestions based on resume
+    2. Run smart search with suggested titles
+    3. Calculate similarity scores for all jobs
+    4. Run resume optimizer for ATS recommendations
+
+    This is a long-running operation (may take 1-2 minutes).
+
+    **Requires authentication.**
+    """
+    try:
+        user_id = current_user['id']
+        logger.info(f"Starting onboarding process for resume: {request.resume_name}, user: {user_id}")
+
+        result = onboarding_service.process_onboarding(
+            resume_name=request.resume_name,
+            user_id=user_id
+        )
+
+        logger.info(f"Onboarding completed: {result.message}")
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Onboarding process failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Onboarding process failed: {str(e)}"
         )
 
 

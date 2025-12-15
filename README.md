@@ -23,9 +23,13 @@ See GPT Job Hunter in action! This demo shows the complete workflow from resume 
 
 ## ✨ What Makes GPT Job Hunter Different?
 
+### ⚡ **Automatic Resume Analysis** - Instant Insights
+
+Upload your resume and GPT Job Hunter **automatically analyzes it** the moment you finish onboarding. Get instant ATS compatibility scores, missing keywords, and optimization tips without lifting a finger. Your analysis is ready before you even search for jobs.
+
 ### 🎯 **SmartSearch AI** - Your Personal Job Scout
 
-Upload your resume once, and our AI instantly generates **personalized job search suggestions** tailored to your background. No more guessing which job titles to search for - GPT Job Hunter knows what you're qualified for.
+Our AI instantly generates **personalized job search suggestions** tailored to your background. No more guessing which job titles to search for - GPT Job Hunter knows what you're qualified for.
 
 ### 🧠 **Intelligent Resume Matching**
 
@@ -70,6 +74,8 @@ Manage your entire job search pipeline with a beautiful **Kanban-style board**. 
 
 ### For Job Seekers
 
+- **⚡ Automatic Resume Analysis** - *NEW* Your resume is analyzed instantly after upload with zero extra clicks
+- **🎯 Streamlined Onboarding** - *NEW* Upload resume → Automatic analysis → Results ready in seconds
 - **🤖 AI Job Suggestions** - Get personalized job title recommendations based on your resume
 - **📈 Smart Ranking** - Every job scored 0-100% based on resume match quality
 - **🎨 ATS Resume Optimizer** - Get AI-powered analysis with compatibility scores, missing keywords, and optimization tips
@@ -130,10 +136,10 @@ make dev
 ## 🎬 How It Works
 
 ### 1️⃣ **Upload Your Resume**
-Simply drag-and-drop your resume (PDF or TXT). GPT Job Hunter extracts your skills, experience, and qualifications.
+Simply drag-and-drop your resume (PDF or TXT) during the quick onboarding. GPT Job Hunter extracts your skills, experience, and qualifications.
 
-### 2️⃣ **Optimize for ATS**
-Use the Resume Optimizer to get an instant ATS compatibility score (0-100), discover missing keywords, and receive actionable tips to beat automated screening systems.
+### 2️⃣ **Get Instant Analysis** ⚡ *NEW*
+The moment you complete onboarding, GPT Job Hunter **automatically analyzes your resume** and redirects you to your results. No extra clicks needed - your ATS compatibility score (0-100), missing keywords, and optimization tips are ready immediately.
 
 ### 3️⃣ **Get AI-Powered Suggestions**
 Click "SmartSearch AI ✨" and instantly receive job title recommendations that match your background.
@@ -200,6 +206,8 @@ We welcome contributions! Here's how to get started:
 ## 📈 Roadmap
 
 ### ✅ Recently Completed
+- [x] **Automatic Resume Analysis** - Zero-click workflow that analyzes resumes instantly after onboarding
+- [x] **Streamlined Onboarding** - Auto-redirect to optimization results with pre-populated insights
 - [x] **ATS Resume Optimizer** - AI-powered resume analysis with compatibility scores and keyword suggestions
 
 ### 🚀 Coming Soon

@@ -344,25 +344,88 @@ def show_login_page():
 
     with tab2:
         st.subheader("Create New Account")
+        st.markdown("*Get started in one step - create your account and upload your resume!*")
 
-        with st.form("register_form"):
-            reg_email = st.text_input("Email", key="reg_email")
-            reg_username = st.text_input("Username", key="reg_username")
-            reg_full_name = st.text_input("Full Name (Optional)", key="reg_full_name")
-            reg_password = st.text_input("Password", type="password", key="reg_password")
-            reg_password_confirm = st.text_input("Confirm Password", type="password", key="reg_password_confirm")
-            register_submit = st.form_submit_button("Register", use_container_width=True)
+        # Account details section
+        st.markdown("##### Account Details")
+        reg_email = st.text_input("Email *", key="reg_email", placeholder="you@example.com")
+        reg_username = st.text_input("Username *", key="reg_username", placeholder="johndoe")
+        reg_full_name = st.text_input("Full Name", key="reg_full_name", placeholder="John Doe")
 
-            if register_submit:
-                if not reg_email or not reg_username or not reg_password:
-                    st.error("Please fill in all required fields")
-                elif reg_password != reg_password_confirm:
-                    st.error("Passwords do not match")
-                elif len(reg_password) < 8:
-                    st.error("Password must be at least 8 characters long")
-                else:
+        col1, col2 = st.columns(2)
+        with col1:
+            reg_password = st.text_input("Password *", type="password", key="reg_password")
+        with col2:
+            reg_password_confirm = st.text_input("Confirm Password *", type="password", key="reg_password_confirm")
+
+        st.markdown("---")
+
+        # Resume upload section (REQUIRED)
+        st.markdown("##### Upload Your Resume *")
+        st.info("📄 Your resume is required to get personalized job matches. We'll analyze it to find jobs that match your skills!")
+
+        resume_file = st.file_uploader(
+            "Choose your resume (PDF or TXT)",
+            type=['pdf', 'txt'],
+            key="registration_resume",
+            help="Upload your resume to get started with AI-powered job matching"
+        )
+
+        if resume_file:
+            st.success(f"✅ Resume selected: **{resume_file.name}**")
+        else:
+            st.warning("⚠️ Please upload your resume to complete registration")
+
+        st.markdown("---")
+
+        # Register button
+        if st.button("🚀 Create Account & Start Job Hunting!", type="primary", use_container_width=True):
+            # Validation
+            errors = []
+            if not reg_email:
+                errors.append("Email is required")
+            if not reg_username:
+                errors.append("Username is required")
+            if not reg_password:
+                errors.append("Password is required")
+            elif len(reg_password) < 8:
+                errors.append("Password must be at least 8 characters long")
+            if reg_password != reg_password_confirm:
+                errors.append("Passwords do not match")
+            if not resume_file:
+                errors.append("Please upload your resume")
+
+            if errors:
+                for error in errors:
+                    st.error(f"❌ {error}")
+            else:
+                # Step 1: Register the user
+                with st.spinner("Creating your account..."):
                     if register_user(reg_email, reg_username, reg_password, reg_full_name):
-                        st.info("Please switch to the Login tab to sign in")
+                        # Step 2: Auto-login
+                        st.success("✅ Account created!")
+                        with st.spinner("Logging you in..."):
+                            if login_user(reg_username, reg_password):
+                                # Step 3: Upload resume
+                                st.success("✅ Logged in!")
+                                with st.spinner("Uploading your resume..."):
+                                    if upload_resume_file(resume_file):
+                                        st.success("✅ Resume uploaded!")
+                                        # Step 4: Set flags for onboarding
+                                        st.session_state.selected_resume = resume_file.name
+                                        st.session_state.show_onboarding = True
+                                        st.session_state.onboarding_resume = resume_file.name
+                                        st.balloons()
+                                        st.success("🎉 All set! Starting your personalized job hunt setup...")
+                                        time.sleep(2)
+                                        st.rerun()
+                                    else:
+                                        st.error("Resume upload failed. You can upload it after logging in.")
+                                        st.rerun()
+                            else:
+                                st.error("Auto-login failed. Please log in manually.")
+                    else:
+                        pass  # Error message already shown by register_user()
 
 
 def initialize_database():
@@ -511,6 +574,16 @@ def optimize_resume(resume_name: str, num_jobs: int = 20) -> Dict[str, Any]:
         return make_api_request("POST", "/resumes/optimize", timeout=120, json=data)
     except:
         return {"success": False, "message": "Optimization request failed"}
+
+
+def run_onboarding_workflow(resume_name: str) -> Dict[str, Any]:
+    """Run the complete onboarding workflow for a resume."""
+    try:
+        data = {"resume_name": resume_name}
+        # Use very long timeout for full onboarding (up to 5 minutes)
+        return make_api_request("POST", "/onboarding/process", timeout=300, json=data)
+    except:
+        return {"success": False, "message": "Onboarding workflow failed"}
 
 
 def format_relative_time(date_str: str) -> str:
@@ -715,6 +788,250 @@ def render_job_card(job: Dict[str, Any], index: int):
             st.markdown("---")
 
 
+# ============================================================================
+# Onboarding Screen
+# ============================================================================
+
+# ATS tips and facts for job seekers during onboarding
+ONBOARDING_FACTS = [
+    "ATS Tip: Use standard section headers like 'Experience' and 'Education' - ATS systems look for these exact words.",
+    "ATS Tip: Avoid tables, columns, and graphics in your resume - most ATS systems can't parse them correctly.",
+    "ATS Tip: Include the exact job title from the posting in your resume - ATS matches on keywords.",
+    "ATS Tip: Use a simple, clean font like Arial or Calibri - fancy fonts can confuse ATS parsers.",
+    "ATS Tip: Save your resume as a .docx or .pdf - these formats are most ATS-compatible.",
+    "ATS Tip: Spell out acronyms at least once (e.g., 'Search Engine Optimization (SEO)') for better keyword matching.",
+    "ATS Tip: Put your most relevant skills near the top - ATS systems weight content by position.",
+    "ATS Tip: Use bullet points instead of paragraphs - ATS systems parse them more accurately.",
+    "ATS Tip: Include both hard skills (Python, Excel) and soft skills (leadership, communication) for broader matches.",
+    "ATS Tip: Quantify your achievements with numbers - '30% increase in sales' stands out to both ATS and humans.",
+    "ATS Tip: Remove headers and footers - many ATS systems skip or misread this content.",
+    "ATS Tip: Use standard date formats (Jan 2020 - Present) - ATS systems parse these reliably.",
+]
+
+STEP_DETAILS = {
+    "job_title_suggestions": {
+        "name": "Analyzing Resume",
+        "icon": "🧠",
+        "active_message": "Our AI is reading your resume and identifying your key skills...",
+        "complete_message": "Resume analyzed successfully!"
+    },
+    "job_search": {
+        "name": "Searching Jobs",
+        "icon": "🔍",
+        "active_message": "Hunting for jobs matching your profile...",
+        "complete_message": "Job search complete!"
+    },
+    "similarity_calculation": {
+        "name": "Calculating Matches",
+        "icon": "📊",
+        "active_message": "Computing how well each job matches your skills...",
+        "complete_message": "Match scores calculated!"
+    },
+    "resume_optimization": {
+        "name": "Optimizing Resume",
+        "icon": "✨",
+        "active_message": "Generating ATS optimization recommendations...",
+        "complete_message": "Optimization tips ready!"
+    }
+}
+
+
+def show_onboarding_screen(resume_name: str):
+    """
+    Display the engaging onboarding processing screen.
+
+    This function orchestrates the full onboarding workflow while showing
+    an engaging UI with progress updates and fun facts.
+    """
+    import random
+
+    # Full-page onboarding view
+    st.markdown('<h1 class="main-header">🚀 Setting Up Your Job Hunt</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Hang tight! We\'re doing the heavy lifting so you don\'t have to.</p>', unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # Create containers for dynamic updates
+    progress_container = st.container()
+    steps_container = st.container()
+    facts_container = st.container()
+
+    # Initialize step tracking
+    steps_order = ["job_title_suggestions", "job_search", "similarity_calculation", "resume_optimization"]
+    step_results = {}
+
+    with progress_container:
+        # Overall progress bar
+        progress_bar = st.progress(0, text="Starting onboarding...")
+
+    with facts_container:
+        # Fun fact display
+        st.markdown("---")
+        fact_placeholder = st.empty()
+        fact_placeholder.info(f"💡 **Did you know?** {random.choice(ONBOARDING_FACTS)}")
+
+    with steps_container:
+        # Step progress display
+        st.subheader("📋 Progress")
+        step_placeholders = {}
+        for step_name in steps_order:
+            step_info = STEP_DETAILS[step_name]
+            step_placeholders[step_name] = st.empty()
+            step_placeholders[step_name].markdown(f"""
+            <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 4px solid #ddd;">
+                <span style="font-size: 1.2rem;">⏳</span>
+                <strong>{step_info['name']}</strong>
+                <span style="color: #999; margin-left: 0.5rem;">Pending...</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # Run the onboarding workflow
+    progress_bar.progress(5, text="🧠 Connecting to AI services...")
+
+    # Show a random fact before starting
+    time.sleep(1)
+    fact_placeholder.info(f"💡 **Did you know?** {random.choice(ONBOARDING_FACTS)}")
+
+    # Call the onboarding API
+    progress_bar.progress(10, text="🚀 Starting onboarding workflow...")
+
+    result = run_onboarding_workflow(resume_name)
+
+    # Process results and update UI
+    if result.get("success") or result.get("steps"):
+        steps = result.get("steps", [])
+
+        # Update each step's display
+        for i, step in enumerate(steps):
+            step_name = step.get("step_name", "")
+            step_success = step.get("success", False)
+            step_message = step.get("message", "")
+            step_data = step.get("data", {})
+
+            progress_pct = 10 + ((i + 1) / len(steps_order)) * 80
+            step_info = STEP_DETAILS.get(step_name, {"name": step_name, "icon": "📌"})
+
+            if step_success:
+                # Show success state
+                detail_text = ""
+                if step_name == "job_title_suggestions" and step_data:
+                    suggestions = step_data.get("suggestions", [])
+                    if suggestions:
+                        detail_text = f"<br><span style='color: #666; font-size: 0.9rem;'>→ Suggested: {', '.join(suggestions)}</span>"
+                elif step_name == "job_search" and step_data:
+                    total_jobs = step_data.get("total_jobs", 0)
+                    detail_text = f"<br><span style='color: #666; font-size: 0.9rem;'>→ Found {total_jobs} jobs!</span>"
+                elif step_name == "similarity_calculation" and step_data:
+                    jobs_updated = step_data.get("jobs_updated", 0)
+                    detail_text = f"<br><span style='color: #666; font-size: 0.9rem;'>→ Scored {jobs_updated} jobs</span>"
+                elif step_name == "resume_optimization" and step_data:
+                    score = step_data.get("overall_score", 0)
+                    detail_text = f"<br><span style='color: #666; font-size: 0.9rem;'>→ ATS Score: {score}/100</span>"
+
+                step_placeholders[step_name].markdown(f"""
+                <div style="background: #d4edda; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 4px solid #28a745;">
+                    <span style="font-size: 1.2rem;">✅</span>
+                    <strong>{step_info['name']}</strong>
+                    <span style="color: #155724; margin-left: 0.5rem;">{step_info.get('complete_message', 'Complete!')}</span>
+                    {detail_text}
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                # Show failure state
+                step_placeholders[step_name].markdown(f"""
+                <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 4px solid #ffc107;">
+                    <span style="font-size: 1.2rem;">⚠️</span>
+                    <strong>{step_info['name']}</strong>
+                    <span style="color: #856404; margin-left: 0.5rem;">{step_message[:50]}...</span>
+                </div>
+                """, unsafe_allow_html=True)
+
+            progress_bar.progress(int(progress_pct), text=f"{step_info['icon']} {step_info['name']} complete!")
+
+        # Final progress
+        progress_bar.progress(100, text="🎉 Onboarding complete!")
+
+        # Celebration!
+        st.balloons()
+
+        # Show brief summary
+        st.markdown("---")
+        st.success(f"""
+        ### 🎉 You're All Set!
+
+        **Summary:**
+        - 📋 Suggested job titles: {', '.join(result.get('job_titles_suggested', ['N/A']))}
+        - 🔍 Jobs found: **{result.get('total_jobs_found', 0)}**
+        - 📊 Jobs with match scores: **{result.get('jobs_with_similarity', 0)}**
+        - ✨ Resume ATS Score: **{result.get('optimization_score', 0)}/100**
+
+        *Redirecting to your dashboard...*
+        """)
+
+        # Store results in session state
+        st.session_state.onboarding_complete = True
+        st.session_state.onboarding_results = result
+        st.session_state.job_suggestions = result.get("job_titles_suggested", [])
+
+        # Extract FULL optimization results from the onboarding steps
+        optimization_data = None
+        for step in result.get("steps", []):
+            if step.get("step_name") == "resume_optimization" and step.get("data"):
+                optimization_data = step.get("data")
+                break
+
+        if optimization_data:
+            st.session_state.optimization_results = {
+                "success": True,
+                "overall_score": optimization_data.get("overall_score", 0),
+                "missing_keywords": optimization_data.get("missing_keywords", []),
+                "keyword_suggestions": optimization_data.get("keyword_suggestions", []),
+                "ats_tips": optimization_data.get("ats_tips", []),
+                "jobs_analyzed": optimization_data.get("jobs_analyzed", 0),
+                "analysis_source": optimization_data.get("analysis_source", "job_database"),
+                "message": f"Analyzed resume against {optimization_data.get('jobs_analyzed', 0)} similar jobs"
+            }
+        else:
+            st.session_state.optimization_results = {
+                "success": True,
+                "overall_score": result.get("optimization_score", 0),
+                "jobs_analyzed": result.get("jobs_with_similarity", 0),
+                "analysis_source": "job_database"
+            }
+
+        st.session_state.similarity_needs_update = False
+        st.session_state.last_similarity_resume = resume_name
+
+        # Clear onboarding flags and AUTO-REDIRECT to main app (no button needed)
+        st.session_state.show_onboarding = False
+        st.session_state.onboarding_resume = None
+
+        # Brief pause to show summary, then redirect
+        time.sleep(3)
+        st.rerun()
+
+    else:
+        # Error state
+        progress_bar.progress(100, text="⚠️ Onboarding encountered issues")
+        st.error(f"""
+        ### Onboarding Had Some Issues
+
+        **Error:** {result.get('message', 'Unknown error')}
+
+        Don't worry! You can still use the app manually:
+        - Upload your resume in the sidebar
+        - Click "Smart Search" to find jobs
+        - Use the Resume Optimizer tab for tips
+        """)
+
+        if st.button("Continue Anyway", type="primary"):
+            # Clear ALL onboarding flags to prevent re-triggering
+            st.session_state.show_onboarding = False
+            st.session_state.onboarding_resume = None
+            st.session_state.onboarding_complete = True
+            st.rerun()
+
+
 def main():
     """Main Streamlit application."""
     
@@ -836,6 +1153,7 @@ def main():
 
             # Upload new resume (collapsed by default)
             with st.expander("📤 Upload New Resume"):
+                st.info("📄 Upload a new resume to automatically search for matching jobs!")
                 uploaded_file = st.file_uploader("Choose a file", type=['txt', 'pdf'], key="resume_uploader")
 
                 # Auto-upload when file is selected
@@ -843,7 +1161,7 @@ def main():
                     # Use session state to track if this file has been processed
                     file_key = f"{uploaded_file.name}_{uploaded_file.size}"
                     if 'last_uploaded_file' not in st.session_state or st.session_state.last_uploaded_file != file_key:
-                        with st.spinner("Uploading and processing resume..."):
+                        with st.spinner("Uploading resume..."):
                             try:
                                 success = upload_resume_file(uploaded_file)
                                 if success:
@@ -851,8 +1169,11 @@ def main():
                                     st.session_state.selected_resume = uploaded_file.name
                                     st.session_state.job_suggestions = None
                                     st.session_state.optimization_results = None
-                                    st.session_state.similarity_needs_update = True
-                                    st.success(f"✅ Uploaded and activated!")
+                                    # Trigger onboarding workflow for the new resume
+                                    st.session_state.show_onboarding = True
+                                    st.session_state.onboarding_resume = uploaded_file.name
+                                    st.success(f"✅ Resume uploaded! Starting job search...")
+                                    time.sleep(1)
                                     st.rerun()
                                 else:
                                     st.error("Upload failed. Please try again.")
@@ -864,21 +1185,25 @@ def main():
                 st.session_state.selected_resume = None
                 st.session_state.job_suggestions = None
 
-            st.info("👋 Start by uploading your resume")
+            st.info("👋 **Start by uploading your resume** to get personalized job matches!")
+            st.markdown("*We'll automatically find jobs matching your skills and optimize your resume for ATS.*")
             uploaded_file = st.file_uploader("Choose a file", type=['txt', 'pdf'], key="first_resume_uploader")
 
             # Auto-upload when file is selected
             if uploaded_file is not None:
                 file_key = f"{uploaded_file.name}_{uploaded_file.size}"
                 if 'last_uploaded_file' not in st.session_state or st.session_state.last_uploaded_file != file_key:
-                    with st.spinner("Uploading and processing resume..."):
+                    with st.spinner("Uploading resume..."):
                         try:
                             success = upload_resume_file(uploaded_file)
                             if success:
                                 st.session_state.last_uploaded_file = file_key
                                 st.session_state.selected_resume = uploaded_file.name
-                                st.session_state.similarity_needs_update = True
-                                st.success(f"✅ Resume uploaded!")
+                                # Trigger onboarding workflow for the new resume
+                                st.session_state.show_onboarding = True
+                                st.session_state.onboarding_resume = uploaded_file.name
+                                st.success(f"✅ Resume uploaded! Starting your personalized job search...")
+                                time.sleep(1)
                                 st.rerun()
                             else:
                                 st.error("Upload failed. Please try again.")
@@ -1390,6 +1715,10 @@ def main():
 if __name__ == "__main__":
     # Check if user is logged in
     if is_logged_in():
-        main()
+        # Check if we need to show onboarding
+        if st.session_state.get("show_onboarding") and st.session_state.get("onboarding_resume"):
+            show_onboarding_screen(st.session_state.onboarding_resume)
+        else:
+            main()
     else:
         show_login_page()
