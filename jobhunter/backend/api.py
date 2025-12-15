@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import List, Optional
 import os
 
-from fastapi import FastAPI, HTTPException, status, Depends, UploadFile, File
+from fastapi import FastAPI, HTTPException, status, Depends, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
@@ -61,6 +61,72 @@ ai_service = AIService()
 job_tracking_service = JobTrackingService()
 resume_optimizer_service = ResumeOptimizerService()
 auth_service = AuthService()
+
+
+# Custom dependency for file uploads that manually extracts token
+async def get_current_user_from_header(request: Request):
+    """
+    Alternative auth dependency that manually extracts token from Authorization header.
+    Useful for file upload endpoints where OAuth2PasswordBearer might have issues.
+    """
+    from jobhunter.backend.auth_service import verify_token
+    from jobhunter.AuthHandler import get_user_by_id
+
+    # Extract Authorization header
+    auth_header = request.headers.get("Authorization")
+    logger.info(f"File upload auth - Authorization header present: {auth_header is not None}")
+
+    if not auth_header:
+        logger.error("File upload auth - No Authorization header found")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Extract token from "Bearer <token>"
+    parts = auth_header.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        logger.error(f"File upload auth - Invalid Authorization header format: {auth_header[:20]}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials format",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = parts[1]
+    logger.info(f"File upload auth - Extracted token: {token[:10]}...{token[-10:]}")
+
+    # Verify token
+    user_id = verify_token(token)
+    if user_id is None:
+        logger.error("File upload auth - Token verification failed")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Get user from database
+    user = get_user_by_id(user_id=user_id)
+    if user is None:
+        logger.error(f"File upload auth - User not found for ID: {user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Check if user is active
+    if not user.get('is_active'):
+        logger.error(f"File upload auth - Inactive user: {user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user account"
+        )
+
+    logger.info(f"File upload auth - SUCCESS for user: {user.get('username')} (ID: {user_id})")
+    return user
 
 
 # Startup event handler
@@ -418,8 +484,9 @@ async def upload_resume(
 
 @app.post("/resumes/upload-file")
 async def upload_resume_file(
+    request: Request,
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_header)
 ):
     """
     Upload a resume file (PDF or TXT).
@@ -429,7 +496,9 @@ async def upload_resume_file(
     **Requires authentication.**
     """
     try:
-        logger.info(f"Received file upload: {file.filename}, content_type: {file.content_type}")
+        logger.info(f"=== FILE UPLOAD RECEIVED ===")
+        logger.info(f"User: {current_user.get('username')} (ID: {current_user.get('id')})")
+        logger.info(f"File: {file.filename}, content_type: {file.content_type}")
 
         # Validate file type
         if file.content_type not in ["application/pdf", "text/plain"]:

@@ -171,12 +171,43 @@ st.markdown("""
 
 
 def make_api_request(method: str, endpoint: str, timeout: int = 30, **kwargs) -> Dict[str, Any]:
-    """Make a request to the FastAPI backend."""
+    """Make a request to the FastAPI backend with authentication."""
     url = f"{BACKEND_URL}{endpoint}"
+
+    # Add JWT token to headers if user is logged in
+    token = st.session_state.get("access_token")
+    if token:
+        # Ensure headers dict exists and add Authorization header
+        headers = kwargs.get("headers", {})
+        if headers is None:
+            headers = {}
+        headers["Authorization"] = f"Bearer {token}"
+        kwargs["headers"] = headers
+        logger.info(f"Making authenticated request to {endpoint} with token: {token[:10]}...{token[-10:]}")
+    else:
+        logger.warning(f"No access token found for request to {endpoint}")
+
     try:
         response = requests.request(method, url, timeout=timeout, **kwargs)
         response.raise_for_status()
         return response.json()
+    except requests.exceptions.HTTPError as e:
+        # Handle 401 Unauthorized - token expired or invalid
+        if e.response.status_code == 401:
+            error_detail = e.response.json().get("detail", "Authentication failed") if e.response.text else "Authentication failed"
+            logger.error(f"401 Unauthorized on {endpoint}: {error_detail}")
+            st.error(f"Authentication failed: {error_detail}")
+
+            # Clear session and force rerun (auto-logout on 401)
+            if "access_token" in st.session_state:
+                del st.session_state.access_token
+            if "user_info" in st.session_state:
+                del st.session_state.user_info
+            st.rerun()
+            return {"error": error_detail}
+
+        st.error(f"API request failed: {e.response.status_code} - {e.response.text}")
+        return {"error": str(e)}
     except requests.exceptions.ConnectionError:
         st.error(f"Cannot connect to backend at {BACKEND_URL}. Please ensure the FastAPI server is running.")
         return {"error": "Connection failed"}
@@ -185,6 +216,7 @@ def make_api_request(method: str, endpoint: str, timeout: int = 30, **kwargs) ->
         return {"error": str(e)}
     except Exception as e:
         st.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Unexpected error in API request: {e}", exc_info=True)
         return {"error": str(e)}
 
 
@@ -195,6 +227,142 @@ def check_backend_health() -> bool:
         return response.get("status") == "healthy"
     except:
         return False
+
+
+# ============================================================================
+# Authentication Functions
+# ============================================================================
+
+def login_user(username_or_email: str, password: str) -> bool:
+    """Login user and store JWT token."""
+    try:
+        url = f"{BACKEND_URL}/auth/login"
+        response = requests.post(
+            url,
+            json={"username_or_email": username_or_email, "password": password},
+            timeout=10
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        # Store token and user info in session state
+        st.session_state.access_token = data.get("access_token")
+
+        # User info is nested in the 'user' object
+        user_data = data.get("user", {})
+        st.session_state.user_info = {
+            "username": user_data.get("username"),
+            "email": user_data.get("email"),
+            "full_name": user_data.get("full_name")
+        }
+        return True
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 401:
+            st.error("Invalid username/email or password")
+        else:
+            st.error(f"Login failed: {e.response.text}")
+        return False
+    except Exception as e:
+        st.error(f"Login error: {str(e)}")
+        return False
+
+
+def register_user(email: str, username: str, password: str, full_name: str = "") -> bool:
+    """Register a new user."""
+    try:
+        url = f"{BACKEND_URL}/auth/register"
+        response = requests.post(
+            url,
+            json={
+                "email": email,
+                "username": username,
+                "password": password,
+                "full_name": full_name
+            },
+            timeout=10
+        )
+        response.raise_for_status()
+        st.success("Registration successful! Please log in.")
+        return True
+    except requests.exceptions.HTTPError as e:
+        try:
+            error_detail = e.response.json().get("detail", str(e))
+        except:
+            error_detail = str(e)
+        st.error(f"Registration failed: {error_detail}")
+        return False
+    except Exception as e:
+        st.error(f"Registration error: {str(e)}")
+        return False
+
+
+def logout_user():
+    """Logout user and clear session."""
+    if "access_token" in st.session_state:
+        del st.session_state.access_token
+    if "user_info" in st.session_state:
+        del st.session_state.user_info
+    st.rerun()
+
+
+def is_logged_in() -> bool:
+    """Check if user is logged in."""
+    return "access_token" in st.session_state and st.session_state.access_token is not None
+
+
+def show_login_page():
+    """Display login/register page."""
+    st.markdown('<h1 class="main-header">🔍 GPT Job Hunter</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">AI-powered job search with intelligent resume matching</p>', unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # Check backend health first
+    if not check_backend_health():
+        st.error("🚨 Backend service is not available. Please start the FastAPI backend first.")
+        st.info("Run: `make dev` or `python -m jobhunter.backend.api`")
+        return
+
+    # Create tabs for login and register
+    tab1, tab2 = st.tabs(["🔑 Login", "📝 Register"])
+
+    with tab1:
+        st.subheader("Login to Your Account")
+
+        with st.form("login_form"):
+            username_or_email = st.text_input("Username or Email", key="login_username")
+            password = st.text_input("Password", type="password", key="login_password")
+            submit = st.form_submit_button("Login", use_container_width=True)
+
+            if submit:
+                if not username_or_email or not password:
+                    st.error("Please fill in all fields")
+                else:
+                    if login_user(username_or_email, password):
+                        st.success("✅ Login successful!")
+                        st.rerun()
+
+    with tab2:
+        st.subheader("Create New Account")
+
+        with st.form("register_form"):
+            reg_email = st.text_input("Email", key="reg_email")
+            reg_username = st.text_input("Username", key="reg_username")
+            reg_full_name = st.text_input("Full Name (Optional)", key="reg_full_name")
+            reg_password = st.text_input("Password", type="password", key="reg_password")
+            reg_password_confirm = st.text_input("Confirm Password", type="password", key="reg_password_confirm")
+            register_submit = st.form_submit_button("Register", use_container_width=True)
+
+            if register_submit:
+                if not reg_email or not reg_username or not reg_password:
+                    st.error("Please fill in all required fields")
+                elif reg_password != reg_password_confirm:
+                    st.error("Passwords do not match")
+                elif len(reg_password) < 8:
+                    st.error("Password must be at least 8 characters long")
+                else:
+                    if register_user(reg_email, reg_username, reg_password, reg_full_name):
+                        st.info("Please switch to the Login tab to sign in")
 
 
 def initialize_database():
@@ -219,8 +387,13 @@ def upload_resume(filename: str, content: str) -> bool:
     try:
         data = {"filename": filename, "content": content}
         response = make_api_request("POST", "/resumes/upload", json=data)
+        if "error" in response:
+            st.error(f"Upload failed: {response['error']}")
+            return False
         return response.get("success", False)
-    except:
+    except Exception as e:
+        st.error(f"Upload error: {str(e)}")
+        logger.error(f"Resume upload error: {e}", exc_info=True)
         return False
 
 
@@ -229,8 +402,13 @@ def upload_resume_file(file) -> bool:
     try:
         files = {"file": (file.name, file.getvalue(), file.type)}
         response = make_api_request("POST", "/resumes/upload-file", files=files)
+        if "error" in response:
+            st.error(f"File upload failed: {response['error']}")
+            return False
         return response.get("success", False)
-    except:
+    except Exception as e:
+        st.error(f"File upload error: {str(e)}")
+        logger.error(f"Resume file upload error: {e}", exc_info=True)
         return False
 
 
@@ -490,7 +668,7 @@ def render_job_card(job: Dict[str, Any], index: int):
             job_id = job.get("id")
             if job_id and save_job_to_tracking(job_id):
                 st.toast("💾 Job saved to tracker!")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.toast("❌ Failed to save job")
     with col3:
@@ -504,7 +682,7 @@ def render_job_card(job: Dict[str, Any], index: int):
             job_id = job.get("id")
             if job_id and pass_job(job_id):
                 st.toast("❌ Job hidden")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.toast("❌ Failed to hide job")
 
@@ -564,6 +742,33 @@ def main():
 
     # Sidebar
     with st.sidebar:
+        # User info and logout button
+        if is_logged_in() and "user_info" in st.session_state:
+            user_info = st.session_state.user_info
+            st.markdown(f"""
+            <div style="background: linear-gradient(90deg, #1e88e5 0%, #7b1fa2 100%);
+                        padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: white;">
+                <div style="font-weight: 600; font-size: 0.9rem;">👤 {user_info.get('username', 'User')}</div>
+                <div style="font-size: 0.75rem; opacity: 0.9;">{user_info.get('email', '')}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Debug: Check if token exists
+            token = st.session_state.get("access_token")
+            if not token:
+                st.warning("⚠️ Authentication token missing! Please log out and log in again.")
+            else:
+                # Show token status (first/last few chars only for security)
+                token_preview = f"{token[:10]}...{token[-10:]}" if len(token) > 20 else "***"
+                with st.expander("🔐 Auth Status", expanded=False):
+                    st.success("✅ Token present")
+                    st.code(token_preview, language=None)
+
+            if st.button("🚪 Logout", use_container_width=True):
+                logout_user()
+
+            st.markdown("---")
+
         st.header("📋 Quick Start")
 
         # Resume Management
@@ -599,7 +804,7 @@ def main():
                 st.session_state.job_suggestions = None  # Clear suggestions for new resume
                 st.session_state.optimization_results = None  # Clear optimization results
                 st.session_state.similarity_needs_update = True  # Flag for similarity update
-                st.experimental_rerun()
+                st.rerun()
 
             # Show update similarity button if jobs exist and resume changed
             stats = get_database_stats()
@@ -621,7 +826,7 @@ def main():
                                 st.session_state.similarity_needs_update = False
                                 st.session_state.last_similarity_resume = st.session_state.selected_resume
                                 st.success(f"✅ Updated {result.get('jobs_updated', 0)} jobs!")
-                                st.experimental_rerun()
+                                st.rerun()
                             else:
                                 st.error("Failed to update similarity scores")
                 else:
@@ -648,7 +853,7 @@ def main():
                                     st.session_state.optimization_results = None
                                     st.session_state.similarity_needs_update = True
                                     st.success(f"✅ Uploaded and activated!")
-                                    st.experimental_rerun()
+                                    st.rerun()
                                 else:
                                     st.error("Upload failed. Please try again.")
                             except Exception as e:
@@ -674,7 +879,7 @@ def main():
                                 st.session_state.selected_resume = uploaded_file.name
                                 st.session_state.similarity_needs_update = True
                                 st.success(f"✅ Resume uploaded!")
-                                st.experimental_rerun()
+                                st.rerun()
                             else:
                                 st.error("Upload failed. Please try again.")
                         except Exception as e:
@@ -937,7 +1142,7 @@ def main():
                             with st.spinner("🤖 AI is re-analyzing your resume... This may take 30-60 seconds."):
                                 result = optimize_resume(st.session_state.selected_resume, num_jobs_param)
                                 st.session_state.optimization_results = result
-                            st.experimental_rerun()
+                            st.rerun()
                     with col2:
                         if job_count == 0:
                             st.info("💡 Search for jobs to get more targeted recommendations!")
@@ -1138,31 +1343,31 @@ def main():
                         if st.button("→ HR Screen", key=f"move_{job_id}_hr", use_container_width=True):
                             if update_job_status(job_id, "hr_screen"):
                                 st.toast("✅ Moved to HR Screen!")
-                                st.experimental_rerun()
+                                st.rerun()
                     elif col_info["key"] == "hr_screen":
                         col_a, col_b = st.columns(2)
                         with col_a:
                             if st.button("→ Round 1", key=f"move_{job_id}_r1", use_container_width=True):
                                 if update_job_status(job_id, "round_1"):
                                     st.toast("✅ Moved to Round 1!")
-                                    st.experimental_rerun()
+                                    st.rerun()
                         with col_b:
                             if st.button("❌ Reject", key=f"move_{job_id}_rej_hr", use_container_width=True):
                                 if update_job_status(job_id, "rejected"):
                                     st.toast("Moved to Rejected")
-                                    st.experimental_rerun()
+                                    st.rerun()
                     elif col_info["key"] == "round_1":
                         col_a, col_b = st.columns(2)
                         with col_a:
                             if st.button("→ Round 2", key=f"move_{job_id}_r2", use_container_width=True):
                                 if update_job_status(job_id, "round_2"):
                                     st.toast("✅ Moved to Round 2!")
-                                    st.experimental_rerun()
+                                    st.rerun()
                         with col_b:
                             if st.button("❌ Reject", key=f"move_{job_id}_rej_r1", use_container_width=True):
                                 if update_job_status(job_id, "rejected"):
                                     st.toast("Moved to Rejected")
-                                    st.experimental_rerun()
+                                    st.rerun()
                     elif col_info["key"] == "round_2":
                         col_a, col_b = st.columns(2)
                         with col_a:
@@ -1173,7 +1378,7 @@ def main():
                             if st.button("❌ Reject", key=f"move_{job_id}_rej_r2", use_container_width=True):
                                 if update_job_status(job_id, "rejected"):
                                     st.toast("Moved to Rejected")
-                                    st.experimental_rerun()
+                                    st.rerun()
 
                     st.divider()
 
@@ -1183,4 +1388,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Check if user is logged in
+    if is_logged_in():
+        main()
+    else:
+        show_login_page()

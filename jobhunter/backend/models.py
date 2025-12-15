@@ -259,7 +259,7 @@ class ResumeOptimizeResponse(BaseModel):
 class UserRegisterRequest(BaseModel):
     """Request model for user registration."""
     email: EmailStr = Field(..., description="User's email address")
-    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
+    username: str = Field(..., min_length=2, max_length=50, description="Unique username (minimum 2 characters)")
     password: str = Field(..., min_length=8, description="Password (minimum 8 characters)")
     full_name: Optional[str] = Field(None, description="User's full name")
 

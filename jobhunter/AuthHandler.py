@@ -12,9 +12,13 @@ import os
 import sqlite3
 import logging
 import secrets
+import hashlib
+import base64
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 from passlib.context import CryptContext
+
+from jobhunter import config
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +28,31 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Token expiration time (30 minutes for password reset)
 PASSWORD_RESET_TOKEN_EXPIRE_MINUTES = 30
 
-# Default database path
-DEFAULT_DB_PATH = "all_jobs.db"
+# Default database path - use centralized config for consistency
+DEFAULT_DB_PATH = config.DATABASE
+
+
+def _prepare_password_for_bcrypt(password: str) -> str:
+    """
+    Pre-hash password with SHA-256 to support passwords longer than 72 bytes.
+
+    Bcrypt has a 72-byte limit, but we can work around this by:
+    1. Hash the password with SHA-256 (produces 32 bytes)
+    2. Base64 encode it (produces ~44 characters)
+    3. Pass the result to bcrypt
+
+    This allows passwords of any length while maintaining security.
+
+    Args:
+        password: The original password (any length)
+
+    Returns:
+        Base64-encoded SHA-256 hash suitable for bcrypt
+    """
+    # Hash with SHA-256
+    password_hash = hashlib.sha256(password.encode('utf-8')).digest()
+    # Base64 encode to make it ASCII-safe for bcrypt
+    return base64.b64encode(password_hash).decode('utf-8')
 
 
 def _get_db_path(db_path: Optional[str] = None) -> str:
@@ -123,8 +150,9 @@ def create_user(
     """
     db_path = _get_db_path(db_path)
 
-    # Hash the password
-    hashed_password = pwd_context.hash(password)
+    # Pre-hash password to support any length, then bcrypt it
+    prepared_password = _prepare_password_for_bcrypt(password)
+    hashed_password = pwd_context.hash(prepared_password)
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -246,7 +274,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True if password matches, False otherwise
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    # Pre-hash the password the same way we did during creation
+    prepared_password = _prepare_password_for_bcrypt(plain_password)
+    return pwd_context.verify(prepared_password, hashed_password)
 
 
 def update_last_login(db_path: Optional[str] = None, user_id: int = None) -> None:
@@ -386,8 +416,9 @@ def reset_password(
         logger.error("Password reset failed - invalid or expired token")
         return False
 
-    # Hash the new password
-    hashed_password = pwd_context.hash(new_password)
+    # Pre-hash the new password to support any length, then bcrypt it
+    prepared_password = _prepare_password_for_bcrypt(new_password)
+    hashed_password = pwd_context.hash(prepared_password)
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()

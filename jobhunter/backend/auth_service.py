@@ -16,7 +16,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from dotenv import load_dotenv
 
-from jobhunter.AuthHandler import get_user_by_id, verify_password as verify_password_hash
+from jobhunter.AuthHandler import get_user_by_id, verify_password as verify_password_hash, _prepare_password_for_bcrypt
 from passlib.context import CryptContext
 
 # Load environment variables
@@ -73,31 +73,39 @@ def verify_token(token: str) -> Optional[int]:
         user_id if token is valid, None otherwise
     """
     try:
+        logger.info(f"Verifying token: {token[:20]}...{token[-20:]}")
+        logger.info(f"Using SECRET_KEY: {SECRET_KEY[:10]}... and ALGORITHM: {ALGORITHM}")
+
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        logger.info(f"Token decoded successfully, payload: {payload}")
+
         user_id: int = payload.get("sub")
 
         if user_id is None:
             logger.warning("Token missing 'sub' claim")
             return None
 
+        logger.info(f"Extracted user_id from token: {user_id}")
         return int(user_id)
 
     except JWTError as e:
-        logger.warning(f"JWT verification failed: {e}")
+        logger.error(f"JWT verification failed: {e}", exc_info=True)
         return None
 
 
 def get_password_hash(password: str) -> str:
     """
-    Hash a password using bcrypt.
+    Hash a password using bcrypt (with SHA-256 pre-hashing to support any length).
 
     Args:
-        password: Plain text password
+        password: Plain text password (any length supported)
 
     Returns:
         Bcrypt hashed password
     """
-    return pwd_context.hash(password)
+    # Pre-hash to support passwords longer than 72 bytes
+    prepared_password = _prepare_password_for_bcrypt(password)
+    return pwd_context.hash(prepared_password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -111,7 +119,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True if password matches, False otherwise
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    # Pre-hash the password the same way we did during creation
+    prepared_password = _prepare_password_for_bcrypt(plain_password)
+    return pwd_context.verify(prepared_password, hashed_password)
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict:

@@ -68,7 +68,7 @@ def rebuild_job_embeddings():
     print("\n🔄 Rebuilding job embeddings...")
     
     # Connect to the database
-    conn = sqlite3.connect("all_jobs.db")
+    conn = sqlite3.connect(config.DATABASE)
     cursor = conn.cursor()
     
     try:

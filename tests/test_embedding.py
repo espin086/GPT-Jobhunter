@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Import necessary modules (no need to append to sys.path since we use pytest)
+from jobhunter import config
 from jobhunter.textAnalysis import generate_gpt_embedding, get_openai_api_key
 from jobhunter.text_similarity import text_similarity
 from jobhunter.SQLiteHandler import get_resume_text, fetch_resumes_from_db
@@ -86,7 +87,7 @@ def test_create_tables():
         create_db_if_not_there()
         
         # Verify the tables now exist
-        conn = sqlite3.connect("all_jobs.db")
+        conn = sqlite3.connect(config.DATABASE)
         cursor = conn.cursor()
         
         # Check for jobs_new table
@@ -226,7 +227,7 @@ def test_sqlite_query():
     conn = None
     try:
         import sqlite3
-        conn = sqlite3.connect("all_jobs.db")
+        conn = sqlite3.connect(config.DATABASE)
         cursor = conn.cursor()
         
         # Check if there are any jobs

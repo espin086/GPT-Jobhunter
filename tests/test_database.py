@@ -154,36 +154,38 @@ def test_isolated_db_creation(temp_db_path):
         conn.close()
 
 def test_resume_table_operations():
-    """Test resume table CRUD operations."""
+    """Test resume table CRUD operations with multi-tenant user isolation."""
     # Import necessary functions
     from jobhunter.SQLiteHandler import save_text_to_db, get_resume_text, delete_resume_in_db
-    
+
     test_resume_name = "test_resume_crud.txt"
     test_resume_text = "This is a test resume for CRUD operations testing."
-    
+    # Use a test user_id for isolation (in real usage, this would come from auth)
+    test_user_id = 999  # Test user ID that won't conflict with real users
+
     try:
-        # Save the test resume
-        save_text_to_db(test_resume_name, test_resume_text)
-        
-        # Retrieve the resume text
-        retrieved_text = get_resume_text(test_resume_name)
+        # Save the test resume with user_id
+        save_text_to_db(test_resume_name, test_resume_text, test_user_id)
+
+        # Retrieve the resume text (must pass user_id for ownership verification)
+        retrieved_text = get_resume_text(test_resume_name, test_user_id)
         assert retrieved_text == test_resume_text, "Retrieved resume text doesn't match what was saved"
-        
+
         # Update the resume text
         updated_text = "This is updated test resume text."
-        save_text_to_db(test_resume_name, updated_text)
-        
+        save_text_to_db(test_resume_name, updated_text, test_user_id)
+
         # Verify the update
-        retrieved_updated_text = get_resume_text(test_resume_name)
+        retrieved_updated_text = get_resume_text(test_resume_name, test_user_id)
         assert retrieved_updated_text == updated_text, "Updated resume text wasn't retrieved correctly"
-        
-        # Delete the resume
-        delete_resume_in_db(test_resume_name)
-        
+
+        # Delete the resume (must pass user_id for ownership verification)
+        delete_resume_in_db(test_resume_name, test_user_id)
+
         # Verify deletion
-        deleted_text = get_resume_text(test_resume_name)
+        deleted_text = get_resume_text(test_resume_name, test_user_id)
         assert deleted_text is None or deleted_text == "", "Resume wasn't properly deleted"
-        
+
     except Exception as e:
         pytest.fail(f"Error during resume table operations: {e}")
 

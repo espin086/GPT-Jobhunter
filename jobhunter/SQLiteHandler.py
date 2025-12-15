@@ -8,6 +8,7 @@ import concurrent.futures # Re-import concurrent futures
 import streamlit as st
 from sklearn.metrics.pairwise import cosine_similarity # Import cosine_similarity
 
+from jobhunter import config
 from jobhunter.textAnalysis import generate_gpt_embedding, generate_gpt_embeddings_batch
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ MAX_SIMILARITY_WORKERS = 8 # Adjust based on CPU cores
 def create_db_if_not_there():
     """Create the database if it doesn't exist."""
     logging.info("Checking and creating database if not present.")
-    conn = sqlite3.connect("all_jobs.db")
+    conn = sqlite3.connect(config.DATABASE)
     c = conn.cursor()
 
     try:
@@ -71,7 +72,7 @@ def check_and_upload_to_db(json_list):
     """
     This function checks if a job is already in the database and uploads it if it's not.
     """
-    db_name = "all_jobs.db"
+    db_name = config.DATABASE
     
     if not json_list:
         logger.info("No new jobs to add to the database.")
@@ -228,41 +229,50 @@ def check_and_upload_to_db(json_list):
         conn.close()
 
 
-def save_text_to_db(filename, text):
-    """Save resume text to the database."""
-    conn = sqlite3.connect("all_jobs.db")
+def save_text_to_db(filename, text, user_id):
+    """Save resume text to the database with user isolation.
+
+    Args:
+        filename: Name of the resume file
+        text: Resume text content
+        user_id: ID of the user who owns this resume
+    """
+    conn = sqlite3.connect(config.DATABASE)
     cursor = conn.cursor()
 
     try:
-        # Create the table with a primary key and filename
+        # Create the table with user_id for multi-tenant isolation
         cursor.execute(
             """
         CREATE TABLE IF NOT EXISTS resumes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            resume_name TEXT UNIQUE,
-            resume_text TEXT
+            resume_name TEXT NOT NULL,
+            resume_text TEXT,
+            user_id INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            UNIQUE(user_id, resume_name)
         )
         """
         )
 
-        # Check if a record with the given filename already exists
+        # Check if a record with the given filename already exists for this user
         cursor.execute(
-            "SELECT id FROM resumes WHERE resume_name = ?",
-            (filename,),
+            "SELECT id FROM resumes WHERE resume_name = ? AND user_id = ?",
+            (filename, user_id),
         )
         record = cursor.fetchone()
 
         if record:
             # If a record exists, update it
             cursor.execute(
-                "UPDATE resumes SET resume_text = ? WHERE resume_name = ?",
-                (text, filename),
+                "UPDATE resumes SET resume_text = ? WHERE resume_name = ? AND user_id = ?",
+                (text, filename, user_id),
             )
         else:
             # Otherwise, insert a new record
             cursor.execute(
-                "INSERT INTO resumes (resume_name, resume_text) VALUES (?, ?)",
-                (filename, text),
+                "INSERT INTO resumes (resume_name, resume_text, user_id) VALUES (?, ?, ?)",
+                (filename, text, user_id),
             )
 
         conn.commit()
@@ -274,66 +284,97 @@ def save_text_to_db(filename, text):
         conn.close()
 
 
-def update_resume_in_db(filename, new_text):
-    """Update resume text in the database."""
-    conn = sqlite3.connect("all_jobs.db")
-    cursor = conn.cursor()
+def update_resume_in_db(filename, new_text, user_id):
+    """Update resume text in the database with user ownership verification.
 
-    cursor.execute(
-        "UPDATE resumes SET resume_text = ? WHERE resume_name = ?",
-        (new_text, filename),
-    )
-    conn.commit()
-    conn.close()
-    return True
+    Args:
+        filename: Name of the resume file
+        new_text: New resume text content
+        user_id: ID of the user who owns this resume
 
-
-def delete_resume_in_db(filename):
-    """Delete resume from the database."""
-    conn = sqlite3.connect("all_jobs.db")
-    cursor = conn.cursor()
-    cursor.execute(
-        "DELETE FROM resumes WHERE resume_name = ?",
-        (filename,),  # Add a comma to create a tuple
-    )
-    conn.commit()
-    conn.close()
-
-
-def fetch_resumes_from_db():
-    """Fetch all resumes from the database
-    
     Returns:
-        list: List of resume names
+        bool: True if update successful, False if resume not found or not owned by user
+    """
+    conn = sqlite3.connect(config.DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE resumes SET resume_text = ? WHERE resume_name = ? AND user_id = ?",
+        (new_text, filename, user_id),
+    )
+    rows_affected = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return rows_affected > 0
+
+
+def delete_resume_in_db(filename, user_id):
+    """Delete resume from the database with user ownership verification.
+
+    Args:
+        filename: Name of the resume file
+        user_id: ID of the user who owns this resume
+
+    Returns:
+        bool: True if deletion successful, False if resume not found or not owned by user
+    """
+    conn = sqlite3.connect(config.DATABASE)
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM resumes WHERE resume_name = ? AND user_id = ?",
+        (filename, user_id),
+    )
+    rows_affected = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return rows_affected > 0
+
+
+def fetch_resumes_from_db(user_id):
+    """Fetch all resumes for a specific user from the database.
+
+    Args:
+        user_id: ID of the user whose resumes to fetch
+
+    Returns:
+        list: List of resume names owned by the user
     """
     try:
         # Connect to the database
-        conn = sqlite3.connect("all_jobs.db")
+        conn = sqlite3.connect(config.DATABASE)
         cursor = conn.cursor()
-        
-        # Execute the query using the hardcoded table name instead of config.TABLE_RESUMES
-        cursor.execute("SELECT resume_name FROM resumes")
-        
+
+        # Execute the query filtering by user_id
+        cursor.execute("SELECT resume_name FROM resumes WHERE user_id = ?", (user_id,))
+
         # Fetch the results and extract the resume names
         resume_names = [row[0] for row in cursor.fetchall()]
-        
+
         # Close the connection
         conn.close()
-        
+
         return resume_names
     except Exception as e:
         logging.error(f"Error fetching resumes from database: {e}")
         return []
 
 
-def get_resume_text(filename):
-    """Fetch the text content of a resume from the database."""
-    conn = sqlite3.connect("all_jobs.db")
+def get_resume_text(filename, user_id):
+    """Fetch the text content of a resume from the database with user verification.
+
+    Args:
+        filename: Name of the resume file
+        user_id: ID of the user who owns this resume
+
+    Returns:
+        str or None: Resume text if found and owned by user, None otherwise
+    """
+    conn = sqlite3.connect(config.DATABASE)
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT resume_text FROM resumes WHERE resume_name = ?",
-        (filename,),
+        "SELECT resume_text FROM resumes WHERE resume_name = ? AND user_id = ?",
+        (filename, user_id),
     )
     record = cursor.fetchone()
     logging.info("Resume text fetched from the database")
@@ -342,9 +383,32 @@ def get_resume_text(filename):
     return record[0] if record else None
 
 
+def verify_resume_ownership(filename, user_id):
+    """Verify that a resume is owned by a specific user.
+
+    Args:
+        filename: Name of the resume file
+        user_id: ID of the user to verify ownership
+
+    Returns:
+        bool: True if the resume exists and is owned by the user, False otherwise
+    """
+    conn = sqlite3.connect(config.DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT id FROM resumes WHERE resume_name = ? AND user_id = ?",
+        (filename, user_id),
+    )
+    record = cursor.fetchone()
+    conn.close()
+
+    return record is not None
+
+
 def fetch_primary_keys_from_db() -> list:
     """Fetch primary keys from the database."""
-    conn = sqlite3.connect("all_jobs.db")
+    conn = sqlite3.connect(config.DATABASE)
     c = conn.cursor()
 
     # Fetch the primary keys from the table
@@ -441,7 +505,7 @@ def update_similarity_in_db(resume_name):
             return False
 
         # Connect to database & Fetch jobs
-        conn = sqlite3.connect("all_jobs.db")
+        conn = sqlite3.connect(config.DATABASE)
         cursor = conn.cursor()
         logger.info("Fetching job primary keys and embeddings...")
         cursor.execute("SELECT primary_key, embeddings FROM jobs_new")
