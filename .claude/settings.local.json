@@ -30,7 +30,8 @@
       "Bash(poetry run python3:*)",
       "Bash(poetry remove:*)",
       "Bash(poetry add:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(timeout 60 poetry run python:*)"
     ]
   }
 }
