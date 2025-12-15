@@ -101,7 +101,7 @@ SELECTED_KEYS = [
     "job_highlights",
 ]
 # Pagination for API calls
-PAGES = 1
+PAGES = 3ßßßßß
 
 # === Model Configs ===
 VECTOR_SIZE = 50
