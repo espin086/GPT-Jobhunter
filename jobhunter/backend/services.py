@@ -1433,14 +1433,27 @@ class OnboardingService:
             optimization_success = optimizer_result.get("success", False)
             optimization_score = optimizer_result.get("overall_score", 0)
 
+            # Convert KeywordSuggestion objects to dicts for JSON serialization
+            keyword_suggestions = optimizer_result.get("keyword_suggestions", [])
+            keyword_suggestions_dict = []
+            for ks in keyword_suggestions:
+                if hasattr(ks, 'dict'):
+                    keyword_suggestions_dict.append(ks.dict())
+                elif isinstance(ks, dict):
+                    keyword_suggestions_dict.append(ks)
+
+            # Store FULL optimization results for frontend to use
             steps.append(OnboardingStepResult(
                 step_name="resume_optimization",
                 success=optimization_success,
                 message=optimizer_result.get("message", ""),
                 data={
                     "overall_score": optimization_score,
-                    "missing_keywords_count": len(optimizer_result.get("missing_keywords", [])),
-                    "tips_count": len(optimizer_result.get("ats_tips", []))
+                    "missing_keywords": optimizer_result.get("missing_keywords", []),
+                    "keyword_suggestions": keyword_suggestions_dict,
+                    "ats_tips": optimizer_result.get("ats_tips", []),
+                    "jobs_analyzed": optimizer_result.get("jobs_analyzed", 0),
+                    "analysis_source": optimizer_result.get("analysis_source", "job_database")
                 } if optimization_success else None
             ))
 

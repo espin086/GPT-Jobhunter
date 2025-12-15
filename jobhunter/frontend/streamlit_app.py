@@ -954,7 +954,7 @@ def show_onboarding_screen(resume_name: str):
         # Celebration!
         st.balloons()
 
-        # Show summary
+        # Show brief summary
         st.markdown("---")
         st.success(f"""
         ### 🎉 You're All Set!
@@ -964,28 +964,51 @@ def show_onboarding_screen(resume_name: str):
         - 🔍 Jobs found: **{result.get('total_jobs_found', 0)}**
         - 📊 Jobs with match scores: **{result.get('jobs_with_similarity', 0)}**
         - ✨ Resume ATS Score: **{result.get('optimization_score', 0)}/100**
+
+        *Redirecting to your dashboard...*
         """)
 
         # Store results in session state
         st.session_state.onboarding_complete = True
         st.session_state.onboarding_results = result
         st.session_state.job_suggestions = result.get("job_titles_suggested", [])
-        st.session_state.optimization_results = {
-            "success": True,
-            "overall_score": result.get("optimization_score", 0),
-            "jobs_analyzed": result.get("jobs_with_similarity", 0),
-            "analysis_source": "job_database"
-        }
+
+        # Extract FULL optimization results from the onboarding steps
+        optimization_data = None
+        for step in result.get("steps", []):
+            if step.get("step_name") == "resume_optimization" and step.get("data"):
+                optimization_data = step.get("data")
+                break
+
+        if optimization_data:
+            st.session_state.optimization_results = {
+                "success": True,
+                "overall_score": optimization_data.get("overall_score", 0),
+                "missing_keywords": optimization_data.get("missing_keywords", []),
+                "keyword_suggestions": optimization_data.get("keyword_suggestions", []),
+                "ats_tips": optimization_data.get("ats_tips", []),
+                "jobs_analyzed": optimization_data.get("jobs_analyzed", 0),
+                "analysis_source": optimization_data.get("analysis_source", "job_database"),
+                "message": f"Analyzed resume against {optimization_data.get('jobs_analyzed', 0)} similar jobs"
+            }
+        else:
+            st.session_state.optimization_results = {
+                "success": True,
+                "overall_score": result.get("optimization_score", 0),
+                "jobs_analyzed": result.get("jobs_with_similarity", 0),
+                "analysis_source": "job_database"
+            }
+
         st.session_state.similarity_needs_update = False
         st.session_state.last_similarity_resume = resume_name
 
-        # Button to go to main app
-        st.markdown("---")
-        if st.button("🚀 Start Exploring Your Job Matches!", type="primary", use_container_width=True):
-            # Clear ALL onboarding flags to prevent re-triggering
-            st.session_state.show_onboarding = False
-            st.session_state.onboarding_resume = None
-            st.rerun()
+        # Clear onboarding flags and AUTO-REDIRECT to main app (no button needed)
+        st.session_state.show_onboarding = False
+        st.session_state.onboarding_resume = None
+
+        # Brief pause to show summary, then redirect
+        time.sleep(3)
+        st.rerun()
 
     else:
         # Error state
