@@ -325,18 +325,19 @@ class JobDataService:
             logger.error(f"Error fetching jobs: {e}", exc_info=True)
             raise
     
-    def update_similarity_scores(self, resume_name: str) -> Tuple[bool, int]:
+    def update_similarity_scores(self, resume_name: str, user_id: int = None) -> Tuple[bool, int]:
         """
         Update similarity scores for all jobs against a resume.
-        
+
         Args:
             resume_name: Name of the resume to calculate similarities against
-            
+            user_id: ID of the user who owns the resume
+
         Returns:
             Tuple of (success, number of jobs updated)
         """
         try:
-            success = update_similarity_in_db(resume_name)
+            success = update_similarity_in_db(resume_name, user_id)
             
             if success:
                 # Get count of jobs that were updated
