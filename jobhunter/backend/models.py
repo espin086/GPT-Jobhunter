@@ -303,3 +303,32 @@ class LogoutResponse(BaseModel):
     """Response model for logout."""
     success: bool = Field(..., description="Whether logout was successful")
     message: str = Field(..., description="Status message")
+
+
+# ============================================================================
+# Onboarding Models
+# ============================================================================
+
+class OnboardingRequest(BaseModel):
+    """Request model for onboarding workflow."""
+    resume_name: str = Field(..., description="Name of the resume to process")
+
+
+class OnboardingStepResult(BaseModel):
+    """Result of a single onboarding step."""
+    step_name: str = Field(..., description="Name of the step")
+    success: bool = Field(..., description="Whether the step succeeded")
+    message: str = Field(..., description="Status message for this step")
+    data: Optional[dict] = Field(None, description="Any data returned by this step")
+
+
+class OnboardingResponse(BaseModel):
+    """Response model for onboarding workflow."""
+    success: bool = Field(..., description="Whether the full onboarding completed successfully")
+    message: str = Field(..., description="Overall status message")
+    steps: List[OnboardingStepResult] = Field(default=[], description="Results for each step")
+    # Summary data
+    job_titles_suggested: List[str] = Field(default=[], description="AI-suggested job titles")
+    total_jobs_found: int = Field(default=0, description="Total jobs found during search")
+    jobs_with_similarity: int = Field(default=0, description="Jobs with calculated similarity scores")
+    optimization_score: int = Field(default=0, description="Resume ATS optimization score (0-100)")

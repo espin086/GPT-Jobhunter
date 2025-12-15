@@ -32,7 +32,9 @@ from jobhunter.backend.models import (
     UserRegisterRequest,
     UserLoginRequest,
     UserResponse,
-    TokenResponse
+    TokenResponse,
+    OnboardingStepResult,
+    OnboardingResponse
 )
 
 logger = logging.getLogger(__name__)
@@ -1301,3 +1303,186 @@ class AuthService:
         except Exception as e:
             logger.error(f"Error resetting password: {e}", exc_info=True)
             return False, f"Failed to reset password: {str(e)}"
+
+
+class OnboardingService:
+    """Service for automated user onboarding workflow."""
+
+    def __init__(self):
+        self.ai_service = AIService()
+        self.job_search_service = JobSearchService()
+        self.job_data_service = JobDataService()
+        self.resume_optimizer_service = ResumeOptimizerService()
+
+    def process_onboarding(self, resume_name: str, user_id: int) -> OnboardingResponse:
+        """
+        Run the complete onboarding workflow for a resume.
+
+        Steps:
+        1. Get AI job title suggestions
+        2. Run smart search with suggested titles
+        3. Update similarity scores
+        4. Run resume optimizer
+
+        Args:
+            resume_name: Name of the resume to process
+            user_id: ID of the user who owns the resume
+
+        Returns:
+            OnboardingResponse with results from all steps
+        """
+        steps = []
+        job_titles_suggested = []
+        total_jobs_found = 0
+        jobs_with_similarity = 0
+        optimization_score = 0
+        overall_success = True
+
+        # Step 1: Get AI job title suggestions
+        logger.info(f"Onboarding Step 1: Getting job title suggestions for {resume_name}")
+        try:
+            success, suggestions, message = self.ai_service.suggest_job_titles(resume_name, user_id)
+            job_titles_suggested = suggestions if success else []
+
+            steps.append(OnboardingStepResult(
+                step_name="job_title_suggestions",
+                success=success,
+                message=message,
+                data={"suggestions": job_titles_suggested} if success else None
+            ))
+
+            if not success:
+                logger.warning(f"Onboarding Step 1 failed: {message}")
+                # Continue with default job titles if suggestions fail
+                job_titles_suggested = ["Software Engineer", "Data Analyst", "Product Manager"]
+
+        except Exception as e:
+            logger.error(f"Onboarding Step 1 error: {e}", exc_info=True)
+            steps.append(OnboardingStepResult(
+                step_name="job_title_suggestions",
+                success=False,
+                message=f"Error: {str(e)}",
+                data=None
+            ))
+            job_titles_suggested = ["Software Engineer", "Data Analyst", "Product Manager"]
+
+        # Step 2: Run smart search with suggested titles
+        logger.info(f"Onboarding Step 2: Searching for jobs with titles: {job_titles_suggested}")
+        try:
+            request = JobSearchRequest(
+                job_titles=job_titles_suggested,
+                country="us",
+                date_posted="all",
+                location=""
+            )
+            total_jobs_found = self.job_search_service.search_jobs(request)
+
+            steps.append(OnboardingStepResult(
+                step_name="job_search",
+                success=total_jobs_found > 0,
+                message=f"Found {total_jobs_found} jobs" if total_jobs_found > 0 else "No jobs found",
+                data={"total_jobs": total_jobs_found, "job_titles_searched": job_titles_suggested}
+            ))
+
+            if total_jobs_found == 0:
+                logger.warning("Onboarding Step 2: No jobs found")
+
+        except Exception as e:
+            logger.error(f"Onboarding Step 2 error: {e}", exc_info=True)
+            steps.append(OnboardingStepResult(
+                step_name="job_search",
+                success=False,
+                message=f"Error: {str(e)}",
+                data=None
+            ))
+            overall_success = False
+
+        # Step 3: Update similarity scores
+        logger.info(f"Onboarding Step 3: Calculating similarity scores")
+        try:
+            success, jobs_updated = self.job_data_service.update_similarity_scores(resume_name, user_id)
+            jobs_with_similarity = jobs_updated
+
+            steps.append(OnboardingStepResult(
+                step_name="similarity_calculation",
+                success=success,
+                message=f"Calculated similarity for {jobs_updated} jobs" if success else "Failed to calculate similarity",
+                data={"jobs_updated": jobs_updated} if success else None
+            ))
+
+            if not success:
+                logger.warning("Onboarding Step 3: Similarity calculation failed")
+
+        except Exception as e:
+            logger.error(f"Onboarding Step 3 error: {e}", exc_info=True)
+            steps.append(OnboardingStepResult(
+                step_name="similarity_calculation",
+                success=False,
+                message=f"Error: {str(e)}",
+                data=None
+            ))
+
+        # Step 4: Run resume optimizer
+        logger.info(f"Onboarding Step 4: Running resume optimizer")
+        try:
+            optimizer_result = self.resume_optimizer_service.optimize_resume(
+                resume_name=resume_name,
+                num_jobs=20,
+                user_id=user_id
+            )
+            optimization_success = optimizer_result.get("success", False)
+            optimization_score = optimizer_result.get("overall_score", 0)
+
+            steps.append(OnboardingStepResult(
+                step_name="resume_optimization",
+                success=optimization_success,
+                message=optimizer_result.get("message", ""),
+                data={
+                    "overall_score": optimization_score,
+                    "missing_keywords_count": len(optimizer_result.get("missing_keywords", [])),
+                    "tips_count": len(optimizer_result.get("ats_tips", []))
+                } if optimization_success else None
+            ))
+
+            if not optimization_success:
+                logger.warning(f"Onboarding Step 4 failed: {optimizer_result.get('message')}")
+
+        except Exception as e:
+            logger.error(f"Onboarding Step 4 error: {e}", exc_info=True)
+            steps.append(OnboardingStepResult(
+                step_name="resume_optimization",
+                success=False,
+                message=f"Error: {str(e)}",
+                data=None
+            ))
+
+        # Determine overall success (at least job search and similarity should succeed)
+        critical_steps_succeeded = any(
+            s.step_name == "job_search" and s.success for s in steps
+        )
+
+        logger.info(f"Onboarding completed. Jobs found: {total_jobs_found}, "
+                   f"Similarity updated: {jobs_with_similarity}, Score: {optimization_score}")
+
+        return OnboardingResponse(
+            success=critical_steps_succeeded,
+            message=self._build_summary_message(steps, total_jobs_found, optimization_score),
+            steps=steps,
+            job_titles_suggested=job_titles_suggested,
+            total_jobs_found=total_jobs_found,
+            jobs_with_similarity=jobs_with_similarity,
+            optimization_score=optimization_score
+        )
+
+    def _build_summary_message(self, steps: List[OnboardingStepResult],
+                               total_jobs: int, score: int) -> str:
+        """Build a human-readable summary message."""
+        successful_steps = sum(1 for s in steps if s.success)
+        total_steps = len(steps)
+
+        if successful_steps == total_steps:
+            return f"Onboarding complete! Found {total_jobs} jobs and your resume scored {score}/100."
+        elif successful_steps > 0:
+            return f"Onboarding partially complete ({successful_steps}/{total_steps} steps). Found {total_jobs} jobs."
+        else:
+            return "Onboarding encountered issues. Please check your API keys and try again."
