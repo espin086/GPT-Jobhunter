@@ -231,6 +231,16 @@ class ResumeOptimizeRequest(BaseModel):
     """Request model for resume optimization analysis."""
     resume_name: str = Field(..., description="Name of the resume to analyze")
     num_jobs: Optional[int] = Field(default=20, description="Number of top similar jobs to analyze (default: 20)")
+    # Basic filters
+    min_similarity: Optional[float] = Field(default=0.0, description="Minimum resume similarity score (0.0-1.0)")
+    location: Optional[str] = Field(default=None, description="Filter by location (city, state, country)")
+    is_remote: Optional[bool] = Field(default=None, description="Filter by remote status (True for remote, False for on-site, None for all)")
+    # Advanced filters
+    company: Optional[str] = Field(default=None, description="Filter by company name")
+    title: Optional[str] = Field(default=None, description="Filter by job title")
+    job_type: Optional[str] = Field(default=None, description="Filter by job type (Full-time, Part-time, Contract, Temporary)")
+    min_salary: Optional[float] = Field(default=None, description="Filter by minimum salary")
+    max_salary: Optional[float] = Field(default=None, description="Filter by maximum salary")
 
 
 class KeywordSuggestion(BaseModel):

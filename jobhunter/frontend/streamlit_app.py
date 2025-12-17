@@ -566,10 +566,15 @@ def update_job_status(job_id: int, new_status: str) -> bool:
         return False
 
 
-def optimize_resume(resume_name: str, num_jobs: int = 20) -> Dict[str, Any]:
-    """Get resume optimization suggestions from backend."""
+def optimize_resume(resume_name: str, num_jobs: int = 20, filters: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Get resume optimization suggestions from backend with optional filters."""
     try:
         data = {"resume_name": resume_name, "num_jobs": num_jobs}
+
+        # Add filters to request if provided
+        if filters:
+            data.update(filters)
+
         # Use longer timeout for AI processing
         return make_api_request("POST", "/resumes/optimize", timeout=120, json=data)
     except:
@@ -1339,7 +1344,7 @@ def main():
             else:
                 st.warning("💡 No job searches yet. Analysis will use AI's general knowledge. For better results, search for jobs first!")
 
-            # Analysis button
+            # Analysis parameters
             col1, col2 = st.columns([2, 1])
             with col1:
                 num_jobs_to_analyze = st.slider(
@@ -1352,12 +1357,102 @@ def main():
             with col2:
                 analyze_button = st.button("🔍 Analyze My Resume", type="primary", use_container_width=True)
 
+            # Basic filters
+            st.subheader("🎯 Refine Your Analysis")
+            st.caption("Optional: Filter jobs before optimization to focus on relevant positions")
+
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                resume_min_similarity = st.slider(
+                    "Min Match Score",
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.05,
+                    help="Only analyze jobs with at least this similarity score"
+                )
+            with col2:
+                resume_location_filter = st.text_input(
+                    "Location",
+                    placeholder="San Francisco, Remote...",
+                    help="Filter by location (city, state, country)"
+                )
+            with col3:
+                resume_remote_filter = st.selectbox(
+                    "Work Style",
+                    ["All", "Remote Only", "Hybrid", "On-site"],
+                    index=0,
+                    help="Filter by remote status"
+                )
+
+            # Advanced filters
+            with st.expander("⚙️ Advanced Filters"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    resume_company_filter = st.text_input(
+                        "Company",
+                        placeholder="Google, Apple...",
+                        help="Filter by company name"
+                    )
+                    resume_title_filter = st.text_input(
+                        "Job Title",
+                        placeholder="Engineer, Manager...",
+                        help="Filter by job title"
+                    )
+                    resume_job_type_filter = st.selectbox(
+                        "Job Type",
+                        ["All", "Full-time", "Part-time", "Contract", "Temporary"],
+                        index=0,
+                        help="Filter by job type"
+                    )
+                with col2:
+                    resume_min_salary = st.number_input(
+                        "Min Salary ($)",
+                        min_value=0,
+                        value=0,
+                        step=10000,
+                        help="Filter by minimum salary (0 for no limit)"
+                    )
+                    resume_max_salary = st.number_input(
+                        "Max Salary ($)",
+                        min_value=0,
+                        value=0,
+                        step=10000,
+                        help="Filter by maximum salary (0 for no limit)"
+                    )
+                    st.info("💡 Leave salary at 0 to show all")
+
             if analyze_button:
                 with st.spinner("🤖 AI is analyzing your resume... This may take 30-60 seconds."):
-                    result = optimize_resume(st.session_state.selected_resume, num_jobs_to_analyze)
+                    # Build filters dictionary
+                    optimization_filters = {}
+                    if resume_min_similarity > 0:
+                        optimization_filters["min_similarity"] = resume_min_similarity
+                    if resume_location_filter:
+                        optimization_filters["location"] = resume_location_filter
+                    if resume_remote_filter == "Remote Only":
+                        optimization_filters["is_remote"] = True
+                    elif resume_remote_filter == "On-site":
+                        optimization_filters["is_remote"] = False
+                    # Note: "Hybrid" and "All" don't set is_remote filter
+
+                    # Advanced filters
+                    if resume_company_filter:
+                        optimization_filters["company"] = resume_company_filter
+                    if resume_title_filter:
+                        optimization_filters["title"] = resume_title_filter
+                    if resume_job_type_filter != "All":
+                        optimization_filters["job_type"] = resume_job_type_filter
+                    if resume_min_salary > 0:
+                        optimization_filters["min_salary"] = resume_min_salary
+                    if resume_max_salary > 0:
+                        optimization_filters["max_salary"] = resume_max_salary
+
+                    result = optimize_resume(st.session_state.selected_resume, num_jobs_to_analyze, optimization_filters)
                     st.session_state.optimization_results = result
-                    # Store the number of jobs used for re-analysis
+                    # Store the number of jobs and filters used for re-analysis
                     st.session_state.num_jobs_analyzed = num_jobs_to_analyze
+                    st.session_state.optimization_filters = optimization_filters
 
                     # Auto-generate the optimized resume
                     if result.get("success"):
@@ -1518,10 +1613,11 @@ def main():
                     col1, col2 = st.columns(2)
                     with col1:
                         if st.button("🔄 Re-analyze", use_container_width=True):
-                            # Re-run the analysis with the same parameters
+                            # Re-run the analysis with the same parameters and filters
                             num_jobs_param = st.session_state.get("num_jobs_analyzed", 20)
+                            filters_param = st.session_state.get("optimization_filters", None)
                             with st.spinner("🤖 AI is re-analyzing your resume... This may take 30-60 seconds."):
-                                result = optimize_resume(st.session_state.selected_resume, num_jobs_param)
+                                result = optimize_resume(st.session_state.selected_resume, num_jobs_param, filters_param)
                                 st.session_state.optimization_results = result
                             st.rerun()
                     with col2:

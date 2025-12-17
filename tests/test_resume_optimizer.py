@@ -105,7 +105,11 @@ def test_db():
             - Microservices architecture
             Requirements: 5+ years experience, strong communication skills
             """,
-            "required_skills": "Python, Django, FastAPI, Machine Learning, TensorFlow, Kubernetes, Docker, AWS, GCP"
+            "required_skills": "Python, Django, FastAPI, Machine Learning, TensorFlow, Kubernetes, Docker, AWS, GCP",
+            "job_type": "Full-time",
+            "salary_low": 150000,
+            "salary_high": 250000,
+            "job_is_remote": "Yes"
         },
         {
             "primary_key": "meta_backend_dev",
@@ -121,7 +125,11 @@ def test_db():
             - Message queues (Kafka, RabbitMQ)
             - Distributed systems experience
             """,
-            "required_skills": "Python, Java, REST API, MySQL, PostgreSQL, Redis, Kafka, RabbitMQ"
+            "required_skills": "Python, Java, REST API, MySQL, PostgreSQL, Redis, Kafka, RabbitMQ",
+            "job_type": "Full-time",
+            "salary_low": 120000,
+            "salary_high": 200000,
+            "job_is_remote": "Yes"
         },
         {
             "primary_key": "amazon_sde",
@@ -137,21 +145,29 @@ def test_db():
             - Agile development practices
             - Code review experience
             """,
-            "required_skills": "Python, Java, AWS, EC2, S3, Lambda, System Design"
+            "required_skills": "Python, Java, AWS, EC2, S3, Lambda, System Design",
+            "job_type": "Part-time",
+            "salary_low": 80000,
+            "salary_high": 150000,
+            "job_is_remote": "No"
         },
     ]
 
     for job in sample_jobs:
         cursor.execute('''
-            INSERT INTO jobs_new (primary_key, title, company, resume_similarity, description, required_skills)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO jobs_new (primary_key, title, company, resume_similarity, description, required_skills, job_type, salary_low, salary_high, job_is_remote)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             job["primary_key"],
             job["title"],
             job["company"],
             job["resume_similarity"],
             job["description"],
-            job["required_skills"]
+            job["required_skills"],
+            job["job_type"],
+            job["salary_low"],
+            job["salary_high"],
+            job["job_is_remote"]
         ))
 
     conn.commit()
@@ -486,6 +502,236 @@ class TestATSOptimization:
 
         assert keyword_count == 5
         assert density > 0.1  # This resume has too much keyword stuffing
+
+
+class TestResumeOptimizerFiltering:
+    """Tests for resume optimizer filtering functionality."""
+
+    def test_get_top_similar_jobs_with_salary_filter(self, test_db):
+        """Test filtering jobs by salary range."""
+        conn = sqlite3.connect(test_db)
+        cursor = conn.cursor()
+
+        # Query for jobs with min_salary >= 150000
+        cursor.execute('''
+            SELECT title, company, resume_similarity, salary_low
+            FROM jobs_new
+            WHERE resume_similarity > 0
+            AND salary_low IS NOT NULL
+            AND salary_low >= ?
+            ORDER BY resume_similarity DESC
+            LIMIT 30
+        ''', (150000,))
+        jobs = cursor.fetchall()
+        conn.close()
+
+        assert len(jobs) == 1  # Only Google job has salary_low >= 150000
+        assert jobs[0][0] == "Senior Software Engineer"
+        assert jobs[0][3] == 150000
+
+    def test_get_top_similar_jobs_with_company_filter(self, test_db):
+        """Test filtering jobs by company name."""
+        conn = sqlite3.connect(test_db)
+        cursor = conn.cursor()
+
+        # Query for jobs matching company name
+        cursor.execute('''
+            SELECT title, company, resume_similarity
+            FROM jobs_new
+            WHERE resume_similarity > 0
+            AND company LIKE ?
+            ORDER BY resume_similarity DESC
+            LIMIT 30
+        ''', ('%Google%',))
+        jobs = cursor.fetchall()
+        conn.close()
+
+        assert len(jobs) == 1
+        assert jobs[0][1] == "Google"
+
+    def test_get_top_similar_jobs_with_job_type_filter(self, test_db):
+        """Test filtering jobs by job type."""
+        conn = sqlite3.connect(test_db)
+        cursor = conn.cursor()
+
+        # Query for Full-time jobs
+        cursor.execute('''
+            SELECT title, company, job_type
+            FROM jobs_new
+            WHERE resume_similarity > 0
+            AND job_type LIKE ?
+            ORDER BY resume_similarity DESC
+            LIMIT 30
+        ''', ('%Full-time%',))
+        jobs = cursor.fetchall()
+        conn.close()
+
+        assert len(jobs) == 2  # Google and Meta are Full-time
+        assert all(job[2] == "Full-time" for job in jobs)
+
+    def test_get_top_similar_jobs_with_remote_filter(self, test_db):
+        """Test filtering jobs by remote status."""
+        conn = sqlite3.connect(test_db)
+        cursor = conn.cursor()
+
+        # Query for remote jobs
+        cursor.execute('''
+            SELECT title, company, job_is_remote
+            FROM jobs_new
+            WHERE resume_similarity > 0
+            AND job_is_remote = ?
+            ORDER BY resume_similarity DESC
+            LIMIT 30
+        ''', ('Yes',))
+        jobs = cursor.fetchall()
+        conn.close()
+
+        assert len(jobs) == 2  # Google and Meta are remote
+        assert all(job[2] == "Yes" for job in jobs)
+
+    def test_get_top_similar_jobs_with_title_filter(self, test_db):
+        """Test filtering jobs by title."""
+        conn = sqlite3.connect(test_db)
+        cursor = conn.cursor()
+
+        # Query for jobs with "Engineer" in title
+        cursor.execute('''
+            SELECT title, company
+            FROM jobs_new
+            WHERE resume_similarity > 0
+            AND title LIKE ?
+            ORDER BY resume_similarity DESC
+            LIMIT 30
+        ''', ('%Engineer%',))
+        jobs = cursor.fetchall()
+        conn.close()
+
+        assert len(jobs) == 2  # Senior Software Engineer and Software Development Engineer
+
+    def test_get_top_similar_jobs_with_multiple_filters(self, test_db):
+        """Test applying multiple filters simultaneously."""
+        conn = sqlite3.connect(test_db)
+        cursor = conn.cursor()
+
+        # Query with multiple conditions
+        cursor.execute('''
+            SELECT title, company, salary_low, job_type, job_is_remote
+            FROM jobs_new
+            WHERE resume_similarity > 0
+            AND salary_low >= ?
+            AND salary_high <= ?
+            AND job_type LIKE ?
+            AND job_is_remote = ?
+            ORDER BY resume_similarity DESC
+            LIMIT 30
+        ''', (100000, 250000, '%Full-time%', 'Yes'))
+        jobs = cursor.fetchall()
+        conn.close()
+
+        # Should return Google and Meta (both full-time, remote, in salary range)
+        assert len(jobs) == 2
+        assert all(job[3] == "Full-time" and job[4] == "Yes" for job in jobs)
+
+    def test_get_top_similar_jobs_respects_limit(self, test_db):
+        """Test that limit parameter is properly respected."""
+        conn = sqlite3.connect(test_db)
+        cursor = conn.cursor()
+
+        # Query with limit of 1
+        cursor.execute('''
+            SELECT title, company
+            FROM jobs_new
+            WHERE resume_similarity > 0
+            ORDER BY resume_similarity DESC
+            LIMIT ?
+        ''', (1,))
+        jobs = cursor.fetchall()
+        conn.close()
+
+        assert len(jobs) == 1
+        assert jobs[0][0] == "Senior Software Engineer"  # Highest similarity
+
+    def test_get_top_similar_jobs_with_no_matches(self, test_db):
+        """Test filtering returns empty when no matches found."""
+        conn = sqlite3.connect(test_db)
+        cursor = conn.cursor()
+
+        # Query for non-existent company
+        cursor.execute('''
+            SELECT title, company
+            FROM jobs_new
+            WHERE resume_similarity > 0
+            AND company LIKE ?
+            ORDER BY resume_similarity DESC
+            LIMIT 30
+        ''', ('%NonExistent%',))
+        jobs = cursor.fetchall()
+        conn.close()
+
+        assert len(jobs) == 0
+
+    def test_filter_parameters_validation(self):
+        """Test that filter parameters are properly validated."""
+        from pydantic import ValidationError
+
+        # Valid request with filters
+        try:
+            request = {
+                "resume_name": "test.pdf",
+                "num_jobs": 20,
+                "min_salary": 100000,
+                "max_salary": 200000,
+                "company": "Google",
+                "title": "Engineer",
+                "job_type": "Full-time",
+                "is_remote": True
+            }
+            # Should not raise error
+            assert request["resume_name"] == "test.pdf"
+        except ValidationError:
+            pytest.fail("Valid filter parameters should not raise ValidationError")
+
+    def test_combined_filtering_with_resume_optimizer_context(self, test_db):
+        """Test that filtering works in the context of resume optimization."""
+        conn = sqlite3.connect(test_db)
+        cursor = conn.cursor()
+
+        # Simulate resume optimizer: get top 5 jobs with filters
+        num_jobs = 5
+        filters = {
+            "min_salary": 100000,
+            "job_type": "Full-time"
+        }
+
+        # Build query with filters
+        query = '''
+            SELECT title, company, resume_similarity, description, required_skills
+            FROM jobs_new
+            WHERE resume_similarity > 0
+            AND description IS NOT NULL
+            AND description != ''
+        '''
+        params = []
+
+        if filters.get("min_salary"):
+            query += " AND salary_low >= ?"
+            params.append(filters["min_salary"])
+
+        if filters.get("job_type"):
+            query += " AND job_type LIKE ?"
+            params.append(f"%{filters['job_type']}%")
+
+        query += " ORDER BY resume_similarity DESC LIMIT ?"
+        params.append(num_jobs)
+
+        cursor.execute(query, params)
+        jobs = cursor.fetchall()
+        conn.close()
+
+        # Should return Google and Meta (both full-time with salary >= 100000)
+        assert len(jobs) == 2
+        assert jobs[0][1] == "Google"  # Highest similarity
+        assert jobs[1][1] == "Meta"
 
 
 if __name__ == "__main__":

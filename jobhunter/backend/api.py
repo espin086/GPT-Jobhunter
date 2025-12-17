@@ -737,6 +737,16 @@ async def optimize_resume(
     This endpoint analyzes the resume against the top similar jobs from your searches
     (if available) or uses AI's general knowledge of job market trends.
 
+    Supports optional filtering to refine which jobs are analyzed:
+    - min_similarity: Minimum resume similarity score (0.0-1.0)
+    - location: Filter by location (city, state, country)
+    - is_remote: Filter by remote status (true for remote, false for on-site, null for all)
+    - company: Filter by company name
+    - title: Filter by job title
+    - job_type: Filter by job type (Full-time, Part-time, Contract, Temporary)
+    - min_salary: Filter by minimum salary
+    - max_salary: Filter by maximum salary
+
     Returns:
     - missing_keywords: Keywords present in target jobs but missing from resume
     - keyword_suggestions: Suggestions for improving existing keywords
@@ -749,12 +759,29 @@ async def optimize_resume(
     """
     try:
         user_id = current_user['id']
-        logger.info(f"Optimizing resume: {request.resume_name} against top {request.num_jobs} jobs")
+
+        # Build filters dictionary from request
+        filters = {
+            "min_similarity": request.min_similarity,
+            "location": request.location,
+            "is_remote": request.is_remote,
+            "company": request.company,
+            "title": request.title,
+            "job_type": request.job_type,
+            "min_salary": request.min_salary,
+            "max_salary": request.max_salary
+        }
+
+        # Remove None values to avoid applying unnecessary filters
+        filters = {k: v for k, v in filters.items() if v is not None}
+
+        logger.info(f"Optimizing resume: {request.resume_name} against top {request.num_jobs} jobs with filters: {filters}")
 
         result = resume_optimizer_service.optimize_resume(
             resume_name=request.resume_name,
             num_jobs=request.num_jobs,
-            user_id=user_id
+            user_id=user_id,
+            filters=filters if filters else None
         )
 
         return ResumeOptimizeResponse(

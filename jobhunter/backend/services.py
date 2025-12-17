@@ -790,12 +790,21 @@ class JobTrackingService:
 class ResumeOptimizerService:
     """Service for resume optimization and ATS keyword analysis."""
 
-    def get_top_similar_jobs(self, num_jobs: int = 20) -> List[Dict]:
+    def get_top_similar_jobs(self, num_jobs: int = 20, filters: Dict = None) -> List[Dict]:
         """
-        Get top N jobs by similarity score.
+        Get top N jobs by similarity score with optional filtering.
 
         Args:
             num_jobs: Number of jobs to retrieve
+            filters: Optional dictionary of filters with keys:
+                - min_similarity: float (>= comparison)
+                - location: str (substring match)
+                - is_remote: bool ("Yes" or "No")
+                - company: str (substring match)
+                - title: str (substring match)
+                - job_type: str (substring match)
+                - min_salary: float (>= comparison)
+                - max_salary: float (<= comparison)
 
         Returns:
             List of job dictionaries with descriptions and required skills
@@ -804,16 +813,65 @@ class ResumeOptimizerService:
             conn = sqlite3.connect(config.DATABASE)
             cursor = conn.cursor()
 
-            cursor.execute('''
+            # Build base query
+            query = '''
                 SELECT title, company, resume_similarity, description, required_skills
                 FROM jobs_new
                 WHERE resume_similarity > 0
                 AND description IS NOT NULL
                 AND description != ''
-                ORDER BY resume_similarity DESC
-                LIMIT ?
-            ''', (num_jobs,))
+            '''
+            params = []
 
+            # Apply filters if provided
+            if filters:
+                # Min similarity filter
+                if filters.get("min_similarity") is not None and filters["min_similarity"] > 0:
+                    query += " AND resume_similarity >= ?"
+                    params.append(filters["min_similarity"])
+
+                # Location filter
+                if filters.get("location"):
+                    query += " AND (city LIKE ? OR state LIKE ? OR country LIKE ?)"
+                    location_param = f"%{filters['location']}%"
+                    params.extend([location_param, location_param, location_param])
+
+                # Remote filter
+                if filters.get("is_remote") is not None:
+                    remote_value = "Yes" if filters["is_remote"] else "No"
+                    query += " AND job_is_remote = ?"
+                    params.append(remote_value)
+
+                # Company filter
+                if filters.get("company"):
+                    query += " AND company LIKE ?"
+                    params.append(f"%{filters['company']}%")
+
+                # Title filter
+                if filters.get("title"):
+                    query += " AND title LIKE ?"
+                    params.append(f"%{filters['title']}%")
+
+                # Job type filter
+                if filters.get("job_type"):
+                    query += " AND job_type LIKE ?"
+                    params.append(f"%{filters['job_type']}%")
+
+                # Min salary filter
+                if filters.get("min_salary") is not None and filters["min_salary"] > 0:
+                    query += " AND salary_low >= ?"
+                    params.append(filters["min_salary"])
+
+                # Max salary filter
+                if filters.get("max_salary") is not None and filters["max_salary"] > 0:
+                    query += " AND salary_high <= ?"
+                    params.append(filters["max_salary"])
+
+            # Add ordering and limit
+            query += " ORDER BY resume_similarity DESC LIMIT ?"
+            params.append(num_jobs)
+
+            cursor.execute(query, params)
             jobs = cursor.fetchall()
             conn.close()
 
@@ -845,7 +903,7 @@ class ResumeOptimizerService:
             logger.error(f"Error getting job count: {e}", exc_info=True)
             return 0
 
-    def optimize_resume(self, resume_name: str, num_jobs: int = 20, user_id: int = None) -> Dict:
+    def optimize_resume(self, resume_name: str, num_jobs: int = 20, user_id: int = None, filters: Dict = None) -> Dict:
         """
         Analyze resume against top similar jobs and provide optimization suggestions.
 
@@ -856,6 +914,7 @@ class ResumeOptimizerService:
             resume_name: Name of the resume to analyze
             num_jobs: Number of top similar jobs to analyze
             user_id: ID of the user who owns the resume
+            filters: Optional dictionary of filters to apply to jobs (same structure as JobFilterRequest)
 
         Returns:
             Dictionary with optimization results
@@ -890,8 +949,8 @@ class ResumeOptimizerService:
                     "analysis_source": "none"
                 }
 
-            # Get top similar jobs
-            top_jobs = self.get_top_similar_jobs(num_jobs)
+            # Get top similar jobs with filters
+            top_jobs = self.get_top_similar_jobs(num_jobs, filters)
             jobs_analyzed = len(top_jobs)
 
             # Determine analysis source
