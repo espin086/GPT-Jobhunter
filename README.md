@@ -27,6 +27,13 @@ See GPT Job Hunter in action! This demo shows the complete workflow from resume 
 
 Upload your resume and GPT Job Hunter **automatically analyzes it** the moment you finish onboarding. Get instant ATS compatibility scores, missing keywords, and optimization tips without lifting a finger. Your analysis is ready before you even search for jobs.
 
+### 🤖 **AI-Powered Resume Rewriting** - Tailor Your Resume to Win
+
+Here's the game-changer: GPT Job Hunter finds your top job matches, then **automatically rewrites your entire resume** to match exactly what those employers want. Your skills and experience stay the same, but the wording, keywords, and focus are perfectly optimized for the positions you're targeting. No more generic resumes—every application gets a custom-tailored version.
+
+![AI Generated Resume](images/jobhunter_ai_generated_resume.png)
+*Your resume, rewritten and optimized for the jobs you're going after*
+
 ### 🎯 **SmartSearch AI** - Your Personal Job Scout
 
 Our AI instantly generates **personalized job search suggestions** tailored to your background. No more guessing which job titles to search for - GPT Job Hunter knows what you're qualified for.
@@ -76,6 +83,7 @@ Manage your entire job search pipeline with a beautiful **Kanban-style board**. 
 
 - **⚡ Automatic Resume Analysis** - *NEW* Your resume is analyzed instantly after upload with zero extra clicks
 - **🎯 Streamlined Onboarding** - *NEW* Upload resume → Automatic analysis → Results ready in seconds
+- **🤖 AI-Powered Resume Rewriting** - *NEW* Automatically rewrites your entire resume tailored to the top jobs you match
 - **🤖 AI Job Suggestions** - Get personalized job title recommendations based on your resume
 - **📈 Smart Ranking** - Every job scored 0-100% based on resume match quality
 - **🎨 ATS Resume Optimizer** - Get AI-powered analysis with compatibility scores, missing keywords, and optimization tips
