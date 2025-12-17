@@ -20,10 +20,19 @@ DB_COMMIT_INTERVAL = 50
 # Define workers for CPU-bound similarity calculation
 MAX_SIMILARITY_WORKERS = 8 # Adjust based on CPU cores
 
-def create_db_if_not_there():
-    """Create the database if it doesn't exist."""
-    logging.info("Checking and creating database if not present.")
-    conn = sqlite3.connect(config.DATABASE)
+def create_db_if_not_there(db_path=None):
+    """Create the database if it doesn't exist.
+
+    Args:
+        db_path: Optional database path. If not provided, uses config.DATABASE or TEST_DATABASE env var.
+    """
+    import os
+    # Support test database override
+    if not db_path:
+        db_path = os.environ.get('TEST_DATABASE', config.DATABASE)
+
+    logging.info(f"Checking and creating database if not present at: {db_path}")
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
     try:
@@ -237,7 +246,10 @@ def save_text_to_db(filename, text, user_id):
         text: Resume text content
         user_id: ID of the user who owns this resume
     """
-    conn = sqlite3.connect(config.DATABASE)
+    import os
+    db_path = os.environ.get('TEST_DATABASE', config.DATABASE)
+
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     try:
@@ -249,11 +261,19 @@ def save_text_to_db(filename, text, user_id):
             resume_name TEXT NOT NULL,
             resume_text TEXT,
             user_id INTEGER NOT NULL,
+            optimized_html TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id),
             UNIQUE(user_id, resume_name)
         )
         """
         )
+
+        # Add optimized_html column if it doesn't exist (migration)
+        try:
+            cursor.execute("SELECT optimized_html FROM resumes LIMIT 1")
+        except:
+            cursor.execute("ALTER TABLE resumes ADD COLUMN optimized_html TEXT")
+            conn.commit()
 
         # Check if a record with the given filename already exists for this user
         cursor.execute(
@@ -295,7 +315,10 @@ def update_resume_in_db(filename, new_text, user_id):
     Returns:
         bool: True if update successful, False if resume not found or not owned by user
     """
-    conn = sqlite3.connect(config.DATABASE)
+    import os
+    db_path = os.environ.get('TEST_DATABASE', config.DATABASE)
+
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -318,7 +341,10 @@ def delete_resume_in_db(filename, user_id):
     Returns:
         bool: True if deletion successful, False if resume not found or not owned by user
     """
-    conn = sqlite3.connect(config.DATABASE)
+    import os
+    db_path = os.environ.get('TEST_DATABASE', config.DATABASE)
+
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute(
         "DELETE FROM resumes WHERE resume_name = ? AND user_id = ?",
@@ -339,9 +365,13 @@ def fetch_resumes_from_db(user_id):
     Returns:
         list: List of resume names owned by the user
     """
+    import os
     try:
+        # Support test database override
+        db_path = os.environ.get('TEST_DATABASE', config.DATABASE)
+
         # Connect to the database
-        conn = sqlite3.connect(config.DATABASE)
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
         # Execute the query filtering by user_id
@@ -369,7 +399,10 @@ def get_resume_text(filename, user_id):
     Returns:
         str or None: Resume text if found and owned by user, None otherwise
     """
-    conn = sqlite3.connect(config.DATABASE)
+    import os
+    db_path = os.environ.get('TEST_DATABASE', config.DATABASE)
+
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -383,6 +416,66 @@ def get_resume_text(filename, user_id):
     return record[0] if record else None
 
 
+def save_optimized_resume_html(filename, html_content, user_id):
+    """Save optimized resume HTML to the database for a specific user.
+
+    Args:
+        filename: Name of the resume file
+        html_content: HTML content of the optimized resume
+        user_id: ID of the user who owns this resume
+
+    Returns:
+        bool: True if saved successfully, False otherwise
+    """
+    import os
+    db_path = os.environ.get('TEST_DATABASE', config.DATABASE)
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    try:
+        # Update the optimized_html for this user's resume
+        cursor.execute(
+            "UPDATE resumes SET optimized_html = ? WHERE resume_name = ? AND user_id = ?",
+            (html_content, filename, user_id),
+        )
+        conn.commit()
+        logging.info(f"Optimized HTML saved for resume '{filename}' (user_id: {user_id})")
+        conn.close()
+        return True
+    except Exception as e:
+        logging.error(f"Failed to save optimized HTML: {e}")
+        conn.close()
+        return False
+
+
+def get_optimized_resume_html(filename, user_id):
+    """Fetch the optimized HTML content of a resume from the database.
+
+    Args:
+        filename: Name of the resume file
+        user_id: ID of the user who owns this resume
+
+    Returns:
+        str or None: Optimized HTML if found and owned by user, None otherwise
+    """
+    import os
+    db_path = os.environ.get('TEST_DATABASE', config.DATABASE)
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT optimized_html FROM resumes WHERE resume_name = ? AND user_id = ?",
+        (filename, user_id),
+    )
+    record = cursor.fetchone()
+    logging.info(f"Optimized HTML fetched for resume '{filename}' (user_id: {user_id})")
+    conn.close()
+
+    return record[0] if record and record[0] else None
+
+
 def verify_resume_ownership(filename, user_id):
     """Verify that a resume is owned by a specific user.
 
@@ -393,7 +486,10 @@ def verify_resume_ownership(filename, user_id):
     Returns:
         bool: True if the resume exists and is owned by the user, False otherwise
     """
-    conn = sqlite3.connect(config.DATABASE)
+    import os
+    db_path = os.environ.get('TEST_DATABASE', config.DATABASE)
+
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute(

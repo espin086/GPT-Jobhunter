@@ -322,8 +322,8 @@ def create_password_reset_token(db_path: Optional[str] = None, user_id: int = No
     # Generate a secure random token
     token = secrets.token_urlsafe(32)
 
-    # Calculate expiration time (30 minutes from now)
-    expires_at = datetime.now() + timedelta(minutes=PASSWORD_RESET_TOKEN_EXPIRE_MINUTES)
+    # Calculate expiration time (30 minutes from now) using UTC to match SQLite's CURRENT_TIMESTAMP
+    expires_at = datetime.utcnow() + timedelta(minutes=PASSWORD_RESET_TOKEN_EXPIRE_MINUTES)
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -379,9 +379,9 @@ def verify_reset_token(db_path: Optional[str] = None, token: str = None) -> Opti
             logger.warning("Reset token already used")
             return None
 
-        # Check if token has expired
+        # Check if token has expired (use UTC to match the expires_at stored in DB)
         expires_at = datetime.fromisoformat(expires_at_str)
-        if datetime.now() > expires_at:
+        if datetime.utcnow() > expires_at:
             logger.warning("Reset token has expired")
             return None
 

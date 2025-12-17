@@ -80,59 +80,65 @@ def test_similarity_calculation(test_text_pair):
 def test_create_tables():
     """Create database tables if they don't exist."""
     logger.info("Creating database tables if needed...")
-    
+
     conn = None
     try:
-        from jobhunter.SQLiteHandler import create_db_if_not_there
+        from jobhunter.SQLiteHandler import create_db_if_not_there, save_text_to_db
+        from jobhunter.AuthHandler import create_auth_tables, create_user
+
+        # Create both job and auth tables
         create_db_if_not_there()
-        
+        create_auth_tables()
+
         # Verify the tables now exist
         conn = sqlite3.connect(config.DATABASE)
         cursor = conn.cursor()
-        
+
         # Check for jobs_new table
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='jobs_new'")
         jobs_table_exists = cursor.fetchone() is not None
-        
+
         # Check for resumes table
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='resumes'")
         resumes_table_exists = cursor.fetchone() is not None
-        
+
         logger.info(f"Table status: jobs_new={jobs_table_exists}, resumes={resumes_table_exists}")
-        
-        # Create the test resume table if needed
-        if resumes_table_exists:
-            logger.info("Resume table exists, checking for test data")
-            cursor.execute("SELECT COUNT(*) FROM resumes")
-            resume_count = cursor.fetchone()[0]
-            
-            if resume_count == 0:
-                logger.info("No test resumes found, adding a test resume")
-                cursor.execute(
-                    "INSERT INTO resumes (resume_name, resume_text) VALUES (?, ?)",
-                    ("test_resume.txt", "This is a test resume for a Python developer with skills in machine learning, data science, and web development.")
-                )
-                conn.commit()
-        else:
-            logger.info("Creating test resume table")
-            cursor.execute("""
-                CREATE TABLE resumes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    resume_name TEXT UNIQUE,
-                    resume_text TEXT
-                )
-            """)
-            # Add a test resume
-            cursor.execute(
-                "INSERT INTO resumes (resume_name, resume_text) VALUES (?, ?)",
-                ("test_resume.txt", "This is a test resume for a Python developer with skills in machine learning, data science, and web development.")
+
+        # Create a test user if needed for resume data
+        cursor.execute("SELECT COUNT(*) FROM users")
+        user_count = cursor.fetchone()[0]
+        test_user_id = 1
+
+        if user_count == 0:
+            logger.info("Creating test user for embedding tests")
+            conn.close()
+            test_user_id = create_user(
+                email="embedding_test@example.com",
+                username="embedding_tester",
+                password="password123"
             )
-            conn.commit()
-            
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
+        # Add test resume if resumes table exists and is empty
+        cursor.execute("SELECT COUNT(*) FROM resumes WHERE user_id = ?", (test_user_id,))
+        resume_count = cursor.fetchone()[0]
+
+        if resume_count == 0:
+            logger.info("No test resumes found, adding a test resume")
+            conn.close()
+            save_text_to_db(
+                filename="test_resume.txt",
+                text="This is a test resume for a Python developer with skills in machine learning, data science, and web development.",
+                user_id=test_user_id
+            )
+            conn = sqlite3.connect(config.DATABASE)
+            cursor = conn.cursor()
+
         # Assert that the tables exist
         assert jobs_table_exists, "jobs_new table does not exist"
         assert resumes_table_exists, "resumes table does not exist"
-        
+
     except Exception as e:
         logger.error(f"Error creating database tables: {e}")
         pytest.fail(f"Failed to create database tables: {e}")
@@ -172,45 +178,48 @@ def test_resume_similarity_with_fixtures(sample_resume_text, mock_job_text):
 def test_resume_similarity():
     """Test resume similarity with real resume data if available."""
     logger.info("Testing resume similarity with actual resume data...")
-    
+
     # Ensure tables exist first
     test_create_tables()
-    
+
+    # Use test user ID from test setup
+    test_user_id = 1
+
     # Get available resumes
     try:
-        resumes = fetch_resumes_from_db()
-        
+        resumes = fetch_resumes_from_db(test_user_id)
+
         if not resumes:
             logger.warning("No resumes found in database.")
             pytest.skip("No resumes found in database to test")
-            
+
         logger.info(f"Found {len(resumes)} resumes: {resumes}")
-        
+
         # Get the text of the first resume
-        resume_text = get_resume_text(resumes[0])
-        
+        resume_text = get_resume_text(resumes[0], test_user_id)
+
         if not resume_text:
             logger.error(f"❌ Could not get text for resume: {resumes[0]}")
             pytest.fail(f"Could not get text for resume: {resumes[0]}")
-            
+
         logger.info(f"Resume text length: {len(resume_text)} chars")
         logger.info(f"Resume text preview: {resume_text[:100]}...")
-        
+
         # Generate embedding for the resume
         resume_embedding = generate_gpt_embedding(resume_text)
-        
+
         if all(v == 0.0 for v in resume_embedding):
             logger.error("❌ Resume embedding is a zero vector!")
             pytest.fail("Resume embedding is a zero vector!")
-            
+
         # Test with a fake job description
         job_text = "Software Engineer experienced in Python, machine learning, and web development."
         job_embedding = generate_gpt_embedding(job_text)
-        
+
         # Calculate similarity
         similarity = cosine_similarity([resume_embedding], [job_embedding])[0][0]
         logger.info(f"Test resume-job similarity: {similarity}")
-        
+
         assert similarity > 0.0
     except Exception as e:
         logger.error(f"❌ Error in resume similarity test: {e}")

@@ -576,6 +576,19 @@ def optimize_resume(resume_name: str, num_jobs: int = 20) -> Dict[str, Any]:
         return {"success": False, "message": "Optimization request failed"}
 
 
+def generate_optimized_resume(resume_name: str, optimization_results: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate optimized resume HTML from backend."""
+    try:
+        data = {
+            "resume_name": resume_name,
+            "optimization_results": optimization_results
+        }
+        # Use longer timeout for AI processing (resume generation)
+        return make_api_request("POST", "/resumes/generate-optimized", timeout=180, json=data)
+    except:
+        return {"success": False, "message": "Resume generation failed"}
+
+
 def run_onboarding_workflow(resume_name: str) -> Dict[str, Any]:
     """Run the complete onboarding workflow for a resume."""
     try:
@@ -1056,6 +1069,19 @@ def main():
         st.session_state.similarity_needs_update = False
     if "last_similarity_resume" not in st.session_state:
         st.session_state.last_similarity_resume = None
+    if "generated_resume_html" not in st.session_state:
+        st.session_state.generated_resume_html = None
+    if "optimization_results" not in st.session_state:
+        st.session_state.optimization_results = None
+    if "last_optimized_resume" not in st.session_state:
+        st.session_state.last_optimized_resume = None
+
+    # Clear cached Word bytes if resume changed
+    if "last_optimized_resume" in st.session_state and st.session_state.last_optimized_resume != st.session_state.selected_resume:
+        if "word_docx_bytes" in st.session_state:
+            del st.session_state.word_docx_bytes
+        if "word_filename" in st.session_state:
+            del st.session_state.word_filename
 
     # Sidebar
     with st.sidebar:
@@ -1326,16 +1352,46 @@ def main():
             with col2:
                 analyze_button = st.button("🔍 Analyze My Resume", type="primary", use_container_width=True)
 
-            # Store optimization results in session state
-            if "optimization_results" not in st.session_state:
-                st.session_state.optimization_results = None
-
             if analyze_button:
                 with st.spinner("🤖 AI is analyzing your resume... This may take 30-60 seconds."):
                     result = optimize_resume(st.session_state.selected_resume, num_jobs_to_analyze)
                     st.session_state.optimization_results = result
                     # Store the number of jobs used for re-analysis
                     st.session_state.num_jobs_analyzed = num_jobs_to_analyze
+
+                    # Auto-generate the optimized resume
+                    if result.get("success"):
+                        with st.spinner("✨ AI is creating your optimized resume... This may take 1-2 minutes."):
+                            optimization_data = {
+                                "missing_keywords": result.get("missing_keywords", []),
+                                "keyword_suggestions": [
+                                    {
+                                        "current": ks.current if hasattr(ks, 'current') else ks.get('current', ''),
+                                        "suggested": ks.suggested if hasattr(ks, 'suggested') else ks.get('suggested', ''),
+                                        "reason": ks.reason if hasattr(ks, 'reason') else ks.get('reason', '')
+                                    }
+                                    for ks in result.get("keyword_suggestions", [])
+                                ],
+                                "ats_tips": result.get("ats_tips", []),
+                                "overall_score": result.get("overall_score", 0)
+                            }
+
+                            generated_result = generate_optimized_resume(
+                                st.session_state.selected_resume,
+                                optimization_data
+                            )
+
+                            if generated_result.get("success"):
+                                st.session_state.generated_resume_html = generated_result.get("html_content")
+                                st.session_state.last_optimized_resume = st.session_state.selected_resume
+                                # Clear any cached Word bytes since we have new HTML
+                                if "word_docx_bytes" in st.session_state:
+                                    del st.session_state.word_docx_bytes
+                                if "word_filename" in st.session_state:
+                                    del st.session_state.word_filename
+                                st.success("✅ Optimized resume generated successfully!")
+                            else:
+                                st.error(f"❌ Resume generation failed: {generated_result.get('message', 'Unknown error')}")
 
             # Display results
             if st.session_state.optimization_results:
@@ -1471,6 +1527,78 @@ def main():
                     with col2:
                         if job_count == 0:
                             st.info("💡 Search for jobs to get more targeted recommendations!")
+
+                    # Download Options Section
+                    st.divider()
+                    st.subheader("📥 Download Your Optimized Resume")
+
+                    # Display the generated resume
+                    if st.session_state.generated_resume_html:
+                        st.markdown("*Changes from the original are highlighted in **yellow**.*")
+
+                        # Download buttons
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            # Prepare Word document automatically if not done
+                            if "word_docx_bytes" not in st.session_state:
+                                with st.spinner("📝 Preparing Word document..."):
+                                    try:
+                                        # Only send resume_name - HTML will be fetched from database by backend
+                                        data = {
+                                            "resume_name": st.session_state.selected_resume
+                                        }
+                                        url = f"{BACKEND_URL}/resumes/download-word"
+                                        token = st.session_state.get("access_token")
+                                        headers = {"Authorization": f"Bearer {token}"}
+                                        response = requests.post(url, json=data, headers=headers, timeout=60)
+                                        if response.status_code == 200:
+                                            st.session_state.word_docx_bytes = response.content
+                                            st.session_state.word_filename = f"{st.session_state.selected_resume.rsplit('.', 1)[0]}_optimized.docx"
+                                        else:
+                                            st.error(f"Failed to prepare Word document: {response.text}")
+                                    except Exception as e:
+                                        logger.error(f"Word generation error: {e}")
+                                        st.error(f"Error preparing Word document: {str(e)}")
+
+                            # Word download button
+                            if "word_docx_bytes" in st.session_state and st.session_state.word_docx_bytes:
+                                st.download_button(
+                                    label="📥 Download as Word (.docx)",
+                                    data=st.session_state.word_docx_bytes,
+                                    file_name=st.session_state.word_filename,
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    use_container_width=True,
+                                    type="primary"
+                                )
+                            else:
+                                st.info("⏳ Preparing Word document...")
+
+                        with col2:
+                            # PDF download using browser print
+                            st.markdown("""
+                            <style>
+                            .pdf-button {
+                                display: inline-block;
+                                padding: 0.5rem 1rem;
+                                background: linear-gradient(90deg, #1e88e5 0%, #1976d2 100%);
+                                color: white;
+                                text-decoration: none;
+                                border-radius: 8px;
+                                font-weight: 600;
+                                text-align: center;
+                                width: 100%;
+                                border: none;
+                                cursor: pointer;
+                            }
+                            </style>
+                            <button class="pdf-button" onclick="window.print()">📄 Download as PDF</button>
+                            """, unsafe_allow_html=True)
+
+                        st.divider()
+
+                        # Display HTML in an expandable container
+                        with st.expander("👁️ Preview Optimized Resume", expanded=True):
+                            st.components.v1.html(st.session_state.generated_resume_html, height=800, scrolling=True)
 
     # TAB 1: Job Matches
     with tab1:

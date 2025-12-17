@@ -252,6 +252,21 @@ class ResumeOptimizeResponse(BaseModel):
     analysis_source: str = Field(default="ai_general", description="Source of analysis: 'job_database' or 'ai_general'")
 
 
+class GenerateOptimizedResumeRequest(BaseModel):
+    """Request model for generating optimized resume HTML."""
+    resume_name: str = Field(..., description="Name of the resume to optimize")
+    optimization_results: dict = Field(..., description="Results from optimize_resume endpoint")
+
+
+class GenerateOptimizedResumeResponse(BaseModel):
+    """Response model for generated optimized resume."""
+    success: bool = Field(..., description="Whether the generation was successful")
+    html_content: Optional[str] = Field(None, description="HTML content of the optimized resume")
+    message: str = Field(..., description="Status message")
+    original_resume: Optional[str] = Field(None, description="Name of the original resume")
+    changes_highlighted: bool = Field(default=False, description="Whether changes are highlighted in yellow")
+
+
 # ============================================================================
 # Authentication Models
 # ============================================================================

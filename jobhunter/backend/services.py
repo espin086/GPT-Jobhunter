@@ -414,10 +414,18 @@ class DatabaseService:
                     resume_name TEXT NOT NULL,
                     resume_text TEXT,
                     user_id INTEGER NOT NULL,
+                    optimized_html TEXT,
                     FOREIGN KEY (user_id) REFERENCES users(id),
                     UNIQUE(user_id, resume_name)
                 )
             ''')
+
+            # Add optimized_html column if it doesn't exist (migration)
+            try:
+                cursor.execute("SELECT optimized_html FROM resumes LIMIT 1")
+            except:
+                cursor.execute("ALTER TABLE resumes ADD COLUMN optimized_html TEXT")
+                conn.commit()
 
             # Create job_tracking table for Kanban board with user isolation
             cursor.execute('''
@@ -1097,6 +1105,402 @@ Return ONLY valid JSON, no additional text."""
             return None
         except Exception as e:
             logger.error(f"Error calling OpenAI for analysis: {e}", exc_info=True)
+            return None
+
+    def generate_optimized_resume_html(self, resume_name: str, optimization_results: Dict, user_id: int = None) -> Optional[Dict]:
+        """
+        Generate an optimized resume in HTML format with highlighted changes.
+
+        Args:
+            resume_name: Name of the original resume
+            optimization_results: Results from optimize_resume()
+            user_id: ID of the user who owns the resume
+
+        Returns:
+            Dictionary with HTML content and metadata
+        """
+        try:
+            # Get original resume text
+            resume_text = get_resume_text(resume_name, user_id)
+            if not resume_text:
+                return None
+
+            # Check if OpenAI API key is available
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                logger.warning("OpenAI API key not found, cannot generate optimized resume")
+                return None
+
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+
+            # Build the prompt for resume generation
+            missing_keywords = optimization_results.get("missing_keywords", [])
+            keyword_suggestions = optimization_results.get("keyword_suggestions", [])
+            ats_tips = optimization_results.get("ats_tips", [])
+
+            # Convert KeywordSuggestion objects to readable format
+            keyword_suggestions_text = []
+            for ks in keyword_suggestions:
+                if hasattr(ks, 'current'):
+                    keyword_suggestions_text.append(f"- Replace '{ks.current}' with '{ks.suggested}': {ks.reason}")
+                elif isinstance(ks, dict):
+                    keyword_suggestions_text.append(f"- Replace '{ks.get('current')}' with '{ks.get('suggested')}': {ks.get('reason')}")
+
+            prompt = f"""You are an expert resume writer and ATS optimization specialist.
+
+ORIGINAL RESUME:
+{resume_text}
+
+OPTIMIZATION REQUIREMENTS:
+1. Missing Keywords to Add: {', '.join(missing_keywords)}
+2. Keyword Improvements:
+{chr(10).join(keyword_suggestions_text)}
+3. Additional Tips: {chr(10).join(ats_tips)}
+
+YOUR TASK:
+Rewrite this resume incorporating ALL the optimization suggestions above. Follow these formatting rules EXACTLY:
+
+🚨 CRITICAL ONE-PAGE REQUIREMENT 🚨
+THE RESUME MUST FIT ON ONE STANDARD 8.5" x 11" PAGE WITH 0.25" MARGINS.
+- Available space: ~10 inches height x 8 inches width
+- With 11pt Calibri and 1.4 line-height, you have approximately 50-55 lines of text
+- Be CONCISE - prioritize impact over length
+- Cut or condense content as needed to fit ONE PAGE
+- Include ALL key information but in a compressed format
+
+MANDATORY CONTENT (Include ALL of this):
+- Full name at top (from original resume)
+- Contact information (email, phone, location, LinkedIn)
+- All sections from original: Education, Experience, Skills, Certifications, etc.
+- Keep the most impactful 2-3 achievements per job (not more)
+
+CRITICAL FORMATTING RULES:
+1. Use clean, professional sections with thin dividing lines
+2. Each job experience MUST have EXACTLY 2 bullet points (no more, no less)
+3. NEVER have orphaned words - if a line wraps, ensure at least 40% of the line is filled:
+   - For Skills section: Use compact comma-separated format on 1-2 lines maximum
+   - For bullet points: If text wraps and the last line has fewer than 5 words, rephrase
+   - Aim for balanced, newspaper-style justified text
+4. Use strong action verbs and quantify achievements
+5. Be CONCISE - every word must earn its place on the page
+6. Keep the same sections (Education, Experience, Skills) but optimize for brevity
+
+MANDATORY HTML STRUCTURE:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@page {{
+    size: 8.5in 11in;
+    margin: 0.25in;
+}}
+body {{
+    font-family: Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.35;
+    color: #000000;
+    background-color: #FFFFFF;
+    margin: 18px;
+    max-width: 8in;
+    max-height: 10in;
+}}
+h1 {{
+    font-size: 16pt;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 0 3px 0;
+    padding: 0;
+}}
+.contact {{
+    text-align: center;
+    font-size: 9pt;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}}
+h2 {{
+    font-size: 12pt;
+    font-weight: bold;
+    margin: 8px 0 4px 0;
+    padding: 0 0 2px 0;
+    border-bottom: 1px solid #333;
+}}
+h3 {{
+    font-size: 10.5pt;
+    font-weight: bold;
+    margin: 5px 0 2px 0;
+}}
+.job-header {{
+    margin: 5px 0 2px 0;
+}}
+.job-title {{
+    font-weight: bold;
+    display: inline;
+}}
+.company {{
+    display: inline;
+}}
+.dates {{
+    float: right;
+    font-size: 10pt;
+}}
+ul {{
+    margin: 2px 0 5px 20px;
+    padding: 0;
+}}
+li {{
+    margin-bottom: 2px;
+    text-align: justify;
+    line-height: 1.3;
+}}
+p {{
+    margin: 3px 0;
+    line-height: 1.3;
+}}
+mark {{
+    background-color: #FFFF00;
+    padding: 0;
+}}
+.section {{
+    margin-bottom: 8px;
+}}
+.skills {{
+    line-height: 1.25;
+}}
+</style>
+</head>
+<body>
+<!-- Your resume content here -->
+</body>
+</html>
+```
+
+IMPORTANT INSTRUCTIONS:
+- Include FULL NAME, CONTACT INFO (email, phone, LinkedIn, location) at the top
+- Use <mark style="background-color: #FFFF00;"> tags to highlight ANY text that was changed or added
+- DO NOT highlight text that remained unchanged from the original
+- Every job MUST have EXACTLY 2 bullet points in <ul><li> format
+- Use compact formatting: reduce margins, tighter line-height
+- Skills section: comma-separated on 1-2 lines max
+- VERIFY it fits on one page: ~50 lines max with the specified formatting
+
+Return ONLY the complete HTML document as shown above, with your resume content inside the body tags."""
+
+            logger.info("Requesting optimized resume generation from OpenAI")
+
+            response = client.chat.completions.create(
+                model="gpt-4o",  # Use GPT-4 for better formatting
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert resume writer who creates perfectly formatted, ATS-optimized resumes. You always return pure HTML code without any markdown or explanations."
+                    },
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=4000
+            )
+
+            html_content = response.choices[0].message.content.strip()
+
+            # Clean up if it contains markdown code blocks
+            if html_content.startswith("```"):
+                lines = html_content.split("\n")
+                # Find actual HTML content (skip ```html and ```)
+                start_idx = 1
+                end_idx = len(lines) - 1
+                html_content = "\n".join(lines[start_idx:end_idx])
+
+            logger.info(f"Generated optimized resume HTML ({len(html_content)} characters)")
+
+            # Save the optimized HTML to database
+            from jobhunter.SQLiteHandler import save_optimized_resume_html
+            saved = save_optimized_resume_html(resume_name, html_content, user_id)
+
+            if not saved:
+                logger.warning(f"Failed to save optimized HTML to database for user {user_id}")
+
+            return {
+                "success": True,
+                "html_content": html_content,
+                "original_resume": resume_name,
+                "changes_highlighted": True,
+                "message": "Optimized resume generated successfully"
+            }
+
+        except Exception as e:
+            logger.error(f"Error generating optimized resume: {e}", exc_info=True)
+            return None
+
+    def generate_optimized_resume_docx(self, resume_name: str, html_content: str, user_id: int = None) -> Optional[bytes]:
+        """
+        Convert the generated HTML resume to a Word document (.docx).
+
+        Args:
+            resume_name: Name of the original resume
+            html_content: HTML content of the optimized resume
+            user_id: ID of the user who owns the resume
+
+        Returns:
+            Bytes of the Word document, or None if conversion fails
+        """
+        try:
+            from docx import Document
+            from docx.shared import Pt, Inches, RGBColor
+            from docx.enum.text import WD_ALIGN_PARAGRAPH
+            from bs4 import BeautifulSoup
+            import io
+
+            # Parse HTML
+            soup = BeautifulSoup(html_content, 'html.parser')
+
+            # Create a new Word document
+            doc = Document()
+
+            # Set narrow margins (0.25 inch) and page size
+            sections = doc.sections
+            for section in sections:
+                section.page_height = Inches(11)
+                section.page_width = Inches(8.5)
+                section.top_margin = Inches(0.25)
+                section.bottom_margin = Inches(0.25)
+                section.left_margin = Inches(0.25)
+                section.right_margin = Inches(0.25)
+
+            # Define styles with tighter spacing for one-page fit
+            style = doc.styles['Normal']
+            font = style.font
+            font.name = 'Calibri'
+            font.size = Pt(11)
+
+            # Set paragraph spacing to minimal
+            from docx.shared import Pt as PtSpacing
+            paragraph_format = style.paragraph_format
+            paragraph_format.space_before = PtSpacing(0)
+            paragraph_format.space_after = PtSpacing(2)
+            paragraph_format.line_spacing = 1.15
+
+            def add_text_with_highlights(paragraph, element):
+                """Add text to paragraph, handling mark tags for highlighting."""
+                for child in element.children:
+                    if isinstance(child, str):
+                        text = child.strip()
+                        if text:
+                            paragraph.add_run(text)
+                    elif child.name == 'mark':
+                        run = paragraph.add_run(child.get_text())
+                        run.font.highlight_color = 7  # Yellow
+                    else:
+                        # Recursively handle nested elements
+                        add_text_with_highlights(paragraph, child)
+
+            def process_element(element):
+                """Recursively process HTML elements and add to Word document."""
+                if not element.name:
+                    return
+
+                if element.name == 'h1':
+                    p = doc.add_paragraph()
+                    add_text_with_highlights(p, element)
+                    for run in p.runs:
+                        run.font.size = Pt(16)
+                        run.font.bold = True
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    p.paragraph_format.space_after = Pt(2)
+
+                elif element.name == 'h2':
+                    p = doc.add_paragraph()
+                    add_text_with_highlights(p, element)
+                    for run in p.runs:
+                        run.font.size = Pt(12)
+                        run.font.bold = True
+                    p.paragraph_format.space_before = Pt(6)
+                    p.paragraph_format.space_after = Pt(2)
+
+                elif element.name == 'h3':
+                    p = doc.add_paragraph()
+                    add_text_with_highlights(p, element)
+                    for run in p.runs:
+                        run.font.size = Pt(10.5)
+                        run.font.bold = True
+                    p.paragraph_format.space_after = Pt(1)
+
+                elif element.name == 'p':
+                    # Check if this is a contact info paragraph
+                    class_attr = element.get('class', [])
+                    p = doc.add_paragraph()
+                    add_text_with_highlights(p, element)
+                    if 'contact' in class_attr:
+                        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        for run in p.runs:
+                            run.font.size = Pt(9)
+                    p.paragraph_format.space_after = Pt(1)
+
+                elif element.name == 'ul':
+                    for li in element.find_all('li', recursive=False):
+                        p = doc.add_paragraph(style='List Bullet')
+                        add_text_with_highlights(p, li)
+                        p.paragraph_format.space_after = Pt(1)
+                        p.paragraph_format.line_spacing = 1.15
+
+                elif element.name == 'div':
+                    # Check for special div classes
+                    class_attr = element.get('class', [])
+
+                    # If it's a contact or section div, process children
+                    if any(cls in ['contact', 'section', 'job-header', 'skills'] for cls in class_attr):
+                        for child in element.children:
+                            if hasattr(child, 'name'):
+                                process_element(child)
+                            elif isinstance(child, str) and child.strip():
+                                # Handle text nodes directly in divs
+                                p = doc.add_paragraph(child.strip())
+                                if 'contact' in class_attr:
+                                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                                    for run in p.runs:
+                                        run.font.size = Pt(9)
+                    else:
+                        # Regular div - process all children
+                        for child in element.children:
+                            if hasattr(child, 'name'):
+                                process_element(child)
+
+                elif element.name == 'hr':
+                    # Skip hr to save space
+                    pass
+
+                elif element.name == 'br':
+                    # Skip br tags
+                    pass
+
+            # Process all elements
+            body = soup.find('body')
+            if body:
+                logger.info(f"Found body tag with {len(list(body.children))} children")
+                for child in body.children:
+                    if hasattr(child, 'name') and child.name:
+                        process_element(child)
+            else:
+                logger.warning("No body tag found, processing entire soup")
+                for child in soup.children:
+                    if hasattr(child, 'name') and child.name:
+                        process_element(child)
+
+            # Save to bytes
+            docx_bytes = io.BytesIO()
+            doc.save(docx_bytes)
+            docx_bytes.seek(0)
+
+            logger.info(f"Generated Word document ({len(docx_bytes.getvalue())} bytes)")
+            return docx_bytes.getvalue()
+
+        except ImportError as ie:
+            logger.error(f"Required library not installed: {ie}")
+            logger.error("Please install: pip install python-docx beautifulsoup4")
+            return None
+        except Exception as e:
+            logger.error(f"Error generating Word document: {e}", exc_info=True)
             return None
 
 class AuthService:

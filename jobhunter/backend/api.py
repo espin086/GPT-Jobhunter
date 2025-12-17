@@ -9,7 +9,7 @@ import os
 
 from fastapi import FastAPI, HTTPException, status, Depends, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 import uvicorn
 
 from jobhunter.backend.models import (
@@ -20,6 +20,7 @@ from jobhunter.backend.models import (
     JobTitleSuggestionsRequest, JobTitleSuggestionsResponse,
     SaveJobRequest, PassJobRequest, JobTrackingResponse, TrackedJobsResponse, UpdateJobStatusRequest,
     ResumeOptimizeRequest, ResumeOptimizeResponse,
+    GenerateOptimizedResumeRequest, GenerateOptimizedResumeResponse,
     ErrorResponse, HealthResponse,
     UserRegisterRequest, UserLoginRequest, UserResponse, TokenResponse,
     PasswordResetRequest, PasswordResetConfirm, LogoutResponse,
@@ -774,6 +775,129 @@ async def optimize_resume(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to optimize resume: {str(e)}"
+        )
+
+
+@app.post("/resumes/generate-optimized", response_model=GenerateOptimizedResumeResponse)
+async def generate_optimized_resume(
+    request: GenerateOptimizedResumeRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Generate an optimized resume in HTML format with highlighted changes.
+
+    This endpoint takes the original resume and optimization results,
+    then generates a professionally formatted HTML resume with:
+    - All optimization suggestions incorporated
+    - Changes highlighted in yellow
+    - Professional formatting (white background, Calibri font, narrow margins)
+    - Clean dividing lines between sections
+    - No orphaned words on lines
+
+    **Requires authentication.**
+    """
+    try:
+        user_id = current_user['id']
+        logger.info(f"Generating optimized resume HTML for: {request.resume_name}")
+
+        result = resume_optimizer_service.generate_optimized_resume_html(
+            resume_name=request.resume_name,
+            optimization_results=request.optimization_results,
+            user_id=user_id
+        )
+
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to generate optimized resume"
+            )
+
+        return GenerateOptimizedResumeResponse(
+            success=result.get("success", False),
+            html_content=result.get("html_content"),
+            message=result.get("message", ""),
+            original_resume=result.get("original_resume"),
+            changes_highlighted=result.get("changes_highlighted", False)
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Resume generation failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate optimized resume: {str(e)}"
+        )
+
+
+@app.post("/resumes/download-word")
+async def download_optimized_resume_word(
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Download the optimized resume as a Word document (.docx).
+
+    This endpoint fetches the user's optimized HTML from the database and converts
+    it to a Word document with proper formatting, narrow margins, Calibri font,
+    and yellow highlights for changes.
+
+    **Requires authentication.**
+    """
+    try:
+        user_id = current_user['id']
+        resume_name = request.get("resume_name")
+
+        if not resume_name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing resume_name"
+            )
+
+        logger.info(f"Generating Word document for: {resume_name} (user_id: {user_id})")
+
+        # Fetch the optimized HTML from database for this user
+        from jobhunter.SQLiteHandler import get_optimized_resume_html
+        html_content = get_optimized_resume_html(resume_name, user_id)
+
+        if not html_content:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No optimized resume found for '{resume_name}'. Please generate the resume first."
+            )
+
+        docx_bytes = resume_optimizer_service.generate_optimized_resume_docx(
+            resume_name=resume_name,
+            html_content=html_content,
+            user_id=user_id
+        )
+
+        if not docx_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to generate Word document"
+            )
+
+        # Create a streaming response with the Word document
+        import io
+        docx_stream = io.BytesIO(docx_bytes)
+
+        # Generate filename
+        filename = f"{resume_name.rsplit('.', 1)[0]}_optimized.docx"
+
+        return StreamingResponse(
+            docx_stream,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Word document generation failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate Word document: {str(e)}"
         )
 
 

@@ -286,14 +286,14 @@ def test_update_last_login(test_db):
     # Store first login time
     first_login = user['last_login']
 
-    # Wait a moment and update again
+    # Wait a moment (1+ seconds) and update again - SQLite timestamps have second precision
     import time
-    time.sleep(0.1)
+    time.sleep(1.1)
     update_last_login(db_path=test_db, user_id=user_id)
 
     # Verify last_login was updated
     user = get_user_by_id(db_path=test_db, user_id=user_id)
-    assert user['last_login'] != first_login
+    assert user['last_login'] != first_login, "last_login timestamp should have been updated after 1+ second delay"
 
 
 def test_deactivate_user(test_db):

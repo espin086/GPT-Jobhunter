@@ -8,8 +8,9 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Set the database path for testing - use absolute path for Docker compatibility
-TEST_DB_PATH = os.path.abspath("all_jobs.db")
+# Set the database path for testing - should match config.DATABASE
+from jobhunter import config
+TEST_DB_PATH = config.DATABASE
 logger.info(f"Using test database path: {TEST_DB_PATH}")
 
 @pytest.fixture(scope="module")
@@ -37,51 +38,44 @@ def test_tables_exist():
     """Test that the required tables exist in the database."""
     # Import the function
     from jobhunter.SQLiteHandler import create_db_if_not_there
-    
+    from jobhunter.AuthHandler import create_auth_tables
+
     # Create the database if it doesn't exist
     create_db_if_not_there()
-    
+    create_auth_tables()
+
     # Connect to the database
     conn = sqlite3.connect(TEST_DB_PATH)
     cursor = conn.cursor()
-    
+
     try:
         # Check for jobs_new table
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='jobs_new'")
         jobs_table_exists = cursor.fetchone() is not None
-        
-        # Check for resumes table (create if needed for testing)
+
+        # Check for resumes table
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='resumes'")
         resumes_table_exists = cursor.fetchone() is not None
-        
-        if not resumes_table_exists:
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS resumes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    resume_name TEXT UNIQUE,
-                    resume_text TEXT
-                )
-            """)
-            conn.commit()
-            
-            # Verify it was created
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='resumes'")
-            resumes_table_exists = cursor.fetchone() is not None
-        
+
         assert jobs_table_exists, "jobs_new table does not exist"
         assert resumes_table_exists, "resumes table does not exist"
-        
+
         # Check the schema of jobs_new table
         cursor.execute("PRAGMA table_info(jobs_new)")
         columns = {col[1] for col in cursor.fetchall()}
-        
+
         required_columns = {"id", "primary_key", "title", "company", "description", "embeddings"}
         for col in required_columns:
             assert col in columns, f"Required column '{col}' missing from jobs_new table"
-        
+
         # Check specifically for the embeddings column
         assert "embeddings" in columns, "embeddings column is missing from jobs_new table"
-        
+
+        # Check resumes table schema has user_id for isolation
+        cursor.execute("PRAGMA table_info(resumes)")
+        resume_columns = {col[1] for col in cursor.fetchall()}
+        assert "user_id" in resume_columns, "resumes table missing user_id column for multi-tenant isolation"
+
     finally:
         conn.close()
 
@@ -156,12 +150,23 @@ def test_isolated_db_creation(temp_db_path):
 def test_resume_table_operations():
     """Test resume table CRUD operations with multi-tenant user isolation."""
     # Import necessary functions
+    import uuid
     from jobhunter.SQLiteHandler import save_text_to_db, get_resume_text, delete_resume_in_db
+    from jobhunter.AuthHandler import create_auth_tables, create_user
+
+    # Create auth tables and a test user
+    create_auth_tables()
+
+    # Use unique credentials to avoid conflicts with previous test runs
+    unique_id = str(uuid.uuid4())[:8]
+    test_user_id = create_user(
+        email=f"crud_test_{unique_id}@example.com",
+        username=f"crud_tester_{unique_id}",
+        password="password123"
+    )
 
     test_resume_name = "test_resume_crud.txt"
     test_resume_text = "This is a test resume for CRUD operations testing."
-    # Use a test user_id for isolation (in real usage, this would come from auth)
-    test_user_id = 999  # Test user ID that won't conflict with real users
 
     try:
         # Save the test resume with user_id
