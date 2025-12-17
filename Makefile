@@ -177,39 +177,23 @@ docker-clean:
 	@docker rmi gpt-jobhunter:latest >/dev/null 2>&1 || true
 	@echo "✅ Docker resources cleaned"
 
-# Testing - consolidated from run_docker.sh
+# Testing - run all tests in tests/ directory
 test:
-	@echo "====== RUNNING TESTS ======"
+	@echo "====== RUNNING ALL TESTS ======"
 	@echo ""
-	@echo "📋 Running database tests..."
-	@if poetry run pytest tests/test_database.py -v; then \
-		echo "✅ Database tests passed!"; \
-	else \
-		echo "❌ Database tests failed!"; \
-		exit 1; \
-	fi
+	@echo "🔍 Discovering and running all tests in tests/ directory..."
 	@echo ""
-	@echo "📋 Running dataTransformer tests..."
-	@if poetry run pytest tests/dataTransformer_test.py -v; then \
-		echo "✅ DataTransformer tests passed!"; \
-	else \
-		echo "❌ DataTransformer tests failed!"; \
-		exit 1; \
-	fi
-	@echo ""
-	@# Check if API keys are available for full test suite
-	@if [ -f ".env" ] && grep -q "OPENAI_API_KEY" .env && grep -q "RAPID_API_KEY" .env; then \
-		echo "🔑 API keys found, running full test suite..."; \
+	@if poetry run pytest tests/ -v; then \
 		echo ""; \
-		if poetry run pytest -v; then \
-			echo "✅ All tests passed successfully!"; \
-		else \
-			echo "⚠️  Some tests failed! This might be due to API limitations or invalid API keys."; \
-			echo "✅ Core tests (database and dataTransformer) passed successfully!"; \
-		fi; \
+		echo "✅ All tests passed successfully!"; \
 	else \
-		echo "⚠️  API keys not found in .env file. Skipping API-dependent tests."; \
-		echo "✅ Core tests completed successfully!"; \
+		echo ""; \
+		echo "❌ Some tests failed!"; \
+		echo "This might be due to:"; \
+		echo "  - Missing API keys (OPENAI_API_KEY, RAPID_API_KEY)"; \
+		echo "  - API limitations or invalid credentials"; \
+		echo "  - Database or environment issues"; \
+		exit 1; \
 	fi
 
 # Coverage report
