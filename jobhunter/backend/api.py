@@ -15,7 +15,7 @@ import uvicorn
 from jobhunter.backend.models import (
     JobSearchRequest, JobSearchResponse,
     ResumeUploadRequest, ResumeResponse, ResumeListResponse, ResumeContentResponse,
-    JobFilterRequest, JobListResponse,
+    JobFilterRequest, JobListResponse, JobCountResponse,
     SimilarityUpdateRequest, SimilarityUpdateResponse,
     JobTitleSuggestionsRequest, JobTitleSuggestionsResponse,
     SaveJobRequest, PassJobRequest, JobTrackingResponse, TrackedJobsResponse, UpdateJobStatusRequest,
@@ -417,7 +417,7 @@ async def get_jobs(
 ):
     """
     Get filtered list of jobs from the database.
-    
+
     Supports filtering by various criteria including similarity scores,
     company, title, location, job type, remote status, and salary range.
     """
@@ -435,9 +435,9 @@ async def get_jobs(
             limit=limit,
             offset=offset
         )
-        
+
         jobs, total_count = job_data_service.get_jobs(filter_request)
-        
+
         return JobListResponse(
             jobs=jobs,
             total_count=total_count,
@@ -449,6 +449,50 @@ async def get_jobs(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get jobs: {str(e)}"
+        )
+
+
+@app.get("/jobs/count", response_model=JobCountResponse)
+async def count_jobs(
+    resume_name: Optional[str] = None,
+    min_similarity: Optional[float] = 0.0,
+    company: Optional[str] = None,
+    title: Optional[str] = None,
+    location: Optional[str] = None,
+    job_type: Optional[str] = None,
+    is_remote: Optional[bool] = None,
+    min_salary: Optional[float] = None,
+    max_salary: Optional[float] = None
+):
+    """
+    Get count of jobs matching filter criteria (without fetching the jobs).
+
+    This is a lightweight endpoint useful for displaying filter previews in the UI.
+    Supports the same filtering criteria as /jobs endpoint.
+    """
+    try:
+        filter_request = JobFilterRequest(
+            resume_name=resume_name,
+            min_similarity=min_similarity,
+            company=company,
+            title=title,
+            location=location,
+            job_type=job_type,
+            is_remote=is_remote,
+            min_salary=min_salary,
+            max_salary=max_salary,
+            limit=1,  # Only need count, not actual jobs
+            offset=0
+        )
+
+        _, total_count = job_data_service.get_jobs(filter_request)
+
+        return JobCountResponse(count=total_count)
+    except Exception as e:
+        logger.error(f"Failed to count jobs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to count jobs: {str(e)}"
         )
 
 

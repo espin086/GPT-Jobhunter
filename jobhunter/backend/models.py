@@ -120,6 +120,11 @@ class JobListResponse(BaseModel):
     offset: int = Field(..., description="Applied offset")
 
 
+class JobCountResponse(BaseModel):
+    """Response model for job count with filters."""
+    count: int = Field(..., description="Total number of jobs matching the filter criteria")
+
+
 class SimilarityUpdateRequest(BaseModel):
     """Request model for updating similarity scores."""
     resume_name: str = Field(..., description="Resume name to calculate similarities against")

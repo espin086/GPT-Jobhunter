@@ -508,6 +508,16 @@ def get_jobs(filters: Dict[str, Any] = None) -> Dict[str, Any]:
         return {"jobs": [], "total_count": 0}
 
 
+def get_filtered_job_count(filters: Dict[str, Any] = None) -> int:
+    """Get count of jobs matching filters (lightweight endpoint for UI preview)."""
+    try:
+        params = filters or {}
+        response = make_api_request("GET", "/jobs/count", params=params)
+        return response.get("count", 0)
+    except:
+        return 0
+
+
 def update_similarity_scores(resume_name: str) -> Dict[str, Any]:
     """Update similarity scores for a resume."""
     try:
@@ -1358,9 +1368,7 @@ def main():
                 analyze_button = st.button("🔍 Analyze My Resume", type="primary", use_container_width=True)
 
             # Basic filters
-            st.subheader("🎯 Refine Your Analysis")
-            st.caption("Optional: Filter jobs before optimization to focus on relevant positions")
-
+            st.subheader("🎯 Filter & Refine Your Analysis")
             col1, col2, col3 = st.columns(3)
             with col1:
                 resume_min_similarity = st.slider(
@@ -1420,7 +1428,42 @@ def main():
                         step=10000,
                         help="Filter by maximum salary (0 for no limit)"
                     )
-                    st.info("💡 Leave salary at 0 to show all")
+                    st.caption("💡 Leave salary at 0 to show all")
+
+            # Live preview of filtered job count
+            preview_filters = {}
+            if resume_min_similarity > 0:
+                preview_filters["min_similarity"] = resume_min_similarity
+            if resume_location_filter:
+                preview_filters["location"] = resume_location_filter
+            if resume_remote_filter == "Remote Only":
+                preview_filters["is_remote"] = True
+            elif resume_remote_filter == "On-site":
+                preview_filters["is_remote"] = False
+
+            if resume_company_filter:
+                preview_filters["company"] = resume_company_filter
+            if resume_title_filter:
+                preview_filters["title"] = resume_title_filter
+            if resume_job_type_filter != "All":
+                preview_filters["job_type"] = resume_job_type_filter
+            if resume_min_salary > 0:
+                preview_filters["min_salary"] = resume_min_salary
+            if resume_max_salary > 0:
+                preview_filters["max_salary"] = resume_max_salary
+
+            # Get count of jobs matching current filters
+            filtered_count = get_filtered_job_count(preview_filters if preview_filters else None)
+
+            # Display live preview
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                if filtered_count > 0:
+                    st.success(f"✅ Analysis will use **{filtered_count}** jobs matching your filters")
+                else:
+                    st.warning("⚠️ No jobs match your current filters. Consider adjusting them.")
+            with col2:
+                st.metric("Sample Size", filtered_count)
 
             if analyze_button:
                 with st.spinner("🤖 AI is analyzing your resume... This may take 30-60 seconds."):
