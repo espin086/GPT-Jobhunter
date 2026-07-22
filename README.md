@@ -1,8 +1,12 @@
-# 🔍 GPT Job Hunter
+# GPT Job Hunter
 
-> **AI-powered job search with ATS optimization that actually understands your resume**
+An embeddings-based resume/job matching engine with a decoupled FastAPI backend and Streamlit frontend. The core pipeline: extract job postings from an external search API, transform and load them into SQLite, generate OpenAI embeddings for both the resume and every job description, then rank every posting by cosine similarity against the resume. a 0-100% match score, not a keyword-overlap heuristic.
 
-Stop manually searching through hundreds of job postings and wondering why you're not getting interviews. GPT Job Hunter uses advanced AI to optimize your resume for ATS systems, find jobs that match your skills, and automatically score each opportunity - so you can focus on jobs where you'll succeed.
+**Why embeddings over keyword matching:** a resume and a job posting rarely share exact phrasing even when the underlying skills line up. Embeddings capture that semantic overlap, so "led a cross-functional engineering team" and "managed engineers across departments" score as similar even with zero shared keywords. That's what makes the 0-100% score a real signal instead of a fuzzy string match.
+
+**Why a decoupled backend/frontend:** the FastAPI backend (port 8000) owns business logic, the embeddings pipeline, and the database; Streamlit (port 8501) is a pure consumer talking to it over REST. Separating them means the matching engine can be tested, deployed, and scaled independently of the UI. the backend has its own API docs, its own test suite, and its own Docker image.
+
+**Relevant to:** full ML product lifecycle (data ingestion → embeddings → serving → CI/CD), retrieval architecture, service decoupling for independent scaling.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
