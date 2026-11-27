@@ -1,0 +1,28 @@
+# Findings in old commits that were reviewed on 2026-11-27 and are either not secrets or old keys handled at the provider.
+# One gitleaks fingerprint per line (commit:file:rule:line). A new finding is never added
+# here without a reason in the heading above it.
+
+# Not secrets: public employer ids (clientkey=) inside apply links in scraped job postings under temp/data
+3cef6a116f9d2d119454ed42e8307b0b88a0217a:temp/data/processed/jobs-1601-2024-03-14_09-21-21-598588.json:generic-api-key:1
+3cef6a116f9d2d119454ed42e8307b0b88a0217a:temp/data/processed/jobs-2176-2024-03-14_09-21-21-678638.json:generic-api-key:1
+3cef6a116f9d2d119454ed42e8307b0b88a0217a:temp/data/raw/jobs-2024-03-14_09-10-44-357440.json:generic-api-key:1
+3cef6a116f9d2d119454ed42e8307b0b88a0217a:temp/data/raw/jobs-2024-03-14_09-10-44-804043.json:generic-api-key:1
+df5ba8123c6f8f6184d81ab490047332f359ece6:temp/data/processed/jobs-1673-2024-03-15_15-19-59-629007.json:generic-api-key:1
+df5ba8123c6f8f6184d81ab490047332f359ece6:temp/data/processed/jobs-2278-2024-03-15_15-19-59-787253.json:generic-api-key:1
+df5ba8123c6f8f6184d81ab490047332f359ece6:temp/data/processed/jobs-2753-2024-03-19_15-50-17-527864.json:generic-api-key:1
+df5ba8123c6f8f6184d81ab490047332f359ece6:temp/data/processed/jobs-3743-2024-03-19_15-50-17-724127.json:generic-api-key:1
+
+# Not secrets: a library constant in a virtual environment that was committed by mistake and later removed
+2bafa38ee69b07e2f43ba2f23d50374f40304c6a:myenv/share/jupyter/nbextensions/pydeck/index.js:generic-api-key:25
+3a38cc5ac65af99176183bc215d11c1195c30329:jobhunter/share/jupyter/nbextensions/pydeck/index.js:generic-api-key:25
+4cadf5f4d75ffaf3557ee909945978d1850ff18f:jobhunter-venv/share/jupyter/nbextensions/pydeck/index.js:generic-api-key:25
+
+# Real keys in 2023 commits, no longer in the tree. Two OpenAI keys, closed as revoked in GitHub secret scanning on 2023-12-14
+06007892259a39c5e93da66b1c032b8d53bed569:.streamlit/secrets.toml:openai-api-key:3
+a2027339ff253ec32d37154eb564f1b89c9f55fd:jobhunter/etl/.bash_profile:openai-api-key:3
+
+# Real key in 2023 commits, no longer in the tree. One RapidAPI key; revoking it is tracked in espin086/claude-harness issue 311
+0f333fa0838a7c3b0afcb38a491d407d9f9017e7:search_jobs.py:rapidapi-access-token:20
+0f333fa0838a7c3b0afcb38a491d407d9f9017e7:text_similarity.py:rapidapi-access-token:11
+1bb72a7ed78efa974de1257c526e6ed8d67272c8:search_jobs.py:rapidapi-access-token:20
+1bb72a7ed78efa974de1257c526e6ed8d67272c8:text_similarity.py:rapidapi-access-token:11
