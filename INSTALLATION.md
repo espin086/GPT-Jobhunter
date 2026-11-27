@@ -2,6 +2,10 @@
 
 Complete installation and setup instructions for GPT Job Hunter.
 
+In a hurry? [QUICKSTART.md](QUICKSTART.md) is the 15-minute path. For running the app day to day (keeping data between restarts, Docker updates, backups, 0% scores) use the [runbooks](docs/README.md#runbooks).
+
+Two things this guide assumes you know: `make dev` deletes the local database every time it starts, and the Docker container has no persistent volume. [Runbook 06](docs/runbooks/06-database-backup-and-reset.md) shows how to back up first.
+
 ---
 
 ## 📋 Table of Contents
@@ -231,10 +235,8 @@ poetry shell
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt  # If you have requirements.txt
-# or
-pip install fastapi uvicorn streamlit pandas openai python-dotenv pydantic
+# Install the project and its dependencies from pyproject.toml
+pip install -e .
 ```
 
 #### Step 2: Set Up Environment
@@ -610,7 +612,9 @@ make dev
 ## Additional Resources
 
 - **API Documentation**: http://localhost:8000/docs (when running)
-- **Architecture Guide**: See [CLAUDE.md](CLAUDE.md)
+- **Architecture**: [docs/architecture/c4.md](docs/architecture/c4.md)
+- **Design decisions**: [docs/decisions/](docs/decisions/README.md)
+- **Runbooks**: [docs/README.md](docs/README.md#runbooks)
 - **GitHub Issues**: https://github.com/espin086/GPT-Jobhunter/issues
 - **Discussions**: https://github.com/espin086/GPT-Jobhunter/discussions
 

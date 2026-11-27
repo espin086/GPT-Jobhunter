@@ -1,10 +1,10 @@
 # GPT Job Hunter
 
-An embeddings-based resume/job matching engine with a decoupled FastAPI backend and Streamlit frontend. The core pipeline: extract job postings from an external search API, transform and load them into SQLite, generate OpenAI embeddings for both the resume and every job description, then rank every posting by cosine similarity against the resume. a 0-100% match score, not a keyword-overlap heuristic.
+An embeddings-based resume/job matching engine with a decoupled FastAPI backend and Streamlit frontend. The core pipeline: extract job postings from an external search API, transform and load them into SQLite, generate OpenAI embeddings for both the resume and every job description, then rank every posting by cosine similarity against the resume. The result is a 0-100% match score, not a keyword-overlap heuristic.
 
 **Why embeddings over keyword matching:** a resume and a job posting rarely share exact phrasing even when the underlying skills line up. Embeddings capture that semantic overlap, so "led a cross-functional engineering team" and "managed engineers across departments" score as similar even with zero shared keywords. That's what makes the 0-100% score a real signal instead of a fuzzy string match.
 
-**Why a decoupled backend/frontend:** the FastAPI backend (port 8000) owns business logic, the embeddings pipeline, and the database; Streamlit (port 8501) is a pure consumer talking to it over REST. Separating them means the matching engine can be tested, deployed, and scaled independently of the UI. the backend has its own API docs, its own test suite, and its own Docker image.
+**Why a decoupled backend/frontend:** the FastAPI backend (port 8000) owns business logic, the embeddings pipeline, and the database; Streamlit (port 8501) is a pure consumer talking to it over REST. Separating them means the matching engine can be tested, deployed, and scaled independently of the UI. The backend has its own API docs, its own test suite, and its own Docker image.
 
 **Relevant to:** full ML product lifecycle (data ingestion → embeddings → serving → CI/CD), retrieval architecture, service decoupling for independent scaling.
 
@@ -58,7 +58,7 @@ Analyze against your actual job searches or use AI's general knowledge - either 
 
 ### 📊 **Visual Job Application Tracker**
 
-Manage your entire job search pipeline with a beautiful **Kanban-style board**. Track applications from "Apply" → "HR Screen" → "1st Round" → "2nd Round" → "Offer" - all in one place.
+Manage your entire job search pipeline with a beautiful **Kanban-style board**. Track applications from "Apply" → "HR Screen" → "1st Round" → "2nd Round", with a "Rejected/Ghosted" column for the ones that end - all in one place.
 
 ---
 
@@ -124,7 +124,7 @@ Manage your entire job search pipeline with a beautiful **Kanban-style board**. 
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/GPT-Jobhunter.git
+git clone https://github.com/espin086/GPT-Jobhunter.git
 cd GPT-Jobhunter
 
 # 2. Set up your API keys
@@ -132,6 +132,7 @@ cp .env.example .env
 # Edit .env and add:
 #   OPENAI_API_KEY=your_key
 #   RAPID_API_KEY=your_key
+#   JWT_SECRET_KEY=<output of: openssl rand -hex 32>
 
 # 3. Start the application
 make dev
@@ -141,7 +142,9 @@ make dev
 # API Docs: http://localhost:8000/docs
 ```
 
-**Full installation guide:** See [INSTALLATION.md](INSTALLATION.md)
+**Step by step, with a check at each stage:** [QUICKSTART.md](QUICKSTART.md). Every install option: [INSTALLATION.md](INSTALLATION.md).
+
+`make dev` starts from an empty database on every run. To keep your account and jobs between restarts, see [runbook 01](docs/runbooks/01-local-development.md).
 
 ---
 
@@ -194,24 +197,30 @@ GPT Job Hunter needs two API keys to function:
 
 ## 📚 Documentation
 
-- **[Installation Guide](INSTALLATION.md)** - Detailed setup instructions
-- **[API Documentation](http://localhost:8000/docs)** - Interactive API reference (when running)
-- **[Architecture Guide](CLAUDE.md)** - Technical architecture and development guide
+| Read this | For |
+|---|---|
+| [QUICKSTART.md](QUICKSTART.md) | From a fresh clone to ranked jobs in about 15 minutes |
+| [INSTALLATION.md](INSTALLATION.md) | Every install option, in detail |
+| [docs/architecture/c4.md](docs/architecture/c4.md) | C4 diagrams: context, containers, components, deployment, data model, run sequences, and the known gaps |
+| [docs/decisions/](docs/decisions/README.md) | Architecture decision records: why embeddings, why two services, why SQLite, why JSearch, how accounts work, why one container |
+| [docs/runbooks/](docs/README.md#runbooks) | Step by step: local development, Docker, keys, search and rate limits, match scores, database backup, accounts |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to propose and submit a change |
+| [API reference](http://localhost:8000/docs) | Interactive, while the backend runs. The same contract is in `openapi.json` |
+| [CLAUDE.md](CLAUDE.md) | Short guide for coding agents working in this repository |
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how to get started:
+Contributions are welcome. The short version:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass (`pytest tests/`)
-6. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-7. Push to the branch (`git push origin feature/AmazingFeature`)
-8. Open a Pull Request
+1. Find or open the issue your change closes
+2. Fork, then branch from `main` with the issue number in the name (`fix/165-rate-limit-backoff`)
+3. Make the change with a test
+4. Run the tests that need no API keys: `poetry run pytest tests/ --ignore=tests/search_jobs_test.py --ignore=tests/test_embedding.py`
+5. Open a pull request whose body contains `Closes #<issue number>`
+
+The full guide, including which docs to update with which change, is [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -253,12 +262,13 @@ We welcome contributions! Here's how to get started:
 - Requires paid OpenAI API access for resume matching
 - Best results with tech/professional roles
 - Job data freshness depends on RapidAPI provider
+- Built for one person on one machine. Match scores and dismissed jobs are shared across accounts, and several API routes need no login. Read the [known gaps](docs/architecture/c4.md#known-gaps) before putting it on a shared or public host
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
 
 ---
 
@@ -273,9 +283,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/GPT-Jobhunter/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/GPT-Jobhunter/discussions)
-- **Email**: support@gptjobhunter.com *(if applicable)*
+- **Issues**: [GitHub Issues](https://github.com/espin086/GPT-Jobhunter/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/espin086/GPT-Jobhunter/discussions)
+- **Something broken?** Start with the "If it fails" table in the matching [runbook](docs/README.md#runbooks)
 
 ---
 
@@ -285,6 +295,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Made with ❤️ by job seekers, for job seekers
 
-[Get Started](INSTALLATION.md) • [Report Bug](https://github.com/yourusername/GPT-Jobhunter/issues) • [Request Feature](https://github.com/yourusername/GPT-Jobhunter/issues)
+[Get Started](QUICKSTART.md) • [Report Bug](https://github.com/espin086/GPT-Jobhunter/issues) • [Request Feature](https://github.com/espin086/GPT-Jobhunter/issues)
 
 </div>
