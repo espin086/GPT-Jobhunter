@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Where the documentation lives
+
+Read these before changing structure, and update them in the same pull request (CONTRIBUTING.md has the table of which change touches which page):
+
+- `docs/architecture/c4.md`: C4 diagrams, data model, run sequences and the known gaps
+- `docs/decisions/`: architecture decision records; add a new one to supersede, do not edit an accepted one
+- `docs/runbooks/`: operating procedures with a check and a failure table each
+- `QUICKSTART.md` and `CONTRIBUTING.md`
+
 ## Requirements
 
 - Python 3.11+ (but < 3.13)
@@ -13,13 +22,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Development Workflow
 ```bash
 # Start local development (backend + frontend with auto-reload)
+# WARNING: deletes jobhunter/all_jobs.db and the staging files on every start
 make dev
 
 # Stop all services (local and Docker)
 make stop
 
-# Run tests (database, dataTransformer, and full suite if API keys present)
+# Run every test (needs RAPID_API_KEY and OPENAI_API_KEY; collection fails without the first)
 make test
+
+# Run the tests that need no API keys
+poetry run pytest tests/ --ignore=tests/search_jobs_test.py --ignore=tests/test_embedding.py
 
 # Run a single test file
 poetry run pytest tests/test_database.py -v
@@ -95,7 +108,7 @@ The application is split into two services that communicate via REST API:
 
 **config.py**: Central configuration with:
 - File paths (RAW_DATA_PATH, PROCESSED_DATA_PATH, RESUME_PATH)
-- Database tables (jobs_new, resumes, applications)
+- Database table names (jobs_new, resumes; `applications` is named here but never created)
 - Job position templates
 - API endpoints
 
@@ -141,20 +154,26 @@ This is critical because the application runs as a package in both local dev and
 
 ### Database Schema
 
-Primary table: `jobs_new`
-- `embeddings`: TEXT (JSON-serialized array of floats from OpenAI)
-- `resume_similarity`: REAL (cosine similarity score 0.0-1.0)
-- `primary_key`: TEXT UNIQUE (company + title composite key)
+Five tables: `users`, `password_reset_tokens`, `resumes`, `jobs_new`, `job_tracking`. The full diagram is in `docs/architecture/c4.md`.
 
-The `resumes` table stores:
-- `resume_name`: TEXT UNIQUE
-- `resume_text`: TEXT
+Shared by all users, `jobs_new`:
+- `embeddings`: TEXT (JSON-serialized array of floats from OpenAI)
+- `resume_similarity`: REAL (cosine similarity score 0.0-1.0); one value per job, not per user
+- `primary_key`: TEXT UNIQUE (the string `"<company> - <title>"`)
+- `hidden`: INTEGER (set by `/jobs/pass`, for every user)
+
+Per user:
+- `resumes`: `resume_name`, `resume_text`, `optimized_html`, `user_id`; unique on `(user_id, resume_name)`
+- `job_tracking`: `job_id`, `user_id`, `status` (`apply`, `hr_screen`, `round_1`, `round_2`, `rejected`); unique on `(user_id, job_id)`
+
+Every query on `resumes` or `job_tracking` must filter by the caller's `user_id`.
 
 ### Environment Variables
 
 Required for full functionality:
 - `OPENAI_API_KEY`: For embeddings and similarity scoring
 - `RAPID_API_KEY`: For job search API (JSearch)
+- `JWT_SECRET_KEY`: Signs login tokens. If unset the code falls back to a default string in the source, so always set it (`openssl rand -hex 32`)
 - `BACKEND_URL`: Frontend's backend connection (default: http://localhost:8000)
 
 Create a `.env` file from `.env.example` with these keys before running.
@@ -167,7 +186,7 @@ Tests are organized by module:
 - `test_embedding.py`: OpenAI embedding operations (requires OPENAI_API_KEY)
 - `search_jobs_test.py`: Job search (requires RAPID_API_KEY)
 
-The Makefile's `make test` runs core tests first, then full suite if API keys are present.
+`make test` runs `pytest tests/ -v` in one pass. Auth, password reset, user isolation and the resume optimizer (`test_authentication.py`, `test_password_reset.py`, `test_user_isolation.py`, `test_resume_optimizer.py`) need no keys.
 
 ### Application Startup
 
